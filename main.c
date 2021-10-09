@@ -15,10 +15,10 @@ int main(int argc, char **argv){
     FILE *input;
     #ifdef DEBUG
         input = fopen(argv[1], "r");
-        printf("Yup\n");
+        printf("File is given\n");
     #else 
         input = stdin;
-        printf("nope\n");
+        printf("Input file is not given\n");
     #endif
 
     read_input(input);
