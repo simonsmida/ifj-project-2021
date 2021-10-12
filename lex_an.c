@@ -18,23 +18,22 @@
 #define CHECK_END_BLOCK_COMMENT 6 // Found a ']' in block comment
 #define ID_OR_KEYWORD 7 // 
 #define STRING_LITERAL 8 // Found '"' in text signalizing string literal
-#define STRING_ESCAPE_SEQUENCE
 #define OPERATOR 9 //
 #define NUMBER_SEQUENCE 10 // Found a number
 #define DOUBLE_DOT_SEQUENCE 11
 #define DOUBLE_E_SEQUENCE 12
 #define DOUBLE_E_PLUS_MINUS_SEQUENCE 13
-
-
+#define BACKSLASH_SEQUENCE 14
 
 
 #define SIZE_STRING 10
 
 #define NUM_OF_KEYWORDS 12
 #define NUM_OF_VAR_TYPE 5
+#define NUM_OF_OPERATORS 9
 
 bool is_operator(int c);
-enum token_type { keyword, identifier, operator, separator } ;
+enum token_type { keyword, identifier, operator, separator, equals, colon } ;
 // All the keywords used in IFJ21
 char *keywords[] =  { "do", "else", "end", "function",
                     "global", "if", "local", "nil",
@@ -44,13 +43,18 @@ char *variable_type[] = {   "string", "integer", "nil", "number",
                             "double" 
                         };
 
-char operators[] = { '#', '*', '/', '+', '-', '.', '<', '>', '~', '=' };
+char first_operators[] = { '#', '*', '/', '+', '-', '.', '<', '>', '~'};
+
+char second_operators[] = { '/', '=', '.' };
+
 
 int read_input(FILE *file){
     char string[40]; //TODO:  Use dynamic string not this
-    unsigned string_index = 0;
+    int string_index = 0;
     int state = 0;
     int c;
+    char escape_seq_bufer[5];
+    int escape_seq_index = 0;
     while ( (c = fgetc(file)) != EOF ){
         
         
@@ -63,30 +67,59 @@ int read_input(FILE *file){
             }
                 if (c == '-'){
                     state = START_COMMENT_OR_MINUS;
-                } 
+                }
+                    // Found number
                 else if (isdigit(c)){
                     append_character(c, string, &string_index);    
                     state = NUMBER_SEQUENCE;
                 }
-                else if (isalnum(c) || c == '_'){
+                    // found ID
+                else if (isalpha(c) || c == '_'){
                     append_character(c, string, &string_index);
                     state = ID_OR_KEYWORD;
                 }
+                    // Found String literal
                 else if (c == '"'){
                     append_character(c, string, &string_index);
                     state = STRING_LITERAL;
                 }
+                    // Found separator
                 else if ( c == ',' ){
                     generate_token("," , &string_index, "separator");
                 }
+                    // Found equals '='
+                else if ( c == '=' ){
+                    generate_token("=", &string_index, "equals");
+                }
+                else if ( c == '(' ){
+                    generate_token("(", &string_index, "L_PAREN");
+                }
+                else if ( c == ')' ){
+                    generate_token(")", &string_index, "R_PAREN");
+                }
+                else if ( c == ':'){
+                    generate_token(":", &string_index, "colon");
+                }
+                    // Found an operator
+                else if ( is_operator(c) ){
+                    state = OPERATOR;
+                    append_character(c, string, &string_index);
+                }
+                
                 break;
 
             case START_COMMENT_OR_MINUS:
                 if (c == '-'){
                     state = ON_COMMENT;
                 }
+                else if (is_operator(c)) {
+                    printf("Lexical error : '-' cannot be followed by %c\n", c);
+                    exit(1);
+                }
                 else {
                     generate_token("-", &string_index, "operator");
+                    ungetc(c, file);
+                    state = DEFAULT_STATE;
                 }
                 break;
         
@@ -135,8 +168,11 @@ int read_input(FILE *file){
                     generate_token(string, &string_index, "STRING_LITERAL");
                     state = DEFAULT_STATE;
                 }
-                else{
-                    append_character(c,string, &string_index);
+                else if ( c == '\\' ){
+                    state = BACKSLASH_SEQUENCE;
+                }
+                else {
+                    append_character(c, string, &string_index);
                 }
                 break;
 
@@ -208,12 +244,90 @@ int read_input(FILE *file){
                 }
                 break; 
 
+            case OPERATOR:
+                if (string[string_index - 1] == '/' && c == '/'){
+                    append_character(c, string, &string_index);
+                    append_character('\0', string, &string_index);
+                    generate_token(string, &string_index, "operator");
+                    state = DEFAULT_STATE;
+                }
+                else if (string[string_index - 1] == '.' && c == '.'){
+                    append_character(c, string, &string_index);
+                    append_character('\0', string, &string_index);
+                    generate_token(string, &string_index, "operator");
+                    state = DEFAULT_STATE;
+                }
+                else if (string[string_index - 1] == '=' && c == '='){
+                    append_character(c, string, &string_index);
+                    append_character('\0', string, &string_index);
+                    generate_token(string, &string_index, "operator");
+                    state = DEFAULT_STATE;
+                }
+                else if (string[string_index - 1] == '<' && c == '='){
+                    append_character(c, string, &string_index);
+                    append_character('\0', string, &string_index);
+                    generate_token(string, &string_index, "operator");
+                    state = DEFAULT_STATE;
+                }
+                else if (string[string_index - 1] == '>' && c == '='){
+                    append_character(c, string, &string_index);
+                    append_character('\0', string, &string_index);
+                    generate_token(string, &string_index, "operator");
+                    state = DEFAULT_STATE;
+                }
+                else if (string[string_index - 1] == '~' && c == '='){
+                    append_character(c, string, &string_index);
+                    append_character('\0', string, &string_index);
+                    generate_token(string, &string_index, "operator");
+                    state = DEFAULT_STATE;
+                }
+                else if (string[string_index - 1] == '~' && c != '='){
+                    printf("Lexical error, ~ has to be followed by =\n");
+                    exit(1); // TODO : Think of a way to end the program without using exit              
+                    // Lexical analysis error - incorrect operator use (if using ~, = has to follow immediately)
+                }
+                else if (is_operator(c) || c == '='){
+                    printf("Lexical error, %c cannot be followed by %c\n", string[string_index - 1], c);
+                    exit(1);
+                }
+                else {
+                    append_character('\0', string, &string_index);
+                    generate_token(string, &string_index, "operator");
+                }
+                state = DEFAULT_STATE;
+                break;
 
+            case BACKSLASH_SEQUENCE:
+                if (c == '\"' || c == '\\' ){
+                    append_character(c, string, &string_index);
+                    state = STRING_LITERAL;
+                }
+                else if ( c == 'n' ){
+                    append_character('\n', string, &string_index);
+                    state = STRING_LITERAL;
+                }
+                else if ( c == 't' ){
+                    append_character('\t', string, &string_index);
+                    state = STRING_LITERAL;
+                }
+                else if(c >= '0' && c <= '9' ){
+                    append_character(c, escape_seq_bufer, &escape_seq_index);
+                    if (escape_seq_index == 3){
+                        escape_seq_bufer[escape_seq_index] = '\0';
+                        int num = strtold(escape_seq_bufer, NULL);
+                        append_character(num, string, &string_index);
+                        state = STRING_LITERAL;
+                        escape_seq_index = 0;
+                    }
+                }
+                else {
+                    append_character(c, string , &string_index);
+                    state = STRING_LITERAL;
+                }
             default:
                 break;
 
         }
-          
 
     }
     return 0;
@@ -235,8 +349,8 @@ void append_character(int c, char *string, int *string_index){
 }
 
 bool is_operator(int c){
-    for (int i = 0; i < strlen(operators); i++){
-        if (c == operators[i]){
+    for (int i = 0; i < NUM_OF_OPERATORS; i++){
+        if (c == first_operators[i]){
             return true;
         }
     }
@@ -244,11 +358,11 @@ bool is_operator(int c){
     return false;
 }
 
-void generate_token(char *string, unsigned *string_index, char *type){
+void generate_token(char *string, int *string_index, char *type){
     // If type is Null, we are signalizing, that we couldnt
     // determine type of token during tokenization
-    string[*string_index] = '\0';
     if (type == NULL){
+        string[*string_index] = '\0';
         if (is_keyword(string)){
             printf("%s - %s", string, "keyword");
         }
@@ -259,6 +373,14 @@ void generate_token(char *string, unsigned *string_index, char *type){
             printf("%s - %s", string, "ID");
         }
     }
+    else if (!strcmp(type, "operator")){
+        printf("%s - %s", string, "OPERATOR");
+    }
+    else if (!strcmp(type, "STRING_LITERAL")){
+        string[*string_index] = '\0';
+        printf("%s - %s", string, "STRING_LITERAL");
+    }
+
     else {
         printf("%s - %s", string, type);
     }

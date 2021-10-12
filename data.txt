@@ -1,0 +1,9 @@
+"asdasd\n\t\na\074\tsd"  id
+integer string
+function ( les goo : integer : string ) try not to be return
+end
+-- maybe some more
+
+end
+return
+
