@@ -6,9 +6,8 @@
  * Compiled : gcc version 9.3.0
  */
 
-
 #include "lex_an.h"
-
+#include "buffer.h"
 #define DEFAULT_STATE 0 
 #define START_COMMENT_OR_MINUS 1 // Used when previous state was default and a '-' char was found
 #define ON_COMMENT 2 // Found "--" in text
@@ -33,7 +32,6 @@
 #define NUM_OF_OPERATORS 9
 
 bool is_operator(int c);
-enum token_type { keyword, identifier, operator, separator, equals, colon } ;
 // All the keywords used in IFJ21
 char *keywords[] =  { "do", "else", "end", "function",
                     "global", "if", "local", "nil",
@@ -48,9 +46,13 @@ char first_operators[] = { '#', '*', '/', '+', '-', '.', '<', '>', '~'};
 char second_operators[] = { '/', '=', '.' };
 
 
-int read_input(FILE *file){
-    char string[40]; //TODO:  Use dynamic string not this
-    int string_index = 0;
+
+TOKEN_T *read_input(FILE *file){
+    
+    STRING_T *buffer = NULL;
+
+    buffer = init_buffer();
+
     int state = 0;
     int c;
     char escape_seq_bufer[5];
@@ -70,40 +72,45 @@ int read_input(FILE *file){
                 }
                     // Found number
                 else if (isdigit(c)){
-                    append_character(c, string, &string_index);    
+                    append_character(buffer, c);;    
                     state = NUMBER_SEQUENCE;
                 }
                     // found ID
                 else if (isalpha(c) || c == '_'){
-                    append_character(c, string, &string_index);
+                    append_character(buffer, c);;
                     state = ID_OR_KEYWORD;
                 }
                     // Found String literal
                 else if (c == '"'){
-                    append_character(c, string, &string_index);
+                    append_character(buffer, c);
                     state = STRING_LITERAL;
                 }
                     // Found separator
                 else if ( c == ',' ){
-                    generate_token("," , &string_index, "separator");
+                    append_character(buffer, c);
+                    return generate_token(buffer, "separator");
                 }
                     // Found equals '='
                 else if ( c == '=' ){
-                    generate_token("=", &string_index, "equals");
+                    append_character(buffer , c);
+                    return generate_token(buffer,  "equals");
                 }
                 else if ( c == '(' ){
-                    generate_token("(", &string_index, "L_PAREN");
+                    append_character(buffer, c);
+                    return generate_token(buffer,  "L_PAREN");
                 }
                 else if ( c == ')' ){
-                    generate_token(")", &string_index, "R_PAREN");
+                    append_character(buffer, c);
+                    return generate_token(buffer, "R_PAREN");
                 }
                 else if ( c == ':'){
-                    generate_token(":", &string_index, "colon");
+                    append_character(buffer, c);
+                    return generate_token(buffer,  "colon");
                 }
                     // Found an operator
                 else if ( is_operator(c) ){
                     state = OPERATOR;
-                    append_character(c, string, &string_index);
+                    append_character(buffer, c);;
                 }
                 
                 break;
@@ -117,7 +124,7 @@ int read_input(FILE *file){
                     exit(1);
                 }
                 else {
-                    generate_token("-", &string_index, "operator");
+                    return generate_token(buffer,  "operator");
                     ungetc(c, file);
                     state = DEFAULT_STATE;
                 }
@@ -164,32 +171,32 @@ int read_input(FILE *file){
             
             case STRING_LITERAL:
                 if (c == '"'){
-                    append_character(c, string, &string_index);
-                    generate_token(string, &string_index, "STRING_LITERAL");
+                   append_character(buffer, c);;
+                    return generate_token(buffer , "STRING_LITERAL");
                     state = DEFAULT_STATE;
                 }
                 else if ( c == '\\' ){
                     state = BACKSLASH_SEQUENCE;
                 }
                 else {
-                    append_character(c, string, &string_index);
+                    append_character(buffer, c);;
                 }
                 break;
 
             case NUMBER_SEQUENCE:
                 if (c == '.'){
-                    append_character(c, string, &string_index);
+                    append_character(buffer, c);
                     state = DOUBLE_DOT_SEQUENCE;
                 }        
                 else if (c == 'e' || c == 'E'){
-                    append_character(c, string, &string_index);
+                    append_character(buffer, c);
                     state = DOUBLE_E_SEQUENCE;
                 }
                 else if ( (c >= '0') && (c <= '9' ) ){
-                    append_character(c, string, &string_index);
+                    append_character(buffer, c);;
                 }
                 else if (isspace(c)){
-                     generate_token(string, &string_index, "INT");
+                     return generate_token(buffer,  "INT");
                     state = DEFAULT_STATE;
                 }
                 else {
@@ -200,14 +207,14 @@ int read_input(FILE *file){
         
             case DOUBLE_DOT_SEQUENCE:
                 if (c == 'e' || c == 'E'){
-                    append_character(c, string, &string_index);
+                    append_character(buffer, c);
                     state = DOUBLE_E_SEQUENCE;
                 }
                 else if (c >= '0' && c <= '9' ){
-                    append_character(c, string, &string_index);
+                    append_character(buffer, c);
                 }
                 else if (isspace(c)){
-                     generate_token(string, &string_index, "DOUBLE");
+                     return generate_token(buffer,  "DOUBLE");
                     state = DEFAULT_STATE;
                 }
                 else {
@@ -218,14 +225,14 @@ int read_input(FILE *file){
 
             case DOUBLE_E_SEQUENCE:
                 if (c == '+' || c == '-'){
-                    append_character(c, string, &string_index);
+                    append_character(buffer, c);;
                     state = DOUBLE_E_PLUS_MINUS_SEQUENCE;
                 }
                 else if (c >= '0' && c <= '9' ){
-                    append_character(c, string, &string_index);
+                    append_character(buffer, c);
                 }
                 else if (isspace(c)){
-                    generate_token(string, &string_index, "DOUBLE");
+                    return generate_token(buffer, "DOUBLE");
                     state = DEFAULT_STATE;
                 }
                 else {
@@ -236,92 +243,92 @@ int read_input(FILE *file){
 
             case ID_OR_KEYWORD:
                 if (isalpha(c) || c == '_'){
-                    append_character(c, string, &string_index);
+                    append_character(buffer, c);;
                 }
                 else {
-                    generate_token(string, &string_index, NULL);
+                    return generate_token(buffer,  NULL);
                     state = DEFAULT_STATE;
                 }
                 break; 
 
             case OPERATOR:
-                if (string[string_index - 1] == '/' && c == '/'){
-                    append_character(c, string, &string_index);
-                    append_character('\0', string, &string_index);
-                    generate_token(string, &string_index, "operator");
+                if (buffer->string[buffer->current_index] == '/' && c == '/'){
+                    append_character(buffer, c);
+                    append_character(buffer, '\0');
+                    return generate_token(buffer,  "operator");
                     state = DEFAULT_STATE;
                 }
-                else if (string[string_index - 1] == '.' && c == '.'){
-                    append_character(c, string, &string_index);
-                    append_character('\0', string, &string_index);
-                    generate_token(string, &string_index, "operator");
+                else if (buffer->string[buffer->current_index] == '.' && c == '.'){
+                    append_character(buffer, c);
+                    append_character(buffer, '\0');
+                    return generate_token(buffer,  "operator");
                     state = DEFAULT_STATE;
                 }
-                else if (string[string_index - 1] == '=' && c == '='){
-                    append_character(c, string, &string_index);
-                    append_character('\0', string, &string_index);
-                    generate_token(string, &string_index, "operator");
+                else if (buffer->string[buffer->current_index] == '=' && c == '='){
+                    append_character(buffer, c);
+                    append_character(buffer,  '\0');
+                    return generate_token(buffer,  "operator");
                     state = DEFAULT_STATE;
                 }
-                else if (string[string_index - 1] == '<' && c == '='){
-                    append_character(c, string, &string_index);
-                    append_character('\0', string, &string_index);
-                    generate_token(string, &string_index, "operator");
+                else if (buffer->string[buffer->current_index] == '<' && c == '='){
+                    append_character(buffer, c);
+                    append_character(buffer,  '\0');
+                    return generate_token(buffer, "operator");
                     state = DEFAULT_STATE;
                 }
-                else if (string[string_index - 1] == '>' && c == '='){
-                    append_character(c, string, &string_index);
-                    append_character('\0', string, &string_index);
-                    generate_token(string, &string_index, "operator");
+                else if (buffer->string[buffer->current_index] == '>' && c == '='){
+                    append_character(buffer, c);
+                    append_character(buffer,  '\0');
+                    return generate_token(buffer, "operator");
                     state = DEFAULT_STATE;
                 }
-                else if (string[string_index - 1] == '~' && c == '='){
-                    append_character(c, string, &string_index);
-                    append_character('\0', string, &string_index);
-                    generate_token(string, &string_index, "operator");
+                else if (buffer->string[buffer->current_index] == '~' && c == '='){
+                    append_character(buffer, c);
+                    append_character( buffer, '\0');
+                    return generate_token(buffer, "operator");
                     state = DEFAULT_STATE;
                 }
-                else if (string[string_index - 1] == '~' && c != '='){
+                else if (buffer->string[buffer->current_index] == '~' && c != '='){
                     printf("Lexical error, ~ has to be followed by =\n");
                     exit(1); // TODO : Think of a way to end the program without using exit              
                     // Lexical analysis error - incorrect operator use (if using ~, = has to follow immediately)
                 }
                 else if (is_operator(c) || c == '='){
-                    printf("Lexical error, %c cannot be followed by %c\n", string[string_index - 1], c);
+                    printf("Lexical error, %c cannot be followed by %c\n", buffer->string[buffer->current_index], c);
                     exit(1);
                 }
                 else {
-                    append_character('\0', string, &string_index);
-                    generate_token(string, &string_index, "operator");
+                    append_character(buffer, '\0');
+                    return generate_token(buffer, "operator");
                 }
                 state = DEFAULT_STATE;
                 break;
 
             case BACKSLASH_SEQUENCE:
                 if (c == '\"' || c == '\\' ){
-                    append_character(c, string, &string_index);
+                    append_character(buffer, c);;
                     state = STRING_LITERAL;
                 }
                 else if ( c == 'n' ){
-                    append_character('\n', string, &string_index);
+                    append_character(buffer, '\n');
                     state = STRING_LITERAL;
                 }
                 else if ( c == 't' ){
-                    append_character('\t', string, &string_index);
+                    append_character(buffer, '\t' );
                     state = STRING_LITERAL;
                 }
                 else if(c >= '0' && c <= '9' ){
-                    append_character(c, escape_seq_bufer, &escape_seq_index);
+                    append_character( buffer, c );
                     if (escape_seq_index == 3){
                         escape_seq_bufer[escape_seq_index] = '\0';
                         int num = strtold(escape_seq_bufer, NULL);
-                        append_character(num, string, &string_index);
+                        append_character(buffer, num );
                         state = STRING_LITERAL;
                         escape_seq_index = 0;
                     }
                 }
                 else {
-                    append_character(c, string , &string_index);
+                    append_character(buffer, c);
                     state = STRING_LITERAL;
                 }
             default:
@@ -342,11 +349,7 @@ void print_string(char *string, int *string_index){
     *string_index = 0;
 }
 
-void append_character(int c, char *string, int *string_index){
-    string[*string_index] = c;
-    *string_index = *string_index + 1;
-    return;
-}
+
 
 bool is_operator(int c){
     for (int i = 0; i < NUM_OF_OPERATORS; i++){
@@ -358,37 +361,67 @@ bool is_operator(int c){
     return false;
 }
 
-void generate_token(char *string, int *string_index, char *type){
+TOKEN_T *generate_token(STRING_T *buffer,  char *type){
     // If type is Null, we are signalizing, that we couldnt
     // determine type of token during tokenization
+    TOKEN_T *token = malloc (sizeof(TOKEN_T));
+    if (token == NULL){
+        fprintf(stderr,"Intern malloc problem");
+        exit(1);
+    }
+    
+    token->value = malloc(buffer->size);
+    
+    if (token->value == NULL){
+        fprintf(stderr,"Intern malloc problem");
+        exit(1);
+    }
+  
+    buffer->string[buffer->current_index] = '\0';
+
+    strcpy(token->value, buffer->string);
+    
     if (type == NULL){
-        string[*string_index] = '\0';
-        if (is_keyword(string)){
-            printf("%s - %s", string, "keyword");
+        buffer->string[buffer->current_index] = '\0';
+        if (is_keyword(buffer->string)){
+            printf("%s - %s", buffer->string, "keyword");
+             destroy_buffer(buffer);
+             return token;
         }
-        else if (is_variable_type(string)){
-            printf("%s - %s", string,"variable_type");
+        else if (is_variable_type(buffer->string)){
+            printf("%s - %s", buffer->string,"variable_type");
+             destroy_buffer(buffer);
+            return token;
         }
         else {
-            printf("%s - %s", string, "ID");
+            printf("%s - %s", buffer->string, "ID");
+            token->TYPE = identifier;
+            destroy_buffer(buffer);
+            return token;
         }
     }
     else if (!strcmp(type, "operator")){
-        printf("%s - %s", string, "OPERATOR");
+        printf("%s - %s", buffer->string, "OPERATOR");
+        token->TYPE = operator;
+        destroy_buffer(buffer);
+        return token;
     }
     else if (!strcmp(type, "STRING_LITERAL")){
-        string[*string_index] = '\0';
-        printf("%s - %s", string, "STRING_LITERAL");
+        buffer->string[buffer->current_index] = '\0';
+        printf("%s - %s", buffer->string, "STRING_LITERAL");
+        token->TYPE = str_literal;
+        destroy_buffer(buffer);
+        return token;
     }
 
     else {
-        printf("%s - %s", string, type);
+        printf("%s - %s", buffer->string, type);
     }
     printf("\n");
     // Null the string index
-    *string_index = 0;
-
-    return;
+    destroy_buffer(buffer);
+    
+    return token;
 }
 
 bool is_keyword(char *string){

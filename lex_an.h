@@ -4,8 +4,23 @@
 #include <ctype.h>
 #include <string.h>
 
-int read_input();
-void generate_token(char *string, int *string_index, char *type);
+
+typedef struct Token {
+    char *value;
+    enum {
+        keyword, 
+        identifier, 
+        operator, 
+        separator, 
+        equals, 
+        colon,
+        str_literal
+    } TYPE;
+} TOKEN_T;
+
+TOKEN_T *read_input();
+
+TOKEN_T *generate_token();
 
 
 /** 
@@ -17,15 +32,7 @@ void generate_token(char *string, int *string_index, char *type);
  */
 void print_string(char *string, int *string_index);
 
-/**
- * Help procedure to append a character into the buffer
- * 
- * @param int c A character to be written into buffer
- * @param string A buffer to be written into
- * @param string_index A pointer to the int which represents the current index in string
- *
- */
-void append_character(int c, char *string, int *string_index);
+
 
 /**
  * Determines wether a given character is operator

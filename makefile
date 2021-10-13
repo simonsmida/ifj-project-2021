@@ -1,9 +1,10 @@
 CC=gcc
 CFLAGS=-std=c11 -Wall -pedantic
 CFILES=lex_an.c main.c
-OBJ=lex_an.o
+HEADERS = buffer.h lex_an.h
+OBJ=lex_an.o buffer.o
   
-compiler: $(CFILES)
+compiler: main.c $(OBJ)
 	$(CC) $(CFLAGS) -o $@ $^
 
 debug: $(CFILES)
@@ -12,6 +13,9 @@ debug: $(CFILES)
 
 
 lex_an.o: lex_an.c
+	$(CC) $(CFLAGS) -fPIC -c $^ -o $@
+
+buffer.o: buffer.c
 	$(CC) $(CFLAGS) -fPIC -c $^ -o $@
 
 clean:
