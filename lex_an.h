@@ -1,3 +1,13 @@
+/**
+ * @file lex_an.h
+ * 
+ * @brief functions and structures used in lexer
+ * @author Krištof Šiška - xsiska16
+ */
+
+#ifndef LEX_AN_H
+#define LEX_AN_H
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,29 +18,23 @@
 typedef struct Token {
     char *value;
     enum {
+        integer,
         keyword, 
         identifier, 
         operator, 
         separator, 
         equals, 
         colon,
-        str_literal
+        str_literal,
+        assign,
+        L_PAREN,
+        R_PAREN
     } TYPE;
 } TOKEN_T;
 
-TOKEN_T *read_input();
+TOKEN_T *get_next_token();
 
 TOKEN_T *generate_token();
-
-
-/** 
- * Used to get terminating null to the end of the string
- * and then printing the content of string to stdout
- * 
- * @param string Buffer with content to be written
- * @param String_index Pointer to the position in string to write terminating null
- */
-void print_string(char *string, int *string_index);
 
 
 
@@ -58,3 +62,5 @@ bool is_variable_type(char *string);
  * @return True if string is a keyword, otherwise false
  */
 bool is_keyword(char *string);
+
+#endif // LEX_AN_H

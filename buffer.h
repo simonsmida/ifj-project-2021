@@ -1,3 +1,13 @@
+#ifndef BUFFER_H
+#define BUFFER_H
+
+/**
+ * @file buffer.h
+ * 
+ * @brief functions and structures used in dynamic string manipulation
+ * @author Krištof Šiška - xsiska16
+ */
+
 typedef struct String_t{
     char *string;
     unsigned current_index;
@@ -20,3 +30,5 @@ STRING_T *init_buffer();
 void append_character(STRING_T *buffer, int c);
 
 #define BASIC_ALLOC_SIZE 20
+
+#endif
