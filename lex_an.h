@@ -27,8 +27,8 @@ typedef struct Token {
         colon,
         str_literal,
         assign,
-        L_PAREN,
-        R_PAREN
+        l_paren,
+        r_paren
     } TYPE;
 } TOKEN_T;
 

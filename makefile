@@ -10,8 +10,6 @@ compiler: main.c $(OBJ)
 debug: $(CFILES)
 	$(CC) $(CFLAGS) -o $@  -DDEBUG $^
 
-
-
 lex_an.o: lex_an.c
 	$(CC) $(CFLAGS) -fPIC -c $^ -o $@
 
