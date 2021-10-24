@@ -77,7 +77,7 @@ TOKEN_T *get_next_token(FILE *file){
             
             case DEFAULT_STATE:
                 // Ignoring all the whitespaces if we are in default state
-                if ( isspace(c) && c != '\n'){
+                if ( isspace(c)){
                 break;
             }
                 if (c == '-'){
@@ -132,6 +132,8 @@ TOKEN_T *get_next_token(FILE *file){
             case START_COMMENT_OR_MINUS:
                 if (c == '-'){
                     state = ON_COMMENT;
+                    buffer->string[0] = '\0';
+                    buffer->current_index = 0;
                 }
                 
                 else {
@@ -182,9 +184,8 @@ TOKEN_T *get_next_token(FILE *file){
             
             case STRING_LITERAL:
                 if (c == '"'){
-                   append_character(buffer, c);
+                    append_character(buffer, c);
                     return generate_token(buffer , STRING_LITERAL);
-                    state = DEFAULT_STATE;
                 }
                 else if ( c == '\\' ){
                     state = ESCAPE_SEQUENCE;
@@ -206,13 +207,10 @@ TOKEN_T *get_next_token(FILE *file){
                 else if ( (c >= '0') && (c <= '9' ) ){
                     append_character(buffer, c);
                 }
-                else if (isspace(c)){
-                     return generate_token(buffer,  NUMBER_SEQUENCE);
-                    state = DEFAULT_STATE;
-                }
+                
                 else {
-                    printf("Lexical error, NUM_SEQ %c\n", c);
-                    // Warning - lexical error
+                    ungetc(c, file);
+                    return generate_token(buffer, integer);
                 }
                 break;
         
@@ -257,6 +255,7 @@ TOKEN_T *get_next_token(FILE *file){
                     append_character(buffer, c);
                 }
                 else {
+                    ungetc(c, file);
                     return generate_token(buffer,  state);
                 }
                 break; 
@@ -400,13 +399,13 @@ bool is_operator(int c){
 TOKEN_T *generate_token(STRING_T *buffer,  int type){
     // If type is Null, we are signalizing, that we couldnt
     // determine type of token during tokenization
-    TOKEN_T *token = malloc (sizeof(TOKEN_T));
+    TOKEN_T *token = (TOKEN_T *) malloc(sizeof(TOKEN_T));
     if (token == NULL){
         fprintf(stderr,"Intern malloc problem");
         exit(1);
     }
     
-    token->value = malloc(buffer->size);
+    token->value = calloc(buffer->size, 1);
     
     if (token->value == NULL){
         fprintf(stderr,"Intern malloc problem");
@@ -415,11 +414,11 @@ TOKEN_T *generate_token(STRING_T *buffer,  int type){
     
     buffer->string[buffer->current_index] = '\0';
 
-    strcpy(token->value, buffer->string);
+    memcpy(token->value, buffer->string, buffer->current_index );
     
     switch (type){
         case ID_OR_KEYWORD:
-            if (is_keyword(buffer->string)){
+            if (is_keyword(buffer->string) || is_variable_type(buffer->string)){
                 token->TYPE = keyword;
                 break;
             }
