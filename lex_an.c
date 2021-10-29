@@ -224,11 +224,11 @@ TOKEN_T *get_next_token(FILE *file){
                 }
                 else if (isspace(c)){
                     return generate_token(buffer,  state);
-                    state = DEFAULT_STATE;
                 }
                 else {
-                    printf("Lexical error, DOUBLE_DOT_SEQ\n");
-                    // Warning - lexical error
+                    // No space between number and other token
+                    ungetc(c ,file);
+                    return generate_token(buffer, state);
                 }
                 break;
 
@@ -242,11 +242,25 @@ TOKEN_T *get_next_token(FILE *file){
                 }
                 else if (isspace(c)){
                     return generate_token(buffer, state);
-                    state = DEFAULT_STATE;
+                }
+                else { 
+                    ungetc(c ,file);
+                    return generate_token(buffer, state);
+                }
+                break;
+
+
+            case DOUBLE_E_PLUS_MINUS_SEQUENCE:
+                if (c >= '0' && c <= '9' ){
+                    append_character(buffer, c);
+                }
+                else if (isspace(c)){
+                    return generate_token(buffer, state);
                 }
                 else {
-                    printf("Lexical error, DOUBLE_E_SEQ\n");
-                    // Warning - lexical error
+                    // No space between number and other token
+                    ungetc(c, file);
+                    return generate_token(buffer, state);
                 }
                 break;
 
@@ -344,6 +358,11 @@ TOKEN_T *get_next_token(FILE *file){
                     escape_seq_bufer[2] = c;
                     escape_seq_bufer[3] = '\0';
                     int character = strtold(escape_seq_bufer,NULL);
+                    if (character > 255) {
+                        fprintf(stderr, "Escape character value cannot be higher than 255\n");
+                        exit(1);
+                        // TODO : replace exit
+                    }
                     if (isprint(character)){
                         append_character(buffer, character);
                     }
@@ -378,6 +397,8 @@ TOKEN_T *get_next_token(FILE *file){
             return NULL; // Found no more tokens
         }
     }
+
+    return NULL;
 }
 
 
@@ -459,6 +480,15 @@ TOKEN_T *generate_token(STRING_T *buffer,  int type){
         case R_PAREN:
             token->TYPE = r_paren;
             break;
+
+        case DOUBLE_DOT_SEQUENCE:
+            token->TYPE = t_double;
+            break;
+            
+        case DOUBLE_E_SEQUENCE:
+            token->TYPE = t_double;
+            break;
+
     
     } // switch
     

@@ -19,6 +19,7 @@ typedef struct Token {
     char *value;
     enum {
         integer,
+        t_double,
         keyword, 
         identifier, 
         operator, 
