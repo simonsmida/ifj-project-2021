@@ -1,12 +1,15 @@
 /**
  * @file  error.h
  *
- * @brief Exit codes for IFJ21 compiler
+ * @brief Exit codes and error messages for IFJ21 compiler
  * @date 2021-10-11
  */
 
 #ifndef ERROR_H
 #define ERROR_H
+
+#include <stdio.h>
+#include <stdarg.h>
 
 #define EXIT_OK              0  ///< no error during compilation process
 #define ERR_LEX              1  ///< invalid structure of current lexeme
@@ -19,5 +22,15 @@
 #define ERR_RUNTIME_NIL      8  ///< unexpected value nil
 #define ERR_RUNTIME_ZERODIV  9  ///< integer division by constant zero
 #define ERR_INTERNAL         99 ///< not influenced by input program
+
+
+/**
+ *  @brief Write formatted error message to stderr
+ *
+ *  @param where Compilation segment where an error occured
+ *  @param fmt   actual error message
+ *  @param ...   ellipsis - variadic arguments
+ */
+void error_message(const char *where, const char *fmt, ...);
 
 #endif // ERROR_H
