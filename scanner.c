@@ -8,7 +8,7 @@
  * Compiled : gcc version 9.3.0
  */
 
-#include "lex_an.h"
+#include "scanner.h"
 #include "buffer.h"
 #define DEFAULT_STATE 0 
 #define START_COMMENT_OR_MINUS 1 // Used when previous state was default and a '-' char was found

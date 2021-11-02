@@ -1,16 +1,16 @@
 CC=gcc
 CFLAGS=-std=c11 -Wall -pedantic
-CFILES=lex_an.c main.c
-HEADERS = buffer.h lex_an.h
-OBJ=lex_an.o buffer.o
+CFILES=scanner.c main.c
+HEADERS = buffer.h scanner.h
+OBJ=scanner.o buffer.o
   
 compiler: main.c $(OBJ)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -g -o $@ $^
 
 debug: $(CFILES)
 	$(CC) $(CFLAGS) -o $@  -DDEBUG $^
 
-lex_an.o: lex_an.c
+lex_an.o: scanner.c
 	$(CC) $(CFLAGS) -fPIC -c $^ -o $@
 
 buffer.o: buffer.c
