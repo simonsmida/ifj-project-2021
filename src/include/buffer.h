@@ -6,18 +6,26 @@
  * 
  * @brief functions and structures used in dynamic string manipulation
  * @author Krištof Šiška - xsiska16
+ *         Šimon Šmída   - xsmida03
  */
 
-typedef struct String_t{
+typedef struct string {
     char *string;
     unsigned current_index;
     unsigned size;
-}STRING_T;
+} string_t;
 
-void destroy_buffer();
 
-STRING_T *init_buffer();
+/**
+ * @brief Initialize a buffer - dynamic string manipulation
+ */
+string_t *init_buffer(void);
 
+/**
+ * @brief Deallocate the buffer
+ * @param buffer pointer to the buffer to be deallocated
+ */
+void destroy_buffer(string_t *buffer);
 
 /**
  * Help procedure to append a character into the buffer
@@ -27,7 +35,7 @@ STRING_T *init_buffer();
  * @param string_index A pointer to the int which represents the current index in string
  *
  */
-void append_character(STRING_T *buffer, int c);
+void append_character(string_t *buffer, int c);
 
 #define BASIC_ALLOC_SIZE 20
 
