@@ -5,6 +5,9 @@ CFLAGS=-std=c11 -Wall -pedantic -g -lm
 SRC_FILES = $(wildcard src/*.c)
 OBJ_FILES = $(SRC_FILES:.c=.o)
 
+#example usage: ./main examples/fact_recur.ifj21
+#if you get bored, type 'q', to quit scanning process
+
 $(OUT): $(OBJ_FILES)
 	$(CC) $(CFLAGS) $^ -o $@
 
@@ -12,4 +15,4 @@ $(OUT): $(OBJ_FILES)
 	$(CC) -c $(CFLAGS) $< -o $@
 
 clean:
-	rm -f *.o src/*.o
+	rm -f *.o src/*.o main
