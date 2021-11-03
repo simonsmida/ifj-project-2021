@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-std=c11 -Wall -pedantic
-CFILES=scanner.c main.c
-HEADERS = buffer.h scanner.h
+CFILES=src/scanner.c src/main.c
+HEADERS = src/include/buffer.h src/include/scanner.h
 OBJ=scanner.o buffer.o
   
 compiler: main.c $(OBJ)
