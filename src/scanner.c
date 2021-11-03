@@ -48,7 +48,7 @@ token_t *get_next_token(FILE *file)
                 // Ignoring all the whitespaces if we are in default state
                 if ( isspace(c)) {
                     break;
-            i   }
+                }
                 if (c == '-') {
                     append_character(buffer, c);
                     state = START_COMMENT_OR_MINUS;
