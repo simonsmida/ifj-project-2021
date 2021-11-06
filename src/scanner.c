@@ -35,7 +35,6 @@ token_t *get_next_token(FILE *file)
         printf("EROOR\n");
         exit(1);
     }
-
     int state = 0;
     int c;
     char escape_seq_bufer[5]; // used if escape sequence is in \ddd form
@@ -92,8 +91,8 @@ token_t *get_next_token(FILE *file)
                 }
                     // Found an operator
                 else if ( is_operator(c) ) {
+					append_character(buffer, c);
                     state = OPERATOR;
-                    append_character(buffer, c);
                 }
                 break;
 
@@ -247,27 +246,27 @@ token_t *get_next_token(FILE *file)
                     append_character(buffer, '\0');
                     return generate_token(buffer,  state);
                 }
-                else if (buffer->string[buffer->current_index] == '.' && c == '.') {
+                else if (buffer->string[buffer->current_index - 1] == '.' && c == '.') {
                     append_character(buffer, c);
                     append_character(buffer, '\0');
                     return generate_token(buffer,  state);
                 }
-                else if (buffer->string[buffer->current_index] == '=' && c == '=') {
+                else if (buffer->string[buffer->current_index - 1] == '=' && c == '=') {
                     append_character(buffer, c);
                     append_character(buffer,  '\0');
                     return generate_token(buffer,  state);
                 }
-                else if (buffer->string[buffer->current_index] == '<' && c == '=') {
+                else if (buffer->string[buffer->current_index - 1] == '<' && c == '=') {
                     append_character(buffer, c);
                     append_character(buffer,  '\0');
                     return generate_token(buffer, state);
                 }
-                else if (buffer->string[buffer->current_index] == '>' && c == '=') {
+                else if (buffer->string[buffer->current_index - 1] == '>' && c == '=') {
                     append_character(buffer, c);
                     append_character(buffer,  '\0');
                     return generate_token(buffer, state);
                 }
-                else if (buffer->string[buffer->current_index] == '~' && c == '=') {
+                else if (buffer->string[buffer->current_index - 1] == '~' && c == '=') {
                     append_character(buffer, c);
                     append_character( buffer, '\0');
                     return generate_token(buffer, state);
@@ -399,6 +398,7 @@ token_t *generate_token(string_t *buffer,  int type)
             }
             else {
                 token->TYPE = identifier;
+				break;
             }
         case OPERATOR:
             token->TYPE = operator;
