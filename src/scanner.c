@@ -35,7 +35,6 @@ token_t *get_next_token(FILE *file)
         printf("EROOR\n");
         exit(1);
     }
-
     int state = 0;
     int c;
     char escape_seq_bufer[5]; // used if escape sequence is in \ddd form
@@ -54,7 +53,7 @@ token_t *get_next_token(FILE *file)
                     state = START_COMMENT_OR_MINUS;
                 }
                     // Found number
-                else if (isdigit(c)) {
+                else if (isdigit(c) && c != '0') { 
                     append_character(buffer, c);
                     state = NUMBER_SEQUENCE;
                 }
@@ -92,8 +91,8 @@ token_t *get_next_token(FILE *file)
                 }
                     // Found an operator
                 else if ( is_operator(c) ) {
+					append_character(buffer, c);
                     state = OPERATOR;
-                    append_character(buffer, c);
                 }
                 break;
 
@@ -182,22 +181,35 @@ token_t *get_next_token(FILE *file)
                 break;
         
             case DOUBLE_DOT_SEQUENCE:
-                if (c == 'e' || c == 'E') {
+                if (c >= '0' && c <= '9' ) {
                     append_character(buffer, c);
-                    state = DOUBLE_E_SEQUENCE;
+					state = DOUBLE_DOT_SEQUENCE_VALID;
                 }
-                else if (c >= '0' && c <= '9' ) {
+				else {
+					fprintf(stderr, "Error, there has to be a digit after '.' in number sequence\n " );
+					exit(-1);
+				}
+                break;
+
+			case DOUBLE_DOT_SEQUENCE_VALID:
+				if (c >= '0' && c <= '9' ) {
                     append_character(buffer, c);
+					state = DOUBLE_DOT_SEQUENCE_VALID;
                 }
-                else if (isspace(c)) {
+				else if (c == 'e' || c == 'E') {
+					append_character(buffer, c);
+					state = DOUBLE_E_SEQUENCE;
+                }
+				else if (isspace(c)) {
                     return generate_token(buffer,  state);
-                }
-                else {
+				 }
+				else {
                     // No space between number and other token
                     ungetc(c ,file);
                     return generate_token(buffer, state);
                 }
-                break;
+
+				break;
 
             case DOUBLE_E_SEQUENCE:
                 if (c == '+' || c == '-') {
@@ -207,6 +219,17 @@ token_t *get_next_token(FILE *file)
                 else if (c >= '0' && c <= '9' ) {
                     append_character(buffer, c);
                 }
+                else {
+					// TODO : Exit program
+					fprintf(stderr, "After 'e' in number sequence, there has to be digit or '+' or '-' ");
+					exit(-1);
+				}
+                break;
+
+			case DOUBLE_E_SEQUENCE_VALID:
+				if (c >= '0' && c <= '9' ) {
+                    append_character(buffer, c);
+                }
                 else if (isspace(c)) {
                     return generate_token(buffer, state);
                 }
@@ -214,11 +237,22 @@ token_t *get_next_token(FILE *file)
                     ungetc(c ,file);
                     return generate_token(buffer, state);
                 }
-                break;
-
+				break;
 
             case DOUBLE_E_PLUS_MINUS_SEQUENCE:
                 if (c >= '0' && c <= '9' ) {
+                    append_character(buffer, c);
+					state = DOUBLE_E_PLUS_MINUS_SEQUENCE_VALID;
+                }
+                else {
+					// TODO : Exit program
+					fprintf(stderr, "After 'e-' 'e+' in number sequence, there has to be digit\n");
+					exit(-1);
+				}
+                break;
+
+			case DOUBLE_E_PLUS_MINUS_SEQUENCE_VALID:
+				if (c >= '0' && c <= '9' ) {
                     append_character(buffer, c);
                 }
                 else if (isspace(c)) {
@@ -242,34 +276,34 @@ token_t *get_next_token(FILE *file)
                 break; 
 
             case OPERATOR:
-                if (buffer->string[buffer->current_index] == '/' && c == '/') {
+                if ( buffer->string[buffer->current_index - 1] == '/' && c == '/' )  {
                     append_character(buffer, c);
-                    append_character(buffer, '\0');
                     return generate_token(buffer,  state);
                 }
-                else if (buffer->string[buffer->current_index] == '.' && c == '.') {
+
+                if ( buffer->string[buffer->current_index - 1] == '.' && c == '.' ) {
                     append_character(buffer, c);
-                    append_character(buffer, '\0');
                     return generate_token(buffer,  state);
                 }
-                else if (buffer->string[buffer->current_index] == '=' && c == '=') {
+				else {
+					fprintf(stderr, "there is no token that can start with dot and its not '..' \n");
+					exit(-1);
+				}
+
+                if (buffer->string[buffer->current_index - 1] == '=' && c == '=') {
                     append_character(buffer, c);
-                    append_character(buffer,  '\0');
                     return generate_token(buffer,  state);
                 }
-                else if (buffer->string[buffer->current_index] == '<' && c == '=') {
+                else if (buffer->string[buffer->current_index - 1] == '<' && c == '=') {
                     append_character(buffer, c);
-                    append_character(buffer,  '\0');
                     return generate_token(buffer, state);
                 }
-                else if (buffer->string[buffer->current_index] == '>' && c == '=') {
+                else if (buffer->string[buffer->current_index - 1] == '>' && c == '=') {
                     append_character(buffer, c);
-                    append_character(buffer,  '\0');
                     return generate_token(buffer, state);
                 }
-                else if (buffer->string[buffer->current_index] == '~' && c == '=') {
+                else if (buffer->string[buffer->current_index - 1] == '~' && c == '=') {
                     append_character(buffer, c);
-                    append_character( buffer, '\0');
                     return generate_token(buffer, state);
                 }
                 else if (buffer->string[buffer->current_index] == '~' && c != '=') {
@@ -282,7 +316,6 @@ token_t *get_next_token(FILE *file)
                     exit(1);
                 }
                 else {
-                    append_character(buffer, '\0');
                     return generate_token(buffer, state);
                 }
                 break;
@@ -357,6 +390,10 @@ token_t *get_next_token(FILE *file)
     } // while
     if (c == EOF) {
         if (buffer->current_index > 0 ) {
+			if (state == DOUBLE_E_SEQUENCE || state == DOUBLE_DOT_SEQUENCE || state == DOUBLE_E_PLUS_MINUS_SEQUENCE){
+				fprintf(stderr, "There has to be non-empty digit after '.' or 'e' or 'e+/-'\n");
+				exit(-1);
+			}
             return generate_token(buffer, state);
         }
         else {
@@ -399,6 +436,7 @@ token_t *generate_token(string_t *buffer,  int type)
             }
             else {
                 token->TYPE = identifier;
+				break;
             }
         case OPERATOR:
             token->TYPE = operator;

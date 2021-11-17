@@ -31,17 +31,20 @@
 #define OPERATOR 9 //
 #define NUMBER_SEQUENCE 10 // Found a number
 #define DOUBLE_DOT_SEQUENCE 11
-#define DOUBLE_E_SEQUENCE 12
-#define DOUBLE_E_PLUS_MINUS_SEQUENCE 13
-#define ESCAPE_SEQUENCE 14
-#define ESCAPE_1 15
-#define ESCAPE_2 16
-#define ASSIGN_OR_EQUALS 17
-#define L_PAREN 18
-#define R_PAREN 19
+#define DOUBLE_DOT_SEQUENCE_VALID 12 // Found a digit after '.' 
+#define DOUBLE_E_SEQUENCE 13
+#define DOUBLE_E_SEQUENCE_VALID 14 // Found a digit adfter 'e' or 'E'
+#define DOUBLE_E_PLUS_MINUS_SEQUENCE 15
+#define DOUBLE_E_PLUS_MINUS_SEQUENCE_VALID 16 // Found digit after 'e' or 'E' concat '+' or '-'
+#define ESCAPE_SEQUENCE 17
+#define ESCAPE_1 18
+#define ESCAPE_2 19
+#define ASSIGN_OR_EQUALS 20
+#define L_PAREN 21
+#define R_PAREN 22
 
-#define COLON 20
-#define SEPARATOR 21
+#define COLON 23
+#define SEPARATOR 24
 
 #define SIZE_STRING 5
 
