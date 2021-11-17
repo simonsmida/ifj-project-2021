@@ -281,6 +281,16 @@ token_t *get_next_token(FILE *file)
                     return generate_token(buffer,  state);
                 }
 
+				if ( buffer->string[buffer->current_index - 1] == '*' ){
+					ungetc(c, file);
+					return generate_token(buffer, state);
+				}
+
+				if ( buffer->string[buffer->current_index - 1] == '/' ){
+					ungetc(c, file);
+					return generate_token(buffer, state);
+				}
+
                 if ( buffer->string[buffer->current_index - 1] == '.' && c == '.' ) {
                     append_character(buffer, c);
                     return generate_token(buffer,  state);
@@ -472,6 +482,12 @@ token_t *generate_token(string_t *buffer,  int type)
         case R_PAREN:
             token->TYPE = r_paren;
             break;
+
+		case DOUBLE_DOT_SEQUENCE_VALID:
+		case DOUBLE_E_PLUS_MINUS_SEQUENCE_VALID:
+		case DOUBLE_E_SEQUENCE_VALID:
+			token->TYPE = t_double;
+			break;
 
         case DOUBLE_DOT_SEQUENCE:
             token->TYPE = t_double;
