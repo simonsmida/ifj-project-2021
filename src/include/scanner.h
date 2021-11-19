@@ -17,34 +17,31 @@
 #include "buffer.h"
 
 
+#define DEFAULT_STATE 200
+#define START_COMMENT_OR_MINUS 201 // Used when previous state was default and a '-' char was found
+#define ON_COMMENT 202 // Found "--" in text
+#define CHECK_COMMENT_BLOCK 203 // Used when we are on ON_COMMENT state and we check for '[' char
+#define INSIDE_LINE_COMMENT 204 // Found "--" in text but not a "--[[" Identifying block comment
+#define INSIDE_BLOCK_COMMENT 205 // Found "--[[" in source code and we are ignoring all chars until we find "]]"
+#define CHECK_END_BLOCK_COMMENT 206 // Found a ']' in block comment
+#define ID_OR_KEYWORD 207 // 
+#define STRING_LITERAL 208 // Found '"' in text signalizing string literal
+#define OPERATOR 209 //
+#define NUMBER_SEQUENCE 210 // Found a number
+#define DOUBLE_DOT_SEQUENCE 211
+#define DOUBLE_DOT_SEQUENCE_VALID 212 // Found a digit after '.' 
+#define DOUBLE_E_SEQUENCE 213
+#define DOUBLE_E_SEQUENCE_VALID 214 // Found a digit adfter 'e' or 'E'
+#define DOUBLE_E_PLUS_MINUS_SEQUENCE 215
+#define DOUBLE_E_PLUS_MINUS_SEQUENCE_VALID 216 // Found digit after 'e' or 'E' concat '+' or '-'
+#define ESCAPE_SEQUENCE 217
+#define ESCAPE_1 218
+#define ESCAPE_2 219
+#define ASSIGN_OR_EQUALS 220
+#define L_PAREN 221
+#define R_PAREN 222
 
-
-#define DEFAULT_STATE 0 
-#define START_COMMENT_OR_MINUS 1 // Used when previous state was default and a '-' char was found
-#define ON_COMMENT 2 // Found "--" in text
-#define CHECK_COMMENT_BLOCK 3 // Used when we are on ON_COMMENT state and we check for '[' char
-#define INSIDE_LINE_COMMENT 4 // Found "--" in text but not a "--[[" Identifying block comment
-#define INSIDE_BLOCK_COMMENT 5 // Found "--[[" in source code and we are ignoring all chars until we find "]]"
-#define CHECK_END_BLOCK_COMMENT 6 // Found a ']' in block comment
-#define ID_OR_KEYWORD 7 // 
-#define STRING_LITERAL 8 // Found '"' in text signalizing string literal
-#define OPERATOR 9 //
-#define NUMBER_SEQUENCE 10 // Found a number
-#define DOUBLE_DOT_SEQUENCE 11
-#define DOUBLE_DOT_SEQUENCE_VALID 12 // Found a digit after '.' 
-#define DOUBLE_E_SEQUENCE 13
-#define DOUBLE_E_SEQUENCE_VALID 14 // Found a digit adfter 'e' or 'E'
-#define DOUBLE_E_PLUS_MINUS_SEQUENCE 15
-#define DOUBLE_E_PLUS_MINUS_SEQUENCE_VALID 16 // Found digit after 'e' or 'E' concat '+' or '-'
-#define ESCAPE_SEQUENCE 17
-#define ESCAPE_1 18
-#define ESCAPE_2 19
-#define ASSIGN_OR_EQUALS 20
-#define L_PAREN 21
-#define R_PAREN 22
-
-#define COLON 23
-#define SEPARATOR 24
+#define COLON 223
 
 #define SIZE_STRING 5
 
@@ -52,26 +49,89 @@
 #define NUM_OF_VAR_TYPE 5
 #define NUM_OF_OPERATORS 9
 
+
+
+typedef enum token_types {
+    // Special
+    TOKEN_ERROR,
+    TOKEN_EOF,
+
+    // Separators
+    TOKEN_L_PAR,
+    TOKEN_R_PAR,
+    TOKEN_COMMA,
+    TOKEN_COLON,
+
+    // Literals
+    TOKEN_STR_LIT,
+    TOKEN_INT_LIT,
+    TOKEN_NUMBER_LIT,
+
+    // Arithmetic operators
+    TOKEN_PLUS,
+    TOKEN_MINUS,
+    TOKEN_MUL,
+    TOKEN_DIV,
+
+    // Relational operators
+    TOKEN_EQ,     // ==
+    TOKEN_NOT_EQ, // ~=
+    TOKEN_LT,     // <
+    TOKEN_LE,     // <=
+    TOKEN_GT,     // >
+    TOKEN_GE,     // >=
+    
+    // Other operators
+    TOKEN_STRLEN, // # string length
+    TOKEN_CONCAT, // .. concatenates two strings
+
+    // Assignment
+    TOKEN_ASSIGN,
+
+    // Identifier
+    TOKEN_ID,
+
+    // Keyword
+    TOKEN_KEYWORD,
+    TOKEN_STRING,
+    TOKEN_INTEGER,
+    TOKEN_NIL,
+    TOKEN_NUMBER,
+    TOKEN_DOUBLE,
+
+} token_type_t;
+
+typedef enum keyword_type {
+    KEYWORD_REQUIRE,
+    KEYWORD_DO,
+    KEYWORD_IF,
+    KEYWORD_ELSE,
+    KEYWORD_END,
+    KEYWORD_FUNCTION,
+    KEYWORD_GLOBAL,
+    KEYWORD_LOCAL,
+    KEYWORD_NIL,
+    KEYWORD_STRING,
+    KEYWORD_INTEGER,
+    KEYWORD_NUMBER,
+    KEYWORD_DOUBLE,
+    KEYWORD_RETURN,
+    KEYWORD_THEN,
+    KEYWORD_WHILE,
+} keyword_type_t;
+
+typedef struct attribute {
+    string_t *string;
+    int integer;
+    double number;
+    keyword_type_t keyword_type;
+} token_attribute_t;
+
 typedef struct token {
-    char *value;
-    enum {
-        integer,
-        t_double,
-        keyword, 
-        identifier, 
-        operator, 
-        separator, 
-        equals, 
-        colon,
-        str_literal,
-        assign,
-        l_paren,
-        r_paren
-    } TYPE;
+    token_type_t type;
+    token_attribute_t attribute;
 } token_t;
 
-// TODO: maybe useful to change the return type to _int_ to be able
-//       to propagate a lexical error, token would be delivered as a parameter
 
 /**
  * @brief Scans the input file - the main function of the scanner
@@ -89,7 +149,7 @@ token_t *get_next_token(FILE *file);
  * @param type type of the token
  * @return token structure
  */
-token_t *generate_token(string_t *buffer, int type);
+token_t *generate_token(string_t *buffer, int type, int error);
 
 /**
  * @brief Determines whether a given character is operator
