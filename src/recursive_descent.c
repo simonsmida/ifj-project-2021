@@ -21,31 +21,35 @@ int prog(parser_t *parser)
     
     // <prog> → <prolog> <func_dec> <func_def> <func_call> 'EOF'
     
-    CHECK_TOKEN_TYPE(TOKEN_REQUIRE);
+    switch (parser->token->type) 
+    {
+        case TOKEN_REQUIRE:
 
-    // <prolog>
-    result = prolog(parser); 
-    CHECK_RESULT_VALUE(EXIT_OK);
+            // <prolog>
+            result = prolog(parser); 
+            CHECK_RESULT_VALUE(EXIT_OK);
 
-    // <func_dec>
-    result = func_dec(parser);
-    CHECK_RESULT_VALUE(EXIT_OK);
+            // <func_dec>
+            result = func_dec(parser);
+            CHECK_RESULT_VALUE(EXIT_OK);
 
-    // <func_def>
-    result = func_def(parser);
-    CHECK_RESULT_VALUE(EXIT_OK);
+            // <func_def>
+            result = func_def(parser);
+            CHECK_RESULT_VALUE(EXIT_OK);
 
-    // <func_call>
-    result = func_call(parser);
-    CHECK_RESULT_VALUE(EXIT_OK);
+            // <func_call>
+            result = func_call(parser);
+            CHECK_RESULT_VALUE(EXIT_OK);
+            
+            // Check End Of File
+            CHECK_RESULT_VALUE(TOKEN_EOF);
+
+            // TODO: generate instruction for program end
+            //
+            return EXIT_OK; // TODO: break?
+    } 
     
-    // Check End Of File
-    // TODO: if (result != TOKEN_EOF) return ERR_SYNTAX;
-    CHECK_RESULT_VALUE(TOKEN_EOF);
-    
-    // TODO: generate instruction for program end
-    //
-    return EXIT_OK;
+    return ERR_SYNTAX;
 }
 
 // <prolog>
@@ -53,50 +57,91 @@ int prolog(parser_t *parser)
 {
     // <prolog> → 'require' 'ifj21'
     
-    CHECK_TOKEN_TYPE(TOKEN_REQUIRE); // TODO: maybe unnecessary
-    GET_TOKEN();
-    CHECK_TOKEN_ERROR();
-    CHECK_TOKEN_TYPE(TOKEN_STR_LIT);
+    switch (parser->token->type) 
+    {
+        case TOKEN_REQUIRE: 
 
-    // Check if scanner correctly set attribute's string value
-    if (parser->token->attribute->string == NULL) {
-        return ERR_LEX;
-    }
-    
-    // Check if next token is precisely "ifj21"
-    if (strcmp(parser->token->attribute->string, "ifj21") != 0) {
-        return ERR_SYNTAX;
-    }
-    
-    return EXIT_OK;
+            GET_TOKEN(); // TODO: parser eat?
+            CHECK_TOKEN_ERROR();
+            CHECK_TOKEN_TYPE(TOKEN_STR_LIT);
 
-    /*
-    if (parser->token->type == TOKEN_REQUIRE) {
-        // Get next token TODO: parser_eat?
-        parser->token = get_next_token();
-        CHECK_TOKEN_ERROR();
-        if (parser->token->type == TOKEN_STR_LIT) {
             // Check if scanner correctly set attribute's string value
             if (parser->token->attribute->string == NULL) {
                 return ERR_LEX;
             }
-            // Next token has to be precisely "ifj21"
+            
+            // Check if next token is precisely "ifj21"
             if (strcmp(parser->token->attribute->string, "ifj21") != 0) {
-                return ERR_SYNTAX; // TODO: check exit code
+                return ERR_SYNTAX;
             }
-        } else { // next token is not "ifj21"
-            return ERR_SYNTAX;
-        }
-        return EXIT_OK;
+            
+            // TODO: check this
+            GET_TOKEN(); 
+            CHECK_TOKEN_ERROR();
+
+            return EXIT_OK;
     }
+
     return ERR_SYNTAX;
-    */
 }
 
 // <func_dec>
 int func_dec(parser_t *parser)
 {
-    // <func_dec> → 'global' 'id' ':' 'function' '(' <param_fdec> ')' ':' <ret_type_list> <func_dec>
+    int result;
 
-    if (parser->token->type == TOKEN_GLOBAL)
+    // <func_dec> → 'global' 'id' ':' 'function' '(' <param_fdec> ')' ':' <ret_type_list> <func_dec>
+    
+    switch (parser->token->type) 
+    {
+        case TOKEN_GLOBAL: // 'global'
+    
+            GET_TOKEN();
+            CHECK_TOKEN_ERROR();
+            CHECK_TOKEN_TYPE(TOKEN_ID);       // 'id'
+            // TODO: store to symtable
+
+            GET_TOKEN();
+            CHECK_TOKEN_ERROR();
+            CHECK_TOKEN_TYPE(TOKEN_COLON);    // ':'
+
+            GET_TOKEN();
+            CHECK_TOKEN_ERROR();
+            CHECK_TOKEN_TYPE(TOKEN_FUNCTION); // 'function'
+
+            GET_TOKEN();
+            CHECK_TOKEN_ERROR();
+            CHECK_TOKEN_TYPE(TOKEN_L_PAR);     // '('
+
+            // <param_fdec>
+            result = param_fdec(); 
+            CHECK_RESULT_VALUE(EXIT_OK);
+
+            GET_TOKEN();
+            CHECK_TOKEN_ERROR();
+            CHECK_TOKEN_TYPE(TOKEN_R_PAR);     // ')'
+
+            GET_TOKEN();
+            CHECK_TOKEN_ERROR();
+            CHECK_TOKEN_TYPE(TOKEN_COLON);     // ':'
+
+            // TODO: check this
+            GET_TOKEN(); 
+            CHECK_TOKEN_ERROR();
+
+            return EXIT_OK;
+        
+        case TOKEN_EOF: 
+        case TOKEN_FUNCTION: // 'function'
+        case TOKEN_EXPR: // TODO: check this
+            
+            // TODO: check this
+            GET_TOKEN(); 
+            CHECK_TOKEN_ERROR();
+
+            // <func_dec> → ε
+            return EXIT_OK;
+    }
+
+    return ERR_EXIT;
 }
