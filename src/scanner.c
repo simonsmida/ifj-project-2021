@@ -208,7 +208,6 @@ token_t *get_next_token(FILE *file)
                     ungetc(c ,file);
                     return generate_token(buffer, state);
                 }
-
 				break;
 
             case DOUBLE_E_SEQUENCE:
@@ -218,6 +217,7 @@ token_t *get_next_token(FILE *file)
                 }
                 else if (c >= '0' && c <= '9' ) {
                     append_character(buffer, c);
+					state = DOUBLE_E_SEQUENCE_VALID;
                 }
                 else {
 					// TODO : Exit program
@@ -281,11 +281,31 @@ token_t *get_next_token(FILE *file)
                     return generate_token(buffer,  state);
                 }
 
+				if ( buffer->string[buffer->current_index - 1] == '*' ){
+					ungetc(c, file);
+					return generate_token(buffer, state);
+				}
+
+				if ( buffer->string[buffer->current_index - 1] == '/' ){
+					ungetc(c, file);
+					return generate_token(buffer, state);
+				}
+
+				if ( buffer->string[buffer->current_index - 1] == '-' ){
+					ungetc(c, file);
+					return generate_token(buffer, state);
+				}
+
+				if ( buffer->string[buffer->current_index - 1] == '+' ){
+					ungetc(c, file);
+					return generate_token(buffer, state);
+				}
+
                 if ( buffer->string[buffer->current_index - 1] == '.' && c == '.' ) {
                     append_character(buffer, c);
                     return generate_token(buffer,  state);
                 }
-				else {
+				else if ((buffer->string[buffer->current_index] - 1) == '.' && c != '.') {
 					fprintf(stderr, "there is no token that can start with dot and its not '..' \n");
 					exit(-1);
 				}
@@ -405,11 +425,16 @@ token_t *get_next_token(FILE *file)
     return NULL;
 }
 
-
+/**
+ * @brief Function for generating token, used by lexer
+ * 
+ * @param buffer Buffer with string value of current token
+ * @param type State of FSM while calling this function
+ * 
+ * @return Pointer to a token if successful, otherwise NULL
+ */
 token_t *generate_token(string_t *buffer,  int type) 
 {
-    // If type is Null, we are signalizing, that we couldnt
-    // determine type of token during tokenization
     token_t *token = (token_t *) malloc(sizeof(token_t));
     if (token == NULL) {
         fprintf(stderr,"Intern malloc problem");
@@ -473,6 +498,12 @@ token_t *generate_token(string_t *buffer,  int type)
             token->TYPE = r_paren;
             break;
 
+		case DOUBLE_DOT_SEQUENCE_VALID:
+		case DOUBLE_E_PLUS_MINUS_SEQUENCE_VALID:
+		case DOUBLE_E_SEQUENCE_VALID:
+			token->TYPE = t_double;
+			break;
+
         case DOUBLE_DOT_SEQUENCE:
             token->TYPE = t_double;
             break;
@@ -489,6 +520,8 @@ token_t *generate_token(string_t *buffer,  int type)
 
 /**
  * @brief Determines wether a given character is operator
+ * 
+ * @param c Character to be determined whether is operator
  */ 
 bool is_operator(int c) {
     for (int i = 0; i < NUM_OF_OPERATORS; i++) {
@@ -502,6 +535,10 @@ bool is_operator(int c) {
 
 /**
  * @brief Determines whether a given string is a keyword
+ * 
+ * @param string String from which to be determined whether it is a keyword
+ * 
+ * @return True if string is keyword, otherwise false
  */ 
 bool is_keyword(char *string) {
     for (int i = 0; i < NUM_OF_KEYWORDS; i++) {
@@ -516,6 +553,10 @@ bool is_keyword(char *string) {
 /** 
  * @brief Determines whether a given string is a variable type
  * aka "integer" or "double" etc
+ * 
+ * @param string String from which to be determined whether it is a variable type
+ * 
+ * @return True if string is var type, otherwise false
  */
 bool is_variable_type(char *string) {
     for (int i = 0; i < NUM_OF_VAR_TYPE; i++) {
