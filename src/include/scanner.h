@@ -49,22 +49,85 @@
 #define NUM_OF_VAR_TYPE 5
 #define NUM_OF_OPERATORS 9
 
+typedef enum token_types {
+    // Special
+    TOKEN_ERROR,
+    TOKEN_EOF,
+
+    // Separators
+    TOKEN_L_PAR,
+    TOKEN_R_PAR,
+    TOKEN_COMMA,
+    TOKEN_COLON,
+
+    // Literals
+    TOKEN_STR_LIT,
+    TOKEN_INT_LIT,
+    TOKEN_NUMBER_LIT,
+
+    // Arithmetic operators
+    TOKEN_PLUS,
+    TOKEN_MINUS,
+    TOKEN_MUL,
+    TOKEN_DIV,
+
+    // Relational operators
+    TOKEN_EQ,     // ==
+    TOKEN_NOT_EQ, // ~=
+    TOKEN_LT,     // <
+    TOKEN_LE,     // <=
+    TOKEN_GT,     // >
+    TOKEN_GE,     // >=
+    
+    // Other operators
+    TOKEN_STRLEN, // # string length
+    TOKEN_CONCAT, // .. concatenates two strings
+
+    // Assignment
+    TOKEN_ASSIGN,
+
+    // Identifier
+    TOKEN_ID,
+
+    // Keyword
+    TOKEN_KEYWORD,
+    TOKEN_STRING,
+    TOKEN_INTEGER,
+    TOKEN_NIL,
+    TOKEN_NUMBER,
+    TOKEN_DOUBLE,
+
+} token_type_t;
+
+typedef enum keyword_type {
+    KEYWORD_REQUIRE,
+    KEYWORD_DO,
+    KEYWORD_IF,
+    KEYWORD_ELSE,
+    KEYWORD_END,
+    KEYWORD_FUNCTION,
+    KEYWORD_GLOBAL,
+    KEYWORD_LOCAL,
+    KEYWORD_NIL,
+    KEYWORD_STRING,
+    KEYWORD_INTEGER,
+    KEYWORD_NUMBER,
+    KEYWORD_DOUBLE,
+    KEYWORD_RETURN,
+    KEYWORD_THEN,
+    KEYWORD_WHILE,
+} keyword_type_t;
+
+typedef struct attribute {
+    string_t *string;
+    int integer;
+    double number;
+    keyword_type_t keyword_type;
+} token_attribute_t;
+
 typedef struct token {
-    char *value;
-    enum {
-        integer,
-        t_double,
-        keyword, 
-        identifier, 
-        operator, 
-        separator, 
-        equals, 
-        colon,
-        str_literal,
-        assign,
-        l_paren,
-        r_paren
-    } TYPE;
+    token_type_t type;
+    token_attribute_t attribute;
 } token_t;
 
 // TODO: maybe useful to change the return type to _int_ to be able
