@@ -121,7 +121,7 @@ typedef enum keyword_type {
 } keyword_type_t;
 
 typedef struct attribute {
-    string_t *string;
+    char *string;
     int integer;
     double number;
     keyword_type_t keyword_type;
