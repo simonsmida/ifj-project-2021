@@ -42,6 +42,8 @@
 #define R_PAREN 222
 
 #define COLON 223
+#define SEPARATOR 224
+
 
 #define SIZE_STRING 5
 
@@ -62,11 +64,6 @@ typedef enum token_types {
     TOKEN_COMMA,
     TOKEN_COLON,
 
-    // Literals
-    TOKEN_STR_LIT,
-    TOKEN_INT_LIT,
-    TOKEN_NUMBER_LIT,
-
     // Arithmetic operators
     TOKEN_PLUS,
     TOKEN_MINUS,
@@ -80,6 +77,8 @@ typedef enum token_types {
     TOKEN_LE,     // <=
     TOKEN_GT,     // >
     TOKEN_GE,     // >=
+	TOKEN_INT_DIV, // //
+
     
     // Other operators
     TOKEN_STRLEN, // # string length
@@ -98,6 +97,7 @@ typedef enum token_types {
     TOKEN_NIL,
     TOKEN_NUMBER,
     TOKEN_DOUBLE,
+	TOKEN_IFJ21
 
 } token_type_t;
 
@@ -129,7 +129,7 @@ typedef struct attribute {
 
 typedef struct token {
     token_type_t type;
-    token_attribute_t attribute;
+    token_attribute_t *attribute;
 } token_t;
 
 
