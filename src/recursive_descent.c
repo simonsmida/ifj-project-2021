@@ -53,6 +53,24 @@ int prolog(parser_t *parser)
 {
     // <prolog> → 'require' 'ifj21'
     
+    CHECK_TOKEN_TYPE(TOKEN_REQUIRE); // TODO: maybe unnecessary
+    GET_TOKEN();
+    CHECK_TOKEN_ERROR();
+    CHECK_TOKEN_TYPE(TOKEN_STR_LIT);
+
+    // Check if scanner correctly set attribute's string value
+    if (parser->token->attribute->string == NULL) {
+        return ERR_LEX;
+    }
+    
+    // Check if next token is precisely "ifj21"
+    if (strcmp(parser->token->attribute->string, "ifj21") != 0) {
+        return ERR_SYNTAX;
+    }
+    
+    return EXIT_OK;
+
+    /*
     if (parser->token->type == TOKEN_REQUIRE) {
         // Get next token TODO: parser_eat?
         parser->token = get_next_token();
@@ -72,6 +90,7 @@ int prolog(parser_t *parser)
         return EXIT_OK;
     }
     return ERR_SYNTAX;
+    */
 }
 
 // <func_dec>
