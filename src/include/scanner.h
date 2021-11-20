@@ -57,6 +57,7 @@ typedef enum token_types {
     // Special
     TOKEN_ERROR,
     TOKEN_EOF,
+	TOKEN_IFJ21, // TODO: prob. redundant
 
     // Separators
     TOKEN_L_PAR,
@@ -92,12 +93,10 @@ typedef enum token_types {
 
     // Keyword
     TOKEN_KEYWORD,
-    TOKEN_STRING,
-    TOKEN_INTEGER,
-    TOKEN_NIL,
-    TOKEN_NUMBER,
-    TOKEN_DOUBLE,
-	TOKEN_IFJ21
+
+    TOKEN_STR_LIT,
+    TOKEN_INT_LIT,
+    TOKEN_NUM_LIT,
 
 } token_type_t;
 
@@ -110,10 +109,10 @@ typedef enum keyword_type {
     KEYWORD_FUNCTION,
     KEYWORD_GLOBAL,
     KEYWORD_LOCAL,
-    KEYWORD_NIL,
-    KEYWORD_STRING,
-    KEYWORD_INTEGER,
-    KEYWORD_NUMBER,
+    KEYWORD_NIL,    // data type
+    KEYWORD_STRING, // data type
+    KEYWORD_INTEGER,// data type
+    KEYWORD_NUMBER, // data type
     KEYWORD_DOUBLE,
     KEYWORD_RETURN,
     KEYWORD_THEN,
