@@ -2,17 +2,64 @@
 #include "include/error.h"
 #include "include/scanner.h"
 
-#define CHECK_RESULT_VALUE(_value) \
-    if (result != (_value)) return result 
+// TODO: parser eat
 
-#define CHECK_TOKEN_ERROR() \
-    if (parser->token->type == TOKEN_ERROR) return ERR_LEX
+#define STRING_TOKEN_T token_type_to_str(parser->token->type)
 
-#define GET_TOKEN() \
-        parser->token = get_next_token()
+#define GET_TOKEN() parser->token = get_next_token()
 
-#define CHECK_TOKEN_TYPE(_type) \
-    if (parser->token->type != (_type)) return ERR_SYNTAX;
+// TODO: error message for specific nonterminal rule function
+#define CHECK_RESULT_VALUE(_value) do { \
+    if (result != (_value)) { \
+        error_message("Parser", "compile time error (error code %d)\n", result) \
+        return result; \
+} while(0)
+
+#define CHECK_TOKEN_ERROR() do { \
+    if (parser->token->type == TOKEN_ERROR) { \
+        error_message("Scanner", "scanning token '%s' failed (error code %d)\n", \
+                STRING_TOKEN_T, ERR_LEX); \
+        return ERR_LEX; \
+    } \
+} while(0)
+
+
+#define CHECK_TOKEN_TYPE(_type) do { \
+    if (parser->token->type != (_type)) { \
+        error_message("Parser", "unexpected token, is: '%s', expects '%s' (error code %d)\n", \
+                STRING_TOKEN_T, token_type_to_str(_type), ERR_SYNTAX);\
+        return ERR_SYNTAX; \
+} while(0)
+
+#define CHECK_KEYWORD(_type) do { \
+    if (parser->token->attribute->keyword_type != (_type)) { \
+        error_message("Parser", "unexpected keyword, is: '%s', expects '%s' (error code %d)\n", \
+                STRING_TOKEN_T, token_type_to_str(_type), ERR_SYNTAX); \
+        return ERR_SYNTAX; \
+} while(0)
+
+#define PARSER_EAT()
+int prog(parser_t *parser);
+int prolog(parser_t *parser);
+int func_dec(parser_t *parser);
+int func_def(parser_t *parser);
+int func_call(parser_t *parser);
+int func_head(parser_t *parser);
+int param_fdef(parser_t *parser);
+int param_fdef_n(parser_t *parser);
+int param_fdec(parser_t *parser);
+int param_fdec_n(parser_t *parser);
+int ret_type_list(parser_t *parser);
+int ret_type_list_n(parser_t *parser);
+int ret_expr_list(parser_t *parser);
+int expr_list(parser_t *parser);
+int stat_list(parser_t *parser);
+int else_nt(parser_t *parser);
+int var_def(parser_t *parser);
+int assign(parser_t *parser);
+int dtype(parser_t *parser);
+int stat(parser_t *parser);
+int id_n(parser_t *parser);
 
 // Starting nonterminal <prog>
 int prog(parser_t *parser)
@@ -55,13 +102,13 @@ int prog(parser_t *parser)
 // <prolog>
 int prolog(parser_t *parser)
 {
-    // <prolog> → 'require' 'ifj21'
-    
     switch (parser->token->type) 
     {
         case TOKEN_REQUIRE: 
+            
+            // <prolog> → 'require' 'ifj21'
 
-            GET_TOKEN(); // TODO: parser eat?
+            GET_TOKEN(); 
             CHECK_TOKEN_ERROR();
             CHECK_TOKEN_TYPE(TOKEN_STR_LIT);
 
@@ -70,12 +117,12 @@ int prolog(parser_t *parser)
                 return ERR_LEX;
             }
             
+            // TODO: STRCMP / *a = *b?
             // Check if next token is precisely "ifj21"
             if (strcmp(parser->token->attribute->string, "ifj21") != 0) {
                 return ERR_SYNTAX;
             }
             
-            // TODO: check this
             GET_TOKEN(); 
             CHECK_TOKEN_ERROR();
 
@@ -84,6 +131,7 @@ int prolog(parser_t *parser)
 
     return ERR_SYNTAX;
 }
+
 
 // <func_dec>
 int func_dec(parser_t *parser)
@@ -108,7 +156,8 @@ int func_dec(parser_t *parser)
 
             GET_TOKEN();
             CHECK_TOKEN_ERROR();
-            CHECK_TOKEN_TYPE(TOKEN_FUNCTION); // 'function'
+            CHECK_TOKEN_TYPE(TOKEN_KEYWOR); 
+            CHECK_KEYWORD(KEYWORD_FUNCTION);  // 'function'
 
             GET_TOKEN();
             CHECK_TOKEN_ERROR();
