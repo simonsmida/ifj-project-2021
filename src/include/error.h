@@ -27,10 +27,11 @@
 /**
  *  @brief Write formatted error message to stderr
  *
- *  @param where Compilation segment where an error occured
- *  @param fmt   actual error message
- *  @param ...   ellipsis - variadic arguments
+ *  @param where    Compilation segment where an error occured
+ *  @param err_code error code
+ *  @param fmt      actual error message
+ *  @param ...      ellipsis - variadic arguments
  */
-void error_message(const char *where, const char *fmt, ...);
+void error_message(const char *where, int err_code, const char *fmt, ...);
 
 #endif // ERROR_H
