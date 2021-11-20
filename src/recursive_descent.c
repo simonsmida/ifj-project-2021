@@ -147,7 +147,17 @@ int func_dec(parser_t *parser)
             PARSER_EAT();
             CHECK_TOKEN_TYPE(TOKEN_ID);       // 'id'
             // TODO: store to symtable
-
+            // Add 'id' to the global symtable
+            bool insert_error; // consider passing just parser
+            symtable_insert(parser->global_symtable, parser->token->attribute.string, &error);
+            if (parser->curr_id == NULL) {
+                if (insert_error) return ERR_INTERNAL;
+                else return ERR_SEM; // TODO: undefined var
+            }
+            // resime ID, ulozime do tabulky symbolu
+            // pokud tento ID jiz byl deklarovan, jedna se o semantickou chybu
+            if (tableInsert(table, &attr, TYPE_INT) == 1) return SEM_ERROR;
+            
             PARSER_EAT();
             CHECK_TOKEN_TYPE(TOKEN_COLON);    // ':'
 
@@ -185,11 +195,10 @@ int func_dec(parser_t *parser)
             // RULE 4: <func_dec> → ε
             
             PARSER_EAT();
-
             return EXIT_OK;
     }
 
-    return ERR_EXIT;
+    return ERR_SYNTAX;
 }
 
 // <func_def>
@@ -227,7 +236,6 @@ int func_def(parser_t *parser)
             // TODO: CONTROL SWITCH TO PRECEDENCE SA
             
             PARSER_EAT();
-            
             return EXIT_OK;
     }
 
@@ -248,7 +256,6 @@ int func_call(parser_t *parser)
             // TODO: CONTROL SWITCH TO PRECEDENCE SA
             
             PARSER_EAT();
-
             return func_call(parser);
 
         case TOKEN_EOF:
@@ -256,7 +263,6 @@ int func_call(parser_t *parser)
             // RULE 8: <func_call> → ε
             
             PARSER_EAT();
-
             return EXIT_OK; 
     }
 
@@ -299,7 +305,6 @@ int func_head(parser_t *parser)
             CHECK_RESULT_VALUE(EXIT_OK);
 
             PARSER_EAT();
-
             return EXIT_OK; 
     }
 
@@ -336,7 +341,6 @@ int param_fdef(parser_t *parser)
             // RULE 11: <param_fdef> → ε
             
             PARSER_EAT();
-
             return EXIT_OK;
     }
 
@@ -374,7 +378,6 @@ int param_fdef_n(parser_t *parser)
             // RULE 13: <param_fdef_n> → ε
 
             PARSER_EAT();
-
             return EXIT_OK;
     }
 
@@ -404,7 +407,6 @@ int param_fdec(parser_t *parser)
             CHECK_RESULT_VALUE(EXIT_OK); 
             
             PARSER_EAT();
-
             return EXIT_OK;
 
         case TOKEN_R_PAR:
@@ -412,7 +414,6 @@ int param_fdec(parser_t *parser)
             // RULE 15: <param_fdec> → ε
             
             PARSER_EAT();
-
             return EXIT_OK;
     }
 
@@ -435,14 +436,12 @@ int param_fdec_n(parser_t *parser)
             CHECK_RESULT_VALUE(EXIT_OK); 
             
             PARSER_EAT();
-
             return param_fdec_n(parser); // calls itself
 
         case TOKEN_R_PAR:
             
             // RULE 17: <param_fdec_n> → ε
             PARSER_EAT();
-
             return EXIT_OK;
     }
 
@@ -473,7 +472,6 @@ int ret_type_list(parser_t *parser)
             CHECK_RESULT_VALUE(EXIT_OK); 
             
             PARSER_EAT();
-
             return EXIT_OK;
 
         case TOKEN_EOF:
@@ -489,7 +487,6 @@ int ret_type_list(parser_t *parser)
             
             // RULE 19: <ret_type_list> → ε
             PARSER_EAT();
-
             return EXIT_OK;
     }
 
@@ -512,7 +509,6 @@ int ret_type_list_n(parser_t *parser)
             CHECK_RESULT_VALUE(EXIT_OK); 
             
             PARSER_EAT();
-
             return ret_type_list_n(parser); // calls itself          
 
         case TOKEN_EOF:
@@ -528,7 +524,6 @@ int ret_type_list_n(parser_t *parser)
             
             // RULE 21: <ret_type_list_n> → ε
             PARSER_EAT();
-
             return EXIT_OK;
     }
 
@@ -556,7 +551,6 @@ int stat_list(parser_t *parser)
             CHECK_RESULT_VALUE(EXIT_OK); 
             
             PARSER_EAT();
-
             return stat_list(parser); // calls itself          
 
         case TOKEN_END:
@@ -565,7 +559,6 @@ int stat_list(parser_t *parser)
             // RULE 23: <stat_list> → ε
             
             PARSER_EAT();
-            
             return EXIT_OK;
     }
     
@@ -598,7 +591,6 @@ int stat(parser_t *parser)
             CHECK_RESULT_VALUE(EXIT_OK); 
             
             PARSER_EAT();
-
             return EXIT_OK;
         
         case TOKEN_IF:
@@ -623,7 +615,6 @@ int stat(parser_t *parser)
             CHECK_TOKEN_TYPE(TOKEN_END); // 'end'
     
             PARSER_EAT();
-            
             return EXIT_OK;
         
         case TOKEN_WHILE:
@@ -647,7 +638,6 @@ int stat(parser_t *parser)
             CHECK_TOKEN_TYPE(TOKEN_END); // 'end'
 
             PARSER_EAT();
-            
             return EXIT_OK;
 
         case TOKEN_ID:
@@ -661,7 +651,6 @@ int stat(parser_t *parser)
             CHECK_RESULT_VALUE(EXIT_OK); 
             
             PARSER_EAT();
-            
             return EXIT_OK;
 
         case TOKEN_RETURN:
@@ -673,7 +662,6 @@ int stat(parser_t *parser)
             CHECK_RESULT_VALUE(EXIT_OK); 
             
             PARSER_EAT();
-            
             return EXIT_OK;
     }
 
@@ -700,7 +688,6 @@ int else_nt(parser_t *parser)
             CHECK_RESULT_VALUE(EXIT_OK); 
 
             PARSER_EAT();
-            
             return EXIT_OK;
         
         case TOKEN_END:
@@ -708,7 +695,6 @@ int else_nt(parser_t *parser)
             // RULE 30: <else> → ε
 
             PARSER_EAT();
-            
             return EXIT_OK;
     }
 
@@ -730,7 +716,6 @@ int var_def(parser_t *parser)
             // TODO: switch context
             
             PARSER_EAT();
-            
             return EXIT_OK;
         
         case TOKEN_ID: // TODO
@@ -744,7 +729,6 @@ int var_def(parser_t *parser)
             // RULE 32: <var_def> → ε
 
             PARSER_EAT();
-            
             return EXIT_OK;
     }
 
@@ -777,7 +761,6 @@ int assign(parser_t *parser)
             CHECK_RESULT_VALUE(EXIT_OK); 
             
             PARSER_EAT();
-            
             return EXIT_OK;
     }
 
@@ -800,7 +783,6 @@ int id_n(parser_t *parser)
             CHECK_TOKEN_TYPE(TOKEN_ID); // 'id' TODO
 
             PARSER_EAT();
-            
             return id_n(parser);
 
         case TOKEN_ASSIGN:
@@ -808,7 +790,6 @@ int id_n(parser_t *parser)
             // RULE 35: <id_n> → ε
 
             PARSER_EAT();
-            
             return EXIT_OK;
     }
 
@@ -828,7 +809,6 @@ int expr_list(parser_t *parser)
             // RULE 36: <expr_list> → 'expr' <expr_list>
 
             PARSER_EAT();
-
             return  = expr_list(parser); // calls itself
         
         case TOKEN_COMMA:
@@ -853,7 +833,6 @@ int expr_list(parser_t *parser)
             // RULE 38: <expr_list> → ε
             
             PARSER_EAT();
-            
             return EXIT_OK;
     }
 
@@ -872,28 +851,24 @@ int dtype(parser_t *parser)
             
             // RULE 39: <dtype> → 'nil'
             PARSER_EAT();
-            
             return EXIT_OK;
 
         case TOKEN_NUMBER:
             
             // RULE 40: <dtype> → 'number'
             PARSER_EAT();
-            
             return EXIT_OK;
         
         case TOKEN_INTEGER:
             
             // RULE 41: <dtype> → 'integer'
             PARSER_EAT();
-            
             return EXIT_OK;
             
         case TOKEN_STRING:
             
             // RULE 42: <dtype> → 'string'
             PARSER_EAT();
-            
             return EXIT_OK;
     }
 
@@ -917,7 +892,6 @@ int ret_expr_list(parser_t *parser)
             CHECK_RESULT_VALUE(EXIT_OK); 
             
             PARSER_EAT();
-            
             return EXIT_OK;
         
         case TOKEN_ID:
@@ -930,7 +904,6 @@ int ret_expr_list(parser_t *parser)
             
             // RULE 44: <ret_expr_list> → ε
             PARSER_EAT();
-            
             return EXIT_OK;
     }
 
