@@ -1,26 +1,31 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-// TODO#include "symtable.h"
+#include "symtable.h"
 #include "scanner.h"
 
 typedef struct parser {
-    // symtable_t symtable;
+    symtable_t *local_symtable;
+    symtable_t *global_symtable;
+
     // list of tokens?
     // semantic analysis
-    token_t token;
+    token_t *token;
+
+    bool in_function;
+    bool declared_function;
 } parser_t;
 
 /**
  * @brief Initialize parser structure
- * @param TODO
  */
 parser_t *parser_init(void);
 
 /**
- * @brief Start parsing source file // TODO: handle src file
+ * @brief Start parsing source file
+ * @param src input source file to be parsed
  */
-int parser_parse(void);
+int parser_parse(FILE *src);
 
 /**
  * @brief Deallocate parser structure

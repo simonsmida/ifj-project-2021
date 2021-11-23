@@ -1,8 +1,11 @@
+#include <stdio.h>
 #include <stdlib.h>
-// TODO
-//#include "include/scanner.h"
+#include <stdbool.h>
+
+#include "include/scanner.h"
 #include "include/parser.h"
 #include "include/recursive_descent.h" // prog()
+#include "include/error.h"
 
 /**
  * @brief Initialize parser structure
@@ -11,37 +14,47 @@ parser_t *parser_init(void)
 {
     parser_t *parser = calloc(1, sizeof(parser_t));
     if (parser == NULL) {
-        // internal error?
+        // TODO: deallocate resources
+        error_message("Parser", ERR_INTERNAL,  "Calloc failure.\n"); 
+        return NULL;
+    }
+    
+    // Create local symtable
+    if ((parser->local_symtable = symtable_init(CAPACITY)) != NULL) {
+        free(parser);
         return NULL;
     }
 
-    // TODO
-    // parser->symtable = symtable_init();
-    // if (parser->symtable == NULL) {
-    //     free(parser); // internal error?
-    //     return NULL; 
-    // }
-    parser->token = get_next_token();
+    // Create global symtable
+    if ((parser->global_symtable = symtable_init(CAPACITY)) != NULL) {
+        free(parser);
+        return NULL;
+    }  
+    
+    parser->in_function = false;
+    parser->declared_function = false;
     
     return parser;
 }
 
 /**
- * @brief Start parsing source file // TODO: handle src file
+ * @brief Start parsing source file 
  */
-int parser_parse(void)
+int parser_parse(FILE *src)
 {
+    if (src == NULL) { /* File error */ }
+
     parser_t *parser = parser_init();
-    parser->token = get_next_token();
-    int result = parser->token->err_code;
-    if (result == EXIT_OK) {
-        // HANDLE FIRST NONTERMINAL AND START REC. DESCEND
+    parser->token = get_next_token(src);
+
+    int result = parser->token->type;
+    if (result != TOKEN_ERROR) {
+        // Starting recursive descent
         result = prog(parser); 
     }
 
     // Parsing finished
     parser_destroy(parser);
-    
     return result;
 }
 
@@ -50,8 +63,8 @@ int parser_parse(void)
  */
 void parser_destroy(parser_t *parser)
 {
-    // TODO free symtable
-    // TODO free token list if we have it
+    symtable_destroy(&parser->local_symtable);
+    symtable_destroy(&parser->global_symtable);
     free(parser);
 }
 
