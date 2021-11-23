@@ -195,7 +195,7 @@ const_var_t *create_symtable_const_var(bool is_var, bool is_defined, data_type_t
 	}
 	param->is_var = is_var;
 	param->data.type = type;
-	param->data.define = is_defined;
+	param->data.defined = is_defined;
 	return param;
 }
 
