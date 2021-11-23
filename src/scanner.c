@@ -379,8 +379,9 @@ token_t *get_next_token(FILE *file)
                     fprintf(stderr, "Invalid escape sequence in string literal");
 					error = -1;
 					return generate_token(buffer, state, error);
-                    break;
+                   
                 }
+				break;
             case ESCAPE_2:
                 if (c >= '0' && c <= '9') {
                     escape_seq_bufer[2] = c;
@@ -495,6 +496,7 @@ token_t *generate_token(string_t *buffer,  int type, int error)
 			 		break;
 				case '*':
 					token->type = TOKEN_MUL;
+					break;
 				case '#':
 					token->type = TOKEN_STRLEN;
 					break;
@@ -571,17 +573,19 @@ token_t *generate_token(string_t *buffer,  int type, int error)
 
 
 		case NUMBER_SEQUENCE:
+			token->type = TOKEN_INTEGER;
 			int num = (int) strtol(buffer->string, NULL, 10);
 			token->attribute->integer = num;
-			token->type = TOKEN_INTEGER;
+		
             break;
 
 		case DOUBLE_DOT_SEQUENCE_VALID:
 		case DOUBLE_E_PLUS_MINUS_SEQUENCE_VALID:
 		case DOUBLE_E_SEQUENCE_VALID:
-			double num = strtod(buffer->string, NULL);
-			token->attribute->number = num;
 			token->type = TOKEN_NUMBER;
+			double number = strtod(buffer->string, NULL);
+			token->attribute->number = num;
+			
 			break;
 		
     } // switch
