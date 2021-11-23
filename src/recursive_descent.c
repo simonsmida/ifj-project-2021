@@ -10,7 +10,7 @@
 // TODO: error message for specific nonterminal rule function
 #define CHECK_RESULT_VALUE(_value) do {                          \
     if (result != (_value)) {                                    \
-        error_message("Parser", result, "compile time error\n"); \
+        error_message("Parser", result, "compile time error");   \
         return result;                                           \
     }                                                            \
 } while(0)
@@ -113,7 +113,7 @@ int prolog(parser_t *parser)
             
             // TODO: STRCMP / *a = *b?
             // Check if next token is precisely "ifj21"
-            if (strcmp(parser->token->attribute->string, "ifj21")) {
+            if (strcmp(parser->token->attribute->string, "\"ifj21\"")) {
                 return ERR_SYNTAX;
             }
             
