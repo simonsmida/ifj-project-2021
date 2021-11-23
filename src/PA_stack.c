@@ -65,6 +65,33 @@ void PA_stack_top(const PA_stack *stack, PA_item_t* item){
 	}
 }
 
+void skuska(PA_stack *zasobnicek){
+	PA_stack_init(zasobnicek);
+	PA_item_t polozka;
+	char* filename = "regex.txt";
+	FILE *f = fopen(filename,"r");
+	if ( f == NULL){
+		fprintf(stderr,"Error while opening the file %s\n",filename);
+	}
+	for(int i=0; i<3;i++){
+		token_t* new_token = get_next_token(f);
+		polozka.terminal = *new_token;
+		printf("\nZiskany terminal\n");
+		printf("Token type: %d\n", polozka.terminal.type);
+		printf("Token name: %s\n",polozka.terminal.attribute->string);
+		PA_stack_push(zasobnicek, polozka);
+	}
+	
+	for(int i=0; i<2;i++){
+		printf("\nPopujem\n");
+		PA_stack_top(zasobnicek,&polozka);
+		PA_stack_pop(zasobnicek);
+		printf("Ziskany terminal\n");
+		printf("Token type: %d\n", polozka.terminal.type);
+		printf("Token name: %s\n",polozka.terminal.attribute->string);
+	}
+	fclose(f);
+}
 /** 
  * @brief Function removes the item from the top of the stack
  * 
@@ -83,6 +110,7 @@ void PA_stack_pop(PA_stack *stack){
  * @param item  Item structure
  */
 void PA_stack_push(PA_stack *stack, PA_item_t item){
+//TODO structure on stack is changing make a deep copy	
 	if ( !PA_stack_full(stack) ){
 		stack -> top_index++;
 		stack -> items[stack -> top_index] = item;

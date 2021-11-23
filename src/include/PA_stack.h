@@ -94,4 +94,6 @@ void PA_stack_pop(PA_stack *stack);
  * @param item  Item structure
  */
 void PA_stack_push(PA_stack *stack, PA_item_t item);
+
+void skuska(PA_stack *zasobnicek);
 #endif /** PA_STACK_H */
