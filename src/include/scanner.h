@@ -65,6 +65,10 @@ typedef enum token_types {
     TOKEN_COMMA,
     TOKEN_COLON,
 
+	TOKEN_STRING,
+	TOKEN_INTEGER,
+	TOKEN_NUMBER,
+
     // Arithmetic operators
     TOKEN_PLUS,
     TOKEN_MINUS,

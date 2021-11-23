@@ -560,11 +560,7 @@ token_t *generate_token(string_t *buffer,  int type, int error)
             token->type = TOKEN_COMMA;
             break;
 
-        case NUMBER_SEQUENCE:
-            token->type = TOKEN_INTEGER;
-			int num = (int) strtol(buffer->string, NULL, 10);
-			token->attribute->integer = num;
-            break;
+       
         case L_PAREN:
             token->type = TOKEN_L_PAR;
             break;
@@ -573,19 +569,21 @@ token_t *generate_token(string_t *buffer,  int type, int error)
             token->type = TOKEN_R_PAR;
             break;
 
+
+		case NUMBER_SEQUENCE:
+			int num = (int) strtol(buffer->string, NULL, 10);
+			token->attribute->integer = num;
+			token->type = TOKEN_INTEGER;
+            break;
+
 		case DOUBLE_DOT_SEQUENCE_VALID:
 		case DOUBLE_E_PLUS_MINUS_SEQUENCE_VALID:
 		case DOUBLE_E_SEQUENCE_VALID:
+			double num = strtod(buffer->string, NULL);
+			token->attribute->number = num;
 			token->type = TOKEN_NUMBER;
 			break;
-
-        case DOUBLE_DOT_SEQUENCE:
-            token->type = TOKEN_NUMBER;
-            break;
-            
-        case DOUBLE_E_SEQUENCE:
-            token->type = TOKEN_NUMBER;
-            break;
+		
     } // switch
     
     destroy_buffer(buffer);
