@@ -642,6 +642,8 @@ bool is_variable_type(char *string) {
     return false;
 }
 
+
+
 /**
  * @brief Converts given integer type of a token to its string version
  */
@@ -649,30 +651,49 @@ const char *token_type_to_str(int type)
 {
     switch (type)
     {
+        case TOKEN_ERROR:
+            return "TOKEN_ERROR";
+        case TOKEN_PLUS:
+            return "plus";
+        case TOKEN_MINUS:
+            return "minus";
+        case TOKEN_MUL:
+            return "mul";
+        case TOKEN_DIV:
+            return "div";
+        case TOKEN_INT_DIV:
+            return "int div";
+        case TOKEN_EOF:
+            return "EOF";
         case TOKEN_COLON:
             return "colon";
-        case TOKEN_EQ: 
-            return "equals";
         case TOKEN_ASSIGN: 
             return "assign";
         case TOKEN_L_PAR: 
             return "l_paren";
         case TOKEN_R_PAR: 
             return "r_paren";
-        case TOKEN_INTEGER: 
-            return "integer";
         case TOKEN_KEYWORD: 
             return "keyword";
-        case TOKEN_NUMBER: 
-            return "t_double";
-        case TOKEN_GE: 
-            return "operator";
         case TOKEN_COMMA: 
             return "separator";
         case TOKEN_ID: 
             return "identifier";
+        case TOKEN_NUMBER: 
+            return "number_literal";
+        case TOKEN_INTEGER: 
+            return "int_literal";
         case TOKEN_STRING: 
             return "str_literal";
+        case TOKEN_EQ: 
+        case TOKEN_NOT_EQ:
+        case TOKEN_CONCAT:
+        case TOKEN_STRLEN:
+        case TOKEN_GT:
+        case TOKEN_GE:
+        case TOKEN_LT:
+        case TOKEN_LE: 
+            return "operator";
   }
   return "unrecognized token type";
 }
@@ -683,6 +704,6 @@ const char *token_type_to_str(int type)
  */
 void print_token(token_t *token)
 {
-    // TODO line/token number!!
-    printf("Token: [%s %s]\n", token_type_to_str(token->type), token->attribute->string);
+    // TODO change token->attribute->string to its actual representation
+    printf("Token: [%s '%s']\n", token_type_to_str(token->type), token->attribute->string);
 }

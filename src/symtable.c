@@ -8,10 +8,15 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <stdint.h> // uint32_t
+<<<<<<< HEAD
+#include "include/symtable.h"
+=======
 #include <string.h>
 #include "include/symtable.h"
 #include "include/error.h"
+>>>>>>> origin/symtab
 
 /**
  * @brief Hashing function - calculate index for given key
