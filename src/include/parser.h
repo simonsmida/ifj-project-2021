@@ -11,7 +11,7 @@ typedef struct parser {
     // list of tokens?
     // semantic analysis
     token_t *token;
-
+    FILE *src;
     bool in_function;
     bool declared_function;
 } parser_t;
@@ -19,7 +19,7 @@ typedef struct parser {
 /**
  * @brief Initialize parser structure
  */
-parser_t *parser_init(void);
+parser_t *parser_init(FILE *src);
 
 /**
  * @brief Start parsing source file

@@ -10,7 +10,7 @@
 /**
  * @brief Initialize parser structure
  */
-parser_t *parser_init(void)
+parser_t *parser_init(FILE *src)
 {
     parser_t *parser = calloc(1, sizeof(parser_t));
     if (parser == NULL) {
@@ -33,7 +33,8 @@ parser_t *parser_init(void)
     
     parser->in_function = false;
     parser->declared_function = false;
-    
+    parser->src = src;
+
     return parser;
 }
 
@@ -44,8 +45,8 @@ int parser_parse(FILE *src)
 {
     if (src == NULL) { /* File error */ }
 
-    parser_t *parser = parser_init();
-    parser->token = get_next_token(src);
+    parser_t *parser = parser_init(src);
+    parser->token = get_next_token(parser->src);
 
     int result = parser->token->type;
     if (result != TOKEN_ERROR) {
@@ -63,8 +64,8 @@ int parser_parse(FILE *src)
  */
 void parser_destroy(parser_t *parser)
 {
-    symtable_destroy(&parser->local_symtable);
-    symtable_destroy(&parser->global_symtable);
+    symtable_destroy(parser->local_symtable);
+    symtable_destroy(parser->global_symtable);
     free(parser);
 }
 
