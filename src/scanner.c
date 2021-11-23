@@ -679,11 +679,11 @@ const char *token_type_to_str(int type)
             return "separator";
         case TOKEN_ID: 
             return "identifier";
-        case TOKEN_NUMBER: 
+        case TOKEN_NUM_LIT: 
             return "number_literal";
-        case TOKEN_INTEGER: 
+        case TOKEN_INT_LIT: 
             return "int_literal";
-        case TOKEN_STRING: 
+        case TOKEN_STR_LIT: 
             return "str_literal";
         case TOKEN_EQ: 
         case TOKEN_NOT_EQ:
