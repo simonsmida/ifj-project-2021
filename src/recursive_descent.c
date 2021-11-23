@@ -812,8 +812,7 @@ int var_def(parser_t *parser)
 }
 
 
-#if 0
-// <assign>
+// Nonterminal <assign>
 int assign(parser_t *parser)
 {
     int result;
@@ -821,6 +820,8 @@ int assign(parser_t *parser)
     switch (parser->token->type)
     {
         case TOKEN_ID:
+            
+            // TODO: add to symtable
 
             // RULE 33: <assign> → 'id' <id_n> '=' 'expr' <expr_list>
 
@@ -839,12 +840,15 @@ int assign(parser_t *parser)
             
             PARSER_EAT();
             return EXIT_OK;
+        default:
+            break;
     }
 
     return ERR_SYNTAX;
 }
 
 
+#if 0
 // <id_n>
 int id_n(parser_t *parser)
 {
