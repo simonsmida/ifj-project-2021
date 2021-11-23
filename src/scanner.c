@@ -541,7 +541,7 @@ token_t *generate_token(string_t *buffer,  int type, int error)
         		return NULL;
 			}
 			memcpy(token->attribute->string,buffer->string,  strlen(buffer->string));
-            token->type = TOKEN_STRING;
+            token->type = TOKEN_STR_LIT;
             break;
 
         case ASSIGN_OR_EQUALS:
@@ -561,7 +561,7 @@ token_t *generate_token(string_t *buffer,  int type, int error)
             break;
 
         case NUMBER_SEQUENCE:
-            token->type = TOKEN_INTEGER;
+            token->type = TOKEN_INT_LIT;
 			int num = (int) strtol(buffer->string, NULL, 10);
 			token->attribute->integer = num;
             break;
@@ -576,7 +576,7 @@ token_t *generate_token(string_t *buffer,  int type, int error)
 		case DOUBLE_DOT_SEQUENCE_VALID:
 		case DOUBLE_E_PLUS_MINUS_SEQUENCE_VALID:
 		case DOUBLE_E_SEQUENCE_VALID:
-			token->type = TOKEN_NUMBER;
+			token->type = TOKEN_NUM_LIT;
 			break;
 
         case DOUBLE_DOT_SEQUENCE:
