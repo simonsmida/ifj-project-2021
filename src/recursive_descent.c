@@ -243,36 +243,26 @@ int func_def(parser_t *parser)
     return ERR_SYNTAX;
 }
 
-// TODO: fix me pls
-int func_call(parser_t *parser) {return 1;}
-
-#if 0
 // Nonterminal <func_call>
 int func_call(parser_t *parser)
 {
-    
-    switch (parser->token->type)
-    {
-        case TOKEN_EXPR:
-            
-            // RULE 7: <func_call> → 'expr' <func_call>
-            
-            // TODO: CONTROL SWITCH TO PRECEDENCE SA
-            
-            PARSER_EAT();
-            return func_call(parser);
+    if (parser->token->type == TOKEN_EOF) {
 
-        case TOKEN_EOF:
-
-            // RULE 8: <func_call> → ε
-            
-            PARSER_EAT();
-            return EXIT_OK; 
+        // RULE 8: <func_call> → ε
+        
+        PARSER_EAT();
+        return EXIT_OK; 
+    } else {
+        // TODO: handle expression - switch context
+        
+        // RULE 7: <func_call> → 'expr' <func_call>
+        
+        PARSER_EAT();
+        return func_call(parser);
     }
 
     return ERR_SYNTAX;
 }
-#endif
 
 // Nonterminal <func_head>
 int func_head(parser_t *parser) 
