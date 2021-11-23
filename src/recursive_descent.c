@@ -1,77 +1,60 @@
 #include "include/recursive_descent.h"
 #include "include/error.h"
 #include "include/scanner.h"
-
+#include "include/parser.h"
 
 #define STRING_TOKEN_T token_type_to_str(parser->token->type)
 
-#define GET_TOKEN() parser->token = get_next_token()
+#define GET_TOKEN() parser->token = get_next_token(parser->src)
 
 // TODO: error message for specific nonterminal rule function
-#define CHECK_RESULT_VALUE(_value) do { \
-    if (result != (_value)) { \
-        error_message("Parser", result, "compile time error\n") \
-        return result; \
+#define CHECK_RESULT_VALUE(_value) do {                          \
+    if (result != (_value)) {                                    \
+        error_message("Parser", result, "compile time error\n"); \
+        return result;                                           \
+    }                                                            \
 } while(0)
 
-#define CHECK_TOKEN_ERROR() do { \
-    if (parser->token->type == TOKEN_ERROR) { \
+#define CHECK_TOKEN_ERROR() do {                            \
+    if (parser->token->type == TOKEN_ERROR) {               \
         return ERR_LEX; /* scanner handles error message */ \
-    } \
+    }                                                       \
 } while(0)
 
-
-#define CHECK_TOKEN_TYPE(_type) do { \
-    if (parser->token->type != (_type)) { \
-        error_message("Parser", ERR_SYNTAX, "unexpected token, is: '%s', expects '%s'\n", \
-            STRING_TOKEN_T, token_type_to_str(_type));\
-        return ERR_SYNTAX; \
+#define CHECK_TOKEN_TYPE(_type) do {                                                        \
+    if (parser->token->type != (_type)) {                                                   \
+        error_message("Parser", ERR_SYNTAX, "unexpected token, expected: '%s', is: '%s'\n", \
+            STRING_TOKEN_T, token_type_to_str(_type));                                      \
+        return ERR_SYNTAX;                                                                  \
+    }                                                                                       \
 } while(0)
 
-#define CHECK_KEYWORD(_type) do { \
-    if (parser->token->attribute->keyword_type != (_type)) { \
-        error_message("Parser", ERR_SYNTAX, "unexpected keyword, is: '%s', expects '%s'\n", \
-            STRING_TOKEN_T, token_type_to_str(_type)); \
-        return ERR_SYNTAX; \
+#define CHECK_KEYWORD(_type) do {                                                             \
+    if (parser->token->attribute->keyword_type != (_type)) {                                  \
+        error_message("Parser", ERR_SYNTAX, "unexpected keyword, expected: '%s', is: '%s'\n", \
+            STRING_TOKEN_T, token_type_to_str(_type));                                        \
+        return ERR_SYNTAX;                                                                    \
+    }                                                                                         \
 } while(0)
 
 #define PARSER_EAT() do { \
-    GET_TOKEN(); \
-    CHECK_TOKEN_ERROR(); \
+    GET_TOKEN();          \
+    CHECK_TOKEN_ERROR();  \
 } while(0)
 
-int prog(parser_t *parser);
-int prolog(parser_t *parser);
-int func_dec(parser_t *parser);
-int func_def(parser_t *parser);
-int func_call(parser_t *parser);
-int func_head(parser_t *parser);
-int param_fdef(parser_t *parser);
-int param_fdef_n(parser_t *parser);
-int param_fdec(parser_t *parser);
-int param_fdec_n(parser_t *parser);
-int ret_type_list(parser_t *parser);
-int ret_type_list_n(parser_t *parser);
-int ret_expr_list(parser_t *parser);
-int expr_list(parser_t *parser);
-int stat_list(parser_t *parser);
-int else_nt(parser_t *parser);
-int var_def(parser_t *parser);
-int assign(parser_t *parser);
-int dtype(parser_t *parser);
-int stat(parser_t *parser);
-int id_n(parser_t *parser);
 
 // Starting nonterminal <prog>
 int prog(parser_t *parser)
 {
     int result;
     
-    // <prog> → <prolog> <func_dec> <func_def> <func_call> 'EOF'
+    // Rule 1: <prog> → <prolog> <func_dec> <func_def> <func_call> 'EOF'
     
     switch (parser->token->type) 
     {
-        case TOKEN_REQUIRE:
+        case TOKEN_KEYWORD: // expects keyword 'require'
+
+            CHECK_KEYWORD(KEYWORD_REQUIRE);
 
             // <prolog>
             result = prolog(parser); 
@@ -90,24 +73,28 @@ int prog(parser_t *parser)
             CHECK_RESULT_VALUE(EXIT_OK);
             
             // Check End Of File
-            CHECK_RESULT_VALUE(TOKEN_EOF);
+            CHECK_TOKEN_TYPE(TOKEN_EOF);
 
             // TODO: generate instruction for program end
             //
             return EXIT_OK; // TODO: break?
+        default:
+            break;
     } 
     
     return ERR_SYNTAX;
 }
 
-// <prolog>
+// Nonterminal <prolog>
 int prolog(parser_t *parser)
 {
     switch (parser->token->type) 
     {
-        case TOKEN_REQUIRE: 
+        case TOKEN_KEYWORD:
+            // Expected keyword is 'require' 
+            CHECK_KEYWORD(KEYWORD_REQUIRE);
             
-            // <prolog> → 'require' 'ifj21'
+            // Rule 2: <prolog> → 'require' 'ifj21'
             
             PARSER_EAT();
             CHECK_TOKEN_TYPE(TOKEN_STR_LIT);
@@ -119,25 +106,25 @@ int prolog(parser_t *parser)
             
             // TODO: STRCMP / *a = *b?
             // Check if next token is precisely "ifj21"
-            if (strcmp(parser->token->attribute->string, "ifj21") != 0) {
+            if (strcmp(parser->token->attribute->string, "ifj21")) {
                 return ERR_SYNTAX;
             }
             
             PARSER_EAT();
-
             return EXIT_OK;
+        default:
+            break;
     }
 
     return ERR_SYNTAX;
 }
 
 
-// <func_dec>
+#if 0
+// Nonterminal <func_dec>
 int func_dec(parser_t *parser)
 {
     int result;
-
-    
     switch (parser->token->type) 
     {
         case TOKEN_GLOBAL: // 'global'
@@ -909,3 +896,5 @@ int ret_expr_list(parser_t *parser)
 
     return ERR_SYNTAX;
 }
+
+#endif
