@@ -874,51 +874,53 @@ int id_n(parser_t *parser)
     return ERR_SYNTAX;
 }
 
-// TODO: fix me pls
-int expr_list(parser_t *parser) { return 1;}
-#if 0
 // Nonterminal <expr_list>
 int expr_list(parser_t *parser)
 {
-    int result;
+    if (parser->token->type == TOKEN_KEYWORD) {
+        switch (TOKEN_KW_TYPE)
+        {
+            case KEYWORD_END:
+            case KEYWORD_LOCAL:
+            case KEYWORD_IF:
+            case KEYWORD_WHILE:
+            case KEYWORD_RETURN:
+            case KEYWORD_ELSE: 
 
-    switch (parser->token->type)
-    {
-        case TOKEN_EXPR: // TODO BS, HAS TO BE SOLVED
+                // RULE 38: <expr_list> → ε
+                PARSER_EAT();
+                return EXIT_OK;
+            default:
+                break;
+        } // switch() 
+    } else if (parser->token->type == TOKEN_COMMA) {
             
-            // RULE 36: <expr_list> → 'expr' <expr_list>
+        // RULE 37: <expr_list> → ',' 'expr' <expr_list>
 
-            PARSER_EAT();
-            return expr_list(parser); // calls itself
+        // Current token should be ','
+        // TODO: handle expression - switch context - sanity needed?
+
+        PARSER_EAT();
         
-        case TOKEN_COMMA:
+        return expr_list(parser);
+    
+    } else if (parser->token->type == TOKEN_ID) {
+
+        // RULE 38: <expr_list> → ε
+        
+        PARSER_EAT();
+        return EXIT_OK;
+    
+    } else { // TODO: handle expression - switch context
             
-            // RULE 37: <expr_list> → ',' 'expr' <expr_list>
+        // RULE 36: <expr_list> → 'expr' <expr_list>
 
-            PARSER_EAT();
-            CHECK_TOKEN_TYPE(TOKEN_expr); // 'EXPR' TODO
-
-            PARSER_EAT();
-            
-            return expr_list(parser);
-
-        case TOKEN_ID: // TODO
-        case TOKEN_END:
-        case TOKEN_LOCAL:
-        case TOKEN_IF:
-        case TOKEN_WHILE:
-        case TOKEN_RETURN:
-        case TOKEN_ELSE:
-
-            // RULE 38: <expr_list> → ε
-            
-            PARSER_EAT();
-            return EXIT_OK;
+        PARSER_EAT();
+        return expr_list(parser); // calls itself
     }
 
     return ERR_SYNTAX;
 }
-#endif
 
 // Nonterminal <dtype>
 int dtype(parser_t *parser)
