@@ -941,8 +941,7 @@ int dtype(parser_t *parser)
 }
 
 
-#if 0
-// <ret_expr_list>
+// Nonterminal <ret_expr_list>
 int ret_expr_list(parser_t *parser)
 {
     int result;
@@ -976,4 +975,5 @@ int ret_expr_list(parser_t *parser)
     return ERR_SYNTAX;
 }
 
-#endif
+// TODO: consider idea of looking at 'expr' terminal as a NONTERMINAL - thus
+// appropriate function must be called no matter what, because it is its time
