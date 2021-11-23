@@ -1,0 +1,90 @@
+/**
+ * @file  PA_stack.c
+ * @brief Stack implementation for precedenet analysis
+ * 
+ * @author  Filip Bučko
+ * @date  	20.11.2021
+ *
+ * Compiled : gcc version 9.3.0
+ */
+
+#include <stdlib.h>
+#include <stdio.h>
+#include "include/PA_stack.h" 
+
+/** 
+ * @brief Function initializes the stack for operator precedence parsing
+ * 
+ * @param stack Pointer to stack structure, which will be intialized
+ */
+void PA_stack_init(PA_stack *stack){
+	if( stack != NULL ){
+		stack -> top_index = -1;
+	}
+}
+
+/** 
+ * @brief Function checks if the stack is empty or not
+ * 
+ * @param stack Pointer to stack structure
+ *
+ * @return Funtion returns non-zero value, if the stack is empty.
+ *		   If the stack pointer is not valid, function returns -1.
+ */
+int PA_stack_empty(const PA_stack *stack){
+	if( stack != NULL ){
+		return (stack -> top_index == -1);
+	}
+	return -1;
+}
+
+/** 
+ * @brief Function checks if the stack is not full
+ * 
+ * @param stack Pointer to stack structure
+ *
+ * @return Funtion returns non-zero value, if the stack is full.
+ *		   If the stack pointer is not valid, function returns -1.
+ */
+int PA_stack_full(const PA_stack *stack){
+	if( stack != NULL ){
+		return (stack -> top_index == (MAX_STACK_SIZE-1) );
+	}
+	return -1;
+}
+/** 
+ * @brief Function returns the item on the top of the stack
+ * 
+ * @param stack Pointer to stack structure
+ *
+ * @return Funtion returns PA_item_t structure on the top of the stack.
+ */
+void PA_stack_top(const PA_stack *stack, PA_item_t* item){
+	if( !PA_stack_empty(stack) ){
+		*item = stack -> items[stack -> top_index];
+	}
+}
+
+/** 
+ * @brief Function removes the item from the top of the stack
+ * 
+ * @param stack Pointer to stack structure
+ */
+void PA_stack_pop(PA_stack *stack){
+	if( !PA_stack_empty(stack) ){
+		stack -> top_index--;
+	}
+}
+
+/** 
+ * @brief Function will push the item on the top of the stack
+ * 
+ * @param stack Pointer to stack structure
+ * @param item  Item structure
+ */
+void PA_stack_push(PA_stack *stack, PA_item_t item){
+	if ( !PA_stack_full(stack) ){
+		stack -> top_index++;
+		stack -> items[stack -> top_index] = item;
+	}
+}
