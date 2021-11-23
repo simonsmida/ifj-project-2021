@@ -6,6 +6,7 @@
  *         Šimon Šmída   - xsmida03
  */
 
+<<<<<<< HEAD
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -16,6 +17,10 @@
 #include "include/error.h"
 =======
 
+>>>>>>> main
+=======
+#include "include/symtable.h"
+#include "include/error.h"
 >>>>>>> main
 
 /**
