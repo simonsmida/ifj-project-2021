@@ -940,36 +940,44 @@ int dtype(parser_t *parser)
     return ERR_SYNTAX;
 }
 
-
 // Nonterminal <ret_expr_list>
 int ret_expr_list(parser_t *parser)
 {
     int result;
+    
+    if (parser->token->type == TOKEN_KEYWORD) {
+        switch (TOKEN_KW_TYPE) 
+        {
+            case KEYWORD_END:
+            case KEYWORD_LOCAL:
+            case KEYWORD_IF:
+            case KEYWORD_WHILE:
+            case KEYWORD_RETURN:
+            case KEYWORD_ELSE:
+                
+                // RULE 44: <ret_expr_list> → ε
+                PARSER_EAT();
+                return EXIT_OK;
 
-    switch (parser->token->type)
-    {
-        case TOKEN_EXPR: // TODO
-            
-            // RULE 43: <ret_expr_list> → 'expr' <expr_list>
-            
-            // <epr_list> 
-            result = expr_list(parser);
-            CHECK_RESULT_VALUE(EXIT_OK); 
-            
-            PARSER_EAT();
-            return EXIT_OK;
+            default:
+                break;
+        }
+    } else if (parser->token->type == TOKEN_ID) {
+        // TODO: insert to symtable
+        // RULE 44: <ret_expr_list> → ε
+        PARSER_EAT();
+        return EXIT_OK;
+    } else {
+        // TODO: expr - switching context, what if token other?
+
+        // RULE 43: <ret_expr_list> → 'expr' <expr_list>
         
-        case TOKEN_ID:
-        case TOKEN_END:
-        case TOKEN_LOCAL:
-        case TOKEN_IF:
-        case TOKEN_WHILE:
-        case TOKEN_RETURN:
-        case TOKEN_ELSE:
-            
-            // RULE 44: <ret_expr_list> → ε
-            PARSER_EAT();
-            return EXIT_OK;
+        // <epr_list> 
+        result = expr_list(parser);
+        CHECK_RESULT_VALUE(EXIT_OK); 
+        
+        PARSER_EAT();
+        return EXIT_OK;
     }
 
     return ERR_SYNTAX;
