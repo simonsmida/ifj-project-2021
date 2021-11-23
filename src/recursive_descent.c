@@ -525,45 +525,59 @@ int ret_type_list(parser_t *parser)
     return ERR_SYNTAX;
 }
 
-#if 0
-// <ret_type_list_n>
+// Nonterminal <ret_type_list_n>
 int ret_type_list_n(parser_t *parser)
 {
     int result;
+    
+    if (parser->token->type == TOKEN_KEYWORD) {
+        switch (TOKEN_KW_TYPE) 
+        {
+            case KEYWORD_FUNCTION:
+            case KEYWORD_GLOBAL:
+            case KEYWORD_LOCAL:
+            case KEYWORD_RETURN:
+            case KEYWORD_END:
+            case KEYWORD_IF:
+            case KEYWORD_WHILE:
+                
+                // RULE 21: <ret_type_list_n> → ε
+                
+                PARSER_EAT();
+                return EXIT_OK;
+            default:
+                break; // TODO: beware must end up in error
+        } // switch()
+    } else if (parser->token->type == TOKEN_COMMA) {
 
-    switch (parser->token->type)
-    {
-        case TOKEN_COMMA:
-
-            // RULE 20: <ret_type_list_n> → ',' <dtype> <ret_type_list_n>
+        // RULE 20: <ret_type_list_n> → ',' <dtype> <ret_type_list_n>
             
-            // <dtype>
-            result = dtype(parser);
-            CHECK_RESULT_VALUE(EXIT_OK); 
-            
-            PARSER_EAT();
-            return ret_type_list_n(parser); // calls itself          
-
-        case TOKEN_EOF:
-        case TOKEN_GLOBAL:
-        case TOKEN_ID: // TODO: HOW TO SYMTABLE
-        case TOKEN_FUNCTION:
-        case TOKEN_END:
-        case TOKEN_LOCAL:
-        case TOKEN_IF:
-        case TOKEN_WHILE:
-        case TOKEN_RETURN:
-        case TOKEN_EXPR: // TODO: HANDLE THIS - switch context ?
-            
-            // RULE 21: <ret_type_list_n> → ε
-            PARSER_EAT();
-            return EXIT_OK;
+        // <dtype>
+        result = dtype(parser);
+        CHECK_RESULT_VALUE(EXIT_OK); 
+        
+        PARSER_EAT();
+        return ret_type_list_n(parser); // calls itself          
+    } else if (parser->token->type == TOKEN_ID) {
+        // TODO: add to symtable 
+        
+        // RULE 21: <ret_type_list_n> → ε
+        
+        PARSER_EAT();
+        return EXIT_OK;
+    } else if (parser->token->type == TOKEN_EOF) {
+        
+        // RULE 21: <ret_type_list_n> → ε
+        
+        PARSER_EAT();
+        return EXIT_OK;
     }
 
     return ERR_SYNTAX;
 }
 
 
+#if 0
 // <stat_list>
 int stat_list(parser_t *parser)
 {
