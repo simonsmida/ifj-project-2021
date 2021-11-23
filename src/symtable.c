@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <stdint.h> // uint32_t
-#include "symtable.h"
+#include "include/symtable.h"
 
 /**
  * @brief Hashing function - calculate index for given key
@@ -12,7 +13,7 @@ size_t symtable_hash_function(const char *key)
     uint32_t h = 0;
     const unsigned char *p;
 
-    for (p=(const unsigned char*)str; *p != '\0'; p++) {
+    for (p=(const unsigned char*)key; *p != '\0'; p++) {
         h = 65599*h + *p;
     }
   
