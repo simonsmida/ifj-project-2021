@@ -874,9 +874,10 @@ int id_n(parser_t *parser)
     return ERR_SYNTAX;
 }
 
-
+// TODO: fix me pls
+int expr_list(parser_t *parser) { return 1;}
 #if 0
-// <expr_list>
+// Nonterminal <expr_list>
 int expr_list(parser_t *parser)
 {
     int result;
@@ -888,7 +889,7 @@ int expr_list(parser_t *parser)
             // RULE 36: <expr_list> → 'expr' <expr_list>
 
             PARSER_EAT();
-            return  = expr_list(parser); // calls itself
+            return expr_list(parser); // calls itself
         
         case TOKEN_COMMA:
             
@@ -917,44 +918,30 @@ int expr_list(parser_t *parser)
 
     return ERR_SYNTAX;
 }
+#endif
 
-
-// <dtype>
+// Nonterminal <dtype>
 int dtype(parser_t *parser)
 {
-    int result;
-
-    switch (parser->token->type)
-    {
-        case TOKEN_NIL:
-            
-            // RULE 39: <dtype> → 'nil'
-            PARSER_EAT();
-            return EXIT_OK;
-
-        case TOKEN_NUMBER:
-            
-            // RULE 40: <dtype> → 'number'
-            PARSER_EAT();
-            return EXIT_OK;
-        
-        case TOKEN_INTEGER:
-            
-            // RULE 41: <dtype> → 'integer'
-            PARSER_EAT();
-            return EXIT_OK;
-            
-        case TOKEN_STRING:
-            
-            // RULE 42: <dtype> → 'string'
-            PARSER_EAT();
-            return EXIT_OK;
+    if (parser->token->type == TOKEN_KEYWORD) {
+        switch (TOKEN_KW_TYPE) 
+        {
+            case KEYWORD_NIL:     // RULE 39: <dtype> → 'nil'
+            case KEYWORD_NUMBER:  // RULE 40: <dtype> → 'number'
+            case KEYWORD_INTEGER: // RULE 41: <dtype> → 'integer'
+            case KEYWORD_STRING:  // RULE 42: <dtype> → 'string'
+                PARSER_EAT();
+                return EXIT_OK;
+            default:
+                break;
+        } // switch()
     }
 
     return ERR_SYNTAX;
 }
 
 
+#if 0
 // <ret_expr_list>
 int ret_expr_list(parser_t *parser)
 {
