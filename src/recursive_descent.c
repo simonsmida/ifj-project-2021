@@ -37,6 +37,8 @@
     }                                                                                         \
 } while(0)
 
+#define TOKEN_KW_TYPE parser->token->attribute->keyword_type 
+
 #define PARSER_EAT() do { \
     GET_TOKEN();          \
     CHECK_TOKEN_ERROR();  \
@@ -120,62 +122,65 @@ int prolog(parser_t *parser)
 }
 
 
-#if 0
 // Nonterminal <func_dec>
 int func_dec(parser_t *parser)
 {
     int result;
     switch (parser->token->type) 
     {
-        case TOKEN_GLOBAL: // 'global'
-    
-            // RULE 3: <func_dec> → 'global' 'id' ':' 'function' '(' <param_fdec> ')' ':' <ret_type_list> <func_dec>
+        case TOKEN_KEYWORD: // 'global' or 'function'
+            if (TOKEN_KW_TYPE == KEYWORD_GLOBAL) {
             
-            PARSER_EAT();
-            CHECK_TOKEN_TYPE(TOKEN_ID);       // 'id'
-            // TODO: store to symtable
-            // Add 'id' to the global symtable
-            bool insert_error; // consider passing just parser
-            symtable_insert(parser->global_symtable, parser->token->attribute.string, &error);
-            if (parser->curr_id == NULL) {
-                if (insert_error) return ERR_INTERNAL;
-                else return ERR_SEM; // TODO: undefined var
+                // RULE 3: 
+                // <func_dec> → 'global' 'id' ':' 'function' '(' <param_fdec> ')' ':' <ret_type_list> <func_dec>
+            
+                PARSER_EAT();
+                CHECK_TOKEN_TYPE(TOKEN_ID);       // 'id'
+                
+                // Add 'id' to the global symtable
+                parser->curr_item = symtable_insert(parser->global_symtable, 
+                                                    parser->token->attribute->string);
+                if (parser->curr_item == NULL) {
+                    return ERR_SEMANTIC_DEF; // TODO: check internal error
+                }
+                 
+                PARSER_EAT();
+                CHECK_TOKEN_TYPE(TOKEN_COLON);    // ':'
+
+                PARSER_EAT();
+                CHECK_TOKEN_TYPE(TOKEN_KEYWORD); 
+                CHECK_KEYWORD(KEYWORD_FUNCTION);  // 'function'
+                
+                PARSER_EAT();
+                CHECK_TOKEN_TYPE(TOKEN_L_PAR);     // '('
+
+                // <param_fdec>
+                result = param_fdec(parser); 
+                CHECK_RESULT_VALUE(EXIT_OK);
+
+                PARSER_EAT();
+                CHECK_TOKEN_TYPE(TOKEN_R_PAR);     // ')'
+
+                PARSER_EAT();
+                CHECK_TOKEN_TYPE(TOKEN_COLON);     // ':'
+                
+                // <ret_type_list>
+                result = ret_type_list(parser); 
+                CHECK_RESULT_VALUE(EXIT_OK);
+
+                PARSER_EAT();
+
+                return func_dec(parser); // calls itself
+            } else if (TOKEN_KW_TYPE == KEYWORD_FUNCTION) {
+                // RULE 4: <func_dec> → ε
+                
+                PARSER_EAT();
+                return EXIT_OK;
+            } else {
+                break; // TODO: verify if error really happens 
             }
-            // resime ID, ulozime do tabulky symbolu
-            // pokud tento ID jiz byl deklarovan, jedna se o semantickou chybu
-            if (tableInsert(table, &attr, TYPE_INT) == 1) return SEM_ERROR;
-            
-            PARSER_EAT();
-            CHECK_TOKEN_TYPE(TOKEN_COLON);    // ':'
-
-            PARSER_EAT();
-            CHECK_TOKEN_TYPE(TOKEN_KEYWOR); 
-            CHECK_KEYWORD(KEYWORD_FUNCTION);  // 'function'
-            
-            PARSER_EAT();
-            CHECK_TOKEN_TYPE(TOKEN_L_PAR);     // '('
-
-            // <param_fdec>
-            result = param_fdec(); 
-            CHECK_RESULT_VALUE(EXIT_OK);
-
-            PARSER_EAT();
-            CHECK_TOKEN_TYPE(TOKEN_R_PAR);     // ')'
-
-            PARSER_EAT();
-            CHECK_TOKEN_TYPE(TOKEN_COLON);     // ':'
-            
-            // <ret_type_list>
-            result = param_fdec(); 
-            CHECK_RESULT_VALUE(EXIT_OK);
-
-            PARSER_EAT();
-
-            return func_dec(parser); // calls itself
-        
         case TOKEN_EOF: 
-        case TOKEN_FUNCTION: // 'function'
-        case TOKEN_EXPR: // TODO: check this
+        // case TOKEN_EXPR: // TODO: check this
             
             // TODO: CONTROL SWITCH TO PRECEDENCE SA
             
@@ -183,12 +188,14 @@ int func_dec(parser_t *parser)
             
             PARSER_EAT();
             return EXIT_OK;
+        default:
+            break;
     }
 
     return ERR_SYNTAX;
 }
 
-// <func_def>
+// Nonterminal <func_def>
 int func_def(parser_t *parser)
 {
     int result;
@@ -196,7 +203,9 @@ int func_def(parser_t *parser)
     
     switch (parser->token->type)
     {
-        case TOKEN_FUNCTION: // 'function'
+        case TOKEN_KEYWORD: // 'function'
+            // Expected keyword is 'function' 
+            CHECK_KEYWORD(KEYWORD_FUNCTION);
 
             // RULE 5: <func_def> → <func_head> <stat_list> 'end' <func_def>
             
@@ -209,28 +218,31 @@ int func_def(parser_t *parser)
             CHECK_RESULT_VALUE(EXIT_OK);
             
             PARSER_EAT();
-            CHECK_TOKEN_TYPE(TOKEN_END); // 'end'
+            CHECK_TOKEN_TYPE(TOKEN_KEYWORD); 
+            CHECK_KEYWORD(KEYWORD_END);  // 'end'
 
             PARSER_EAT();
 
             return func_def(parser); // calls itself
         
-        case TOKEN_EOF:
-        case TOKEN_EXPR:
+        case TOKEN_EOF: // TODO: beware, expr was here
             
             // RULE 6: <func_def> → ε
             
-            // TODO: CONTROL SWITCH TO PRECEDENCE SA
-            
             PARSER_EAT();
             return EXIT_OK;
+        default:
+            break;
     }
 
     return ERR_SYNTAX;
 }
 
+// TODO: fix me pls
+int func_call(parser_t *parser) {return 1;}
 
-// <func_call>
+#if 0
+// Nonterminal <func_call>
 int func_call(parser_t *parser)
 {
     
@@ -255,21 +267,26 @@ int func_call(parser_t *parser)
 
     return ERR_SYNTAX;
 }
+#endif
 
-// <func_head>
+// Nonterminal <func_head>
 int func_head(parser_t *parser) 
 {
     int result;
-    
+
     switch (parser->token->type)
     {
-        case TOKEN_FUNCTION:
+        case TOKEN_KEYWORD:
+            // Expected keyword is 'function' 
+            CHECK_KEYWORD(KEYWORD_FUNCTION);
             
             // RULE 9: <func_head> → 'function' 'id' '(' <param_fdef> ')' ':' <ret_type_list>
             
+            /* TODO wtf redundant bs 
             PARSER_EAT();
             CHECK_TOKEN_TYPE(TOKEN_FUNCTION); // 'function'
-            
+            */
+
             PARSER_EAT();
             CHECK_TOKEN_TYPE(TOKEN_ID); // 'id'
             // TODO: add to symtable
@@ -292,12 +309,13 @@ int func_head(parser_t *parser)
             CHECK_RESULT_VALUE(EXIT_OK);
 
             PARSER_EAT();
-            return EXIT_OK; 
+            return EXIT_OK;
+        default:
+           break; 
     }
 
     return ERR_SYNTAX;
 }
-
 
 // <param_fdef>
 int param_fdef(parser_t *parser)
@@ -329,12 +347,14 @@ int param_fdef(parser_t *parser)
             
             PARSER_EAT();
             return EXIT_OK;
+        default:
+            break;
     }
 
     return ERR_SYNTAX;
 }
 
-// <param_fdef_n>
+// Nonterminal <param_fdef_n>
 int param_fdef_n(parser_t *parser)
 {
     int result;
@@ -366,48 +386,54 @@ int param_fdef_n(parser_t *parser)
 
             PARSER_EAT();
             return EXIT_OK;
+        default:
+            break;
     }
 
     return ERR_SYNTAX;
 }
 
-// <param_fdec>
+// Nonterminal <param_fdec>
 int param_fdec(parser_t *parser)
 {
     int result;
     
     switch (parser->token->type)
     {
-        case TOKEN_NIL:
-        case TOKEN_NUMBER:
-        case TOKEN_INTEGER:
-        case TOKEN_STRING:
-
-            // RULE 14: <param_fdec> → <dtype> <param_fdec_n>
-
-            // <dtype>
-            result = dtype(parser);
-            CHECK_RESULT_VALUE(EXIT_OK); 
+        case TOKEN_KEYWORD:
+            if (TOKEN_KW_TYPE == KEYWORD_NIL     ||
+                TOKEN_KW_TYPE == KEYWORD_NUMBER  ||
+                TOKEN_KW_TYPE == KEYWORD_INTEGER ||
+                TOKEN_KW_TYPE == KEYWORD_STRING) {
             
-            // <param_fdef_n>
-            result = param_fdef_n(parser);
-            CHECK_RESULT_VALUE(EXIT_OK); 
-            
-            PARSER_EAT();
-            return EXIT_OK;
+                // RULE 14: <param_fdec> → <dtype> <param_fdec_n>
 
+                // <dtype>
+                result = dtype(parser);
+                CHECK_RESULT_VALUE(EXIT_OK); 
+                
+                // <param_fdef_n>
+                result = param_fdef_n(parser);
+                CHECK_RESULT_VALUE(EXIT_OK); 
+                
+                PARSER_EAT();
+                return EXIT_OK;
+            }
+            break; // TODO: beware, must end up in error
         case TOKEN_R_PAR:
             
             // RULE 15: <param_fdec> → ε
             
             PARSER_EAT();
             return EXIT_OK;
+        default:
+            break;
     }
 
     return ERR_SYNTAX;
 }
 
-// <param_fdec_n>
+// Nonterminal <param_fdec_n>
 int param_fdec_n(parser_t *parser)
 {
     int result;
@@ -430,13 +456,16 @@ int param_fdec_n(parser_t *parser)
             // RULE 17: <param_fdec_n> → ε
             PARSER_EAT();
             return EXIT_OK;
+        default:
+            break;
     }
 
     return ERR_SYNTAX;
 }
 
 
-// <ret_type_list>
+#if 0
+// Nonterminal <ret_type_list>
 int ret_type_list(parser_t *parser)
 {
     int result;
