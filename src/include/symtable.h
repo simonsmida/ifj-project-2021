@@ -17,6 +17,7 @@
 
 
 #include <stdbool.h>
+#include <stddef.h>
 
 typedef enum data_type {
     DTYPE_UNKNOWN = 0,
