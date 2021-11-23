@@ -771,41 +771,48 @@ int else_nt(parser_t *parser)
     return ERR_SYNTAX;
 } 
 
-#if 0
-// <var_def>
+// Nonterminal <var_def>
 int var_def(parser_t *parser)
 {
     int result;
 
-    switch (parser->token->type) 
-    { 
-        case TOKEN_ASSIGN:
-            
-            // RULE 31: <var_def> → '=' 'expr'
+    if (parser->token->type == TOKEN_KEYWORD) {
+        switch (TOKEN_KW_TYPE) 
+        { 
+            case KEYWORD_END:
+            case KEYWORD_LOCAL:
+            case KEYWORD_IF:
+            case KEYWORD_WHILE:
+            case KEYWORD_RETURN:
+            case KEYWORD_ELSE:
+                
+                // RULE 32: <var_def> → ε
 
-            // TODO: switch context
-            
-            PARSER_EAT();
-            return EXIT_OK;
+                PARSER_EAT();
+                return EXIT_OK;
+            default:
+                break;
+        }
+    } else if (parser->token->type == TOKEN_ASSIGN) {
+
+        // RULE 31: <var_def> → '=' 'expr'
+
+        // TODO: switch context
         
-        case TOKEN_ID: // TODO
-        case TOKEN_END:
-        case TOKEN_LOCAL:
-        case TOKEN_IF:
-        case TOKEN_WHILE:
-        case TOKEN_RETURN:
-        case TOKEN_ELSE:
-            
-            // RULE 32: <var_def> → ε
+        PARSER_EAT();
+        return EXIT_OK;
+    } else if (parser->token->type == TOKEN_ID) {
+        
+        // RULE 32: <var_def> → ε
 
-            PARSER_EAT();
-            return EXIT_OK;
+        PARSER_EAT();
+        return EXIT_OK;
     }
-
     return ERR_SYNTAX;
 }
 
 
+#if 0
 // <assign>
 int assign(parser_t *parser)
 {
