@@ -34,7 +34,7 @@ parser_t *parser_init(FILE *src)
     parser->in_function = false;
     parser->declared_function = false;
     parser->src = src;
-
+    parser->curr_item = NULL;
     return parser;
 }
 
