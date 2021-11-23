@@ -78,7 +78,7 @@ typedef enum token_types {
     TOKEN_LE,     // <=
     TOKEN_GT,     // >
     TOKEN_GE,     // >=
-	TOKEN_INT_DIV, // //
+    TOKEN_INT_DIV, // //
 
     
     // Other operators
