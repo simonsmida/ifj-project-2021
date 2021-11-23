@@ -626,6 +626,8 @@ int stat_list(parser_t *parser)
     return ERR_SYNTAX;
 }
 
+// TODO: fix me pls
+int stat(parser_t *parser) {return 1;}
 #if 0
 // <stat>
 int stat(parser_t *parser)
@@ -729,41 +731,47 @@ int stat(parser_t *parser)
 
     return ERR_SYNTAX;
 }
+#endif
 
-
-// <else>
+// Nonterminal <else>
 int else_nt(parser_t *parser)
 {
     int result;
 
     switch (parser->token->type)
     {
-        case TOKEN_ELSE:
+        case TOKEN_KEYWORD:
+            if (TOKEN_KW_TYPE == KEYWORD_ELSE) {
 
-            // RULE 29: <else> → 'else' <stat_list>
+                // RULE 29: <else> → 'else' <stat_list>
+                
+                PARSER_EAT();
+                CHECK_TOKEN_TYPE(TOKEN_KEYWORD); // 'else'
+                CHECK_KEYWORD(KEYWORD_ELSE);
+
+                // <stat_list> 
+                result = stat_list(parser);
+                CHECK_RESULT_VALUE(EXIT_OK); 
+
+                PARSER_EAT();
+                return EXIT_OK;
             
-            PARSER_EAT();
-            CHECK_TOKEN_TYPE(TOKEN_ELSE); // 'else'
+            } else if (TOKEN_KW_TYPE == KEYWORD_END) {
+                
+                // RULE 30: <else> → ε
 
-            // <stat_list> 
-            result = stat_list(parser);
-            CHECK_RESULT_VALUE(EXIT_OK); 
-
-            PARSER_EAT();
-            return EXIT_OK;
-        
-        case TOKEN_END:
-            
-            // RULE 30: <else> → ε
-
-            PARSER_EAT();
-            return EXIT_OK;
-    }
+                PARSER_EAT();
+                return EXIT_OK;
+            }
+            break; // TODO: beware must end up in error
+        default:
+            break;
+    } // switch()
 
     return ERR_SYNTAX;
 } 
 
-
+#if 0
 // <var_def>
 int var_def(parser_t *parser)
 {
