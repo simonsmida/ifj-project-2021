@@ -7,7 +7,7 @@
 typedef struct parser {
     symtable_t *local_symtable;
     symtable_t *global_symtable;
-
+    symtable_item_t *curr_item;
     // list of tokens?
     // semantic analysis
     token_t *token;
