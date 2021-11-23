@@ -10,9 +10,13 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h> // uint32_t
+<<<<<<< HEAD
 #include <string.h>
 #include "include/symtable.h"
 #include "include/error.h"
+=======
+
+>>>>>>> main
 
 /**
  * @brief Hashing function - calculate index for given key
