@@ -16,7 +16,12 @@
 	
 
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h> // uint32_t
+#include <string.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 typedef enum data_type {
     DTYPE_UNKNOWN = 0,
