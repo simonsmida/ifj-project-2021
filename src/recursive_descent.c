@@ -626,112 +626,116 @@ int stat_list(parser_t *parser)
     return ERR_SYNTAX;
 }
 
-// TODO: fix me pls
-int stat(parser_t *parser) {return 1;}
-#if 0
-// <stat>
+// Nonterminal <stat>
 int stat(parser_t *parser)
 {
     int result;
-
-    switch (parser->token_type) 
-    {
-        case TOKEN_LOCAL:
-
-            // RULE 24: <stat> → 'local' 'id' ':' <dtype> <var_def>
-
-            PARSER_EAT();
-            CHECK_TOKEN_TYPE(TOKEN_ID); // 'id'
-
-            PARSER_EAT();
-            CHECK_TOKEN_TYPE(TOKEN_COLON); // ':'
-            
-            // <dtype>
-            result = dtype(parser);
-            CHECK_RESULT_VALUE(EXIT_OK); 
-
-            // <var_def>
-            result = var_def(parser);
-            CHECK_RESULT_VALUE(EXIT_OK); 
-            
-            PARSER_EAT();
-            return EXIT_OK;
-        
-        case TOKEN_IF:
-            
-            // RULE 25: <stat> → 'if' 'expr' 'then' <stat_list> <else> 'end'
-            
-            PARSER_EAT();
-            CHECK_TOKEN_TYPE(TOKEN_EXPR); // 'expr' TODO: context switch + handle
-
-            PARSER_EAT();
-            CHECK_TOKEN_TYPE(TOKEN_THEN); // 'then'
-
-            // <stat_list>
-            result = stat_list(parser);
-            CHECK_RESULT_VALUE(EXIT_OK); 
-            
-            // <else>
-            result = else_nt(parser); // TODO: WATCH OUT
-            CHECK_RESULT_VALUE(EXIT_OK); 
-
-            PARSER_EAT();
-            CHECK_TOKEN_TYPE(TOKEN_END); // 'end'
     
-            PARSER_EAT();
-            return EXIT_OK;
+    if (parser->token->type == TOKEN_KEYWORD) {
+        switch (TOKEN_KW_TYPE) 
+        {
+            case KEYWORD_LOCAL:
+
+                // RULE 24: <stat> → 'local' 'id' ':' <dtype> <var_def>
+
+                PARSER_EAT();
+                CHECK_TOKEN_TYPE(TOKEN_ID); // 'id'
+                // TODO symtable
+
+                PARSER_EAT();
+                CHECK_TOKEN_TYPE(TOKEN_COLON); // ':'
+                
+                // <dtype>
+                result = dtype(parser);
+                CHECK_RESULT_VALUE(EXIT_OK); 
+
+                // <var_def>
+                result = var_def(parser);
+                CHECK_RESULT_VALUE(EXIT_OK); 
+                
+                PARSER_EAT();
+                return EXIT_OK;
+            
+            case KEYWORD_IF:
+                
+                // RULE 25: <stat> → 'if' 'expr' 'then' <stat_list> <else> 'end'
+                
+                // Current token should be 'if'
+                // TODO: handle expression - switch context 
+
+                PARSER_EAT();
+                CHECK_TOKEN_TYPE(TOKEN_KEYWORD); // 'then'
+                CHECK_KEYWORD(KEYWORD_THEN);
+
+                // <stat_list>
+                result = stat_list(parser);
+                CHECK_RESULT_VALUE(EXIT_OK); 
+                
+                // <else>
+                result = else_nt(parser); // TODO: WATCH OUT
+                CHECK_RESULT_VALUE(EXIT_OK); 
+
+                PARSER_EAT();
+                CHECK_TOKEN_TYPE(TOKEN_KEYWORD); // 'end'
+                CHECK_KEYWORD(KEYWORD_END);
         
-        case TOKEN_WHILE:
+                PARSER_EAT();
+                return EXIT_OK;
             
-            // RULE 26: <stat> → 'while' 'expr' 'do' <stat_list> 'end'
-            
-            PARSER_EAT();
-            CHECK_TOKEN_TYPE(TOKEN_EXPR); // 'expr' TODO: context switch + handle
+            case KEYWORD_WHILE:
+                
+                // RULE 26: <stat> → 'while' 'expr' 'do' <stat_list> 'end'
+                
+                // Current token should be 'while'
+                // Handle expression - switch context 
 
-            PARSER_EAT();
-            CHECK_TOKEN_TYPE(TOKEN_THEN); // 'then'
-            
-            PARSER_EAT();
-            CHECK_TOKEN_TYPE(TOKEN_DO); // 'do'
-           
-            // <do> 
-            result = do_nt(parser);
-            CHECK_RESULT_VALUE(EXIT_OK); 
+                PARSER_EAT();
+                CHECK_TOKEN_TYPE(TOKEN_KEYWORD); // 'then'
+                CHECK_KEYWORD(KEYWORD_THEN);
 
-            PARSER_EAT();
-            CHECK_TOKEN_TYPE(TOKEN_END); // 'end'
+                PARSER_EAT();
+                CHECK_TOKEN_TYPE(TOKEN_KEYWORD); // 'do'
+                CHECK_KEYWORD(KEYWORD_DO);
 
-            PARSER_EAT();
-            return EXIT_OK;
+                // <stat_list> 
+                result = stat_list(parser);
+                CHECK_RESULT_VALUE(EXIT_OK); 
 
-        case TOKEN_ID:
-            
-            // RULE 27: <stat> → <assign>
-            
-            // TODO: SYMTABLE
+                PARSER_EAT();
+                CHECK_TOKEN_TYPE(TOKEN_KEYWORD); // 'end'
+                CHECK_KEYWORD(KEYWORD_END);
 
-            // <assign> 
-            result = assign(parser);
-            CHECK_RESULT_VALUE(EXIT_OK); 
-            
-            PARSER_EAT();
-            return EXIT_OK;
+                PARSER_EAT();
+                return EXIT_OK;
 
-        case TOKEN_RETURN:
+            case KEYWORD_RETURN:
 
-            // RULE 28: <stat> → 'return' <ret_expr_list>
+                // RULE 28: <stat> → 'return' <ret_expr_list>
 
-            // <ret_expr_list> 
-            result = ret_expr_list(parser);
-            CHECK_RESULT_VALUE(EXIT_OK); 
-            
-            PARSER_EAT();
-            return EXIT_OK;
+                // <ret_expr_list> 
+                result = ret_expr_list(parser);
+                CHECK_RESULT_VALUE(EXIT_OK); 
+                
+                PARSER_EAT();
+                return EXIT_OK;
+            default:
+                break;
+        }
+    } else if (parser->token->type == TOKEN_ID) {
+        // RULE 27: <stat> → <assign>
+        
+        // TODO: SYMTABLE
+
+        // <assign> 
+        result = assign(parser);
+        CHECK_RESULT_VALUE(EXIT_OK); 
+        
+        PARSER_EAT();
+        return EXIT_OK;
     }
 
     return ERR_SYNTAX;
 }
-#endif
 
 // Nonterminal <else>
 int else_nt(parser_t *parser)
