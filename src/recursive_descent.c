@@ -577,41 +577,56 @@ int ret_type_list_n(parser_t *parser)
 }
 
 
-#if 0
 // <stat_list>
 int stat_list(parser_t *parser)
 {
     int result;
 
-    switch (parser->token->type)
-    {
-        case TOKEN_ID: // TODO: HANDLE THIS SYMTAB
-        case TOKEN_LOCAL: // TODO: MAYBE KEYWORD?
-        case TOKEN_IF:
-        case TOKEN_WHILE:
-        case TOKEN_RETURN:
+    if (parser->token->type == TOKEN_KEYWORD) {
+        switch (TOKEN_KW_TYPE) 
+        {
+            case KEYWORD_LOCAL: // TODO: MAYBE KEYWORD?
+            case KEYWORD_IF:
+            case KEYWORD_WHILE:
+            case KEYWORD_RETURN:
 
-            // RULE 22: <stat_list> → <stat> <stat_list>
-            
-            // <stat>
-            result = stat(parser);
-            CHECK_RESULT_VALUE(EXIT_OK); 
-            
-            PARSER_EAT();
-            return stat_list(parser); // calls itself          
+                // RULE 22: <stat_list> → <stat> <stat_list>
+                
+                // <stat>
+                result = stat(parser);
+                CHECK_RESULT_VALUE(EXIT_OK); 
+                
+                PARSER_EAT();
+                return stat_list(parser); // calls itself  
 
-        case TOKEN_END:
-        case TOKEN_ELSE:
+            case KEYWORD_END:
+            case KEYWORD_ELSE:
+                
+                // RULE 23: <stat_list> → ε
+                
+                PARSER_EAT();
+                return EXIT_OK;
 
-            // RULE 23: <stat_list> → ε
-            
-            PARSER_EAT();
-            return EXIT_OK;
+            default:
+                break;    
+        } // switch()
+    } else if (parser->token->type == TOKEN_ID) {
+        // TODO: add to symtab
+        
+        // RULE 22: <stat_list> → <stat> <stat_list>
+        
+        // <stat>
+        result = stat(parser);
+        CHECK_RESULT_VALUE(EXIT_OK); 
+                
+        PARSER_EAT();
+        return stat_list(parser); // calls itself  
     }
     
     return ERR_SYNTAX;
 }
 
+#if 0
 // <stat>
 int stat(parser_t *parser)
 {
