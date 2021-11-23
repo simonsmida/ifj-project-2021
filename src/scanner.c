@@ -580,11 +580,11 @@ token_t *generate_token(string_t *buffer,  int type, int error)
 			break;
 
         case DOUBLE_DOT_SEQUENCE:
-            token->type = TOKEN_NUMBER;
+            token->type = TOKEN_NUM_LIT;
             break;
             
         case DOUBLE_E_SEQUENCE:
-            token->type = TOKEN_NUMBER;
+            token->type = TOKEN_NUM_LIT;
             break;
     } // switch
     
