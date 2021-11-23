@@ -397,8 +397,8 @@ token_t *get_next_token(FILE *file)
                     }
 
                     state = STRING_LITERAL;
-                    break;
                 }
+				break;
 
 
             case ASSIGN_OR_EQUALS:
@@ -478,6 +478,7 @@ token_t *generate_token(string_t *buffer,  int type, int error)
 
             if (is_keyword(buffer->string) || is_variable_type(buffer->string)) {
                 token->type = TOKEN_KEYWORD;
+				token->attribute->keyword_type = determine_keyword(buffer->string);
                 break;
             }
             else {
@@ -584,7 +585,7 @@ token_t *generate_token(string_t *buffer,  int type, int error)
 		case DOUBLE_E_SEQUENCE_VALID:
 			token->type = TOKEN_NUMBER;
 			double number = strtod(buffer->string, NULL);
-			token->attribute->number = num;
+			token->attribute->number = number;
 			
 			break;
 		
@@ -707,5 +708,65 @@ const char *token_type_to_str(int type)
 void print_token(token_t *token)
 {
     // TODO change token->attribute->string to its actual representation
+	if (token->attribute->keyword_type == KEYWORD_STRING){
+		printf("Next token is STRING\n");
+	}
+	if (token->attribute->keyword_type == KEYWORD_INTEGER){
+		printf("Next token is INTEGER\n");
+	}
+	if (token->attribute->keyword_type == KEYWORD_NIL){
+		printf("Next token is NIL\n");
+	}
+	
     printf("Token: [%s '%s']\n", token_type_to_str(token->type), token->attribute->string);
+}
+
+
+keyword_type_t determine_keyword(const char *string){
+	if(!strcmp(string,"require")){
+		return KEYWORD_REQUIRE;
+	}
+	else if(!strcmp(string,"nil")){
+		return KEYWORD_NIL;
+	}
+	else if(!strcmp(string,"if")){
+		return KEYWORD_IF;
+	}
+	else if(!strcmp(string,"else")){
+		return KEYWORD_ELSE;
+	}
+	else if(!strcmp(string,"do")){
+		return KEYWORD_DO;
+	}
+	else if(!strcmp(string,"end")){
+		return KEYWORD_END;
+	}
+	else if(!strcmp(string,"function")){
+		return KEYWORD_FUNCTION;
+	}
+	else if(!strcmp(string,"global")){
+		return KEYWORD_GLOBAL;
+	}
+	else if(!strcmp(string,"local")){
+		return KEYWORD_LOCAL;
+	}
+	else if(!strcmp(string,"return")){
+		return KEYWORD_RETURN;
+	}
+	else if(!strcmp(string,"then")){
+		return KEYWORD_THEN;
+	}
+	else if(!strcmp(string,"while")){
+		return KEYWORD_WHILE;
+	}
+	else if(!strcmp(string,"string")){
+		return KEYWORD_STRING;
+	}
+	else if(!strcmp(string,"integer")){
+		return KEYWORD_INTEGER;
+	}
+	else if(!strcmp(string,"number")){
+		return KEYWORD_NUMBER;
+	}
+
 }

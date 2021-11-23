@@ -194,4 +194,11 @@ const char *token_type_to_str(int type);
  * @param token token to be printed
  */
 void print_token(token_t *token);
+
+/**
+ * @brief Function to determine which keyword is in string
+ * 
+ * @param string 
+ */ 
+keyword_type_t determine_keyword(const char *string);
 #endif // LEX_AN_H
