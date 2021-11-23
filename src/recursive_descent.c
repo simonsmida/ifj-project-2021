@@ -44,6 +44,11 @@
     CHECK_TOKEN_ERROR();  \
 } while(0)
 
+#define IS_DTYPE(_keyword) \
+    (_keyword) == KEYWORD_NIL     || \
+    (_keyword) == KEYWORD_NUMBER  || \
+    (_keyword) == KEYWORD_INTEGER || \
+    (_keyword) == KEYWORD_STRING     \
 
 // Starting nonterminal <prog>
 int prog(parser_t *parser)
@@ -401,11 +406,7 @@ int param_fdec(parser_t *parser)
     switch (parser->token->type)
     {
         case TOKEN_KEYWORD:
-            if (TOKEN_KW_TYPE == KEYWORD_NIL     ||
-                TOKEN_KW_TYPE == KEYWORD_NUMBER  ||
-                TOKEN_KW_TYPE == KEYWORD_INTEGER ||
-                TOKEN_KW_TYPE == KEYWORD_STRING) {
-            
+            if (IS_DTYPE(TOKEN_KW_TYPE)){
                 // RULE 14: <param_fdec> → <dtype> <param_fdec_n>
 
                 // <dtype>
@@ -464,51 +465,67 @@ int param_fdec_n(parser_t *parser)
 }
 
 
-#if 0
 // Nonterminal <ret_type_list>
 int ret_type_list(parser_t *parser)
 {
     int result;
 
-    switch (parser->token->type)
-    {
-        case TOKEN_NIL: 
-        case TOKEN_NUMBER:
-        case TOKEN_INTEGER:
-        case TOKEN_STRING:
+    if (parser->token->type == TOKEN_KEYWORD) {
+        switch (TOKEN_KW_TYPE) 
+        {
+            case KEYWORD_STRING:
+            case KEYWORD_INTEGER:
+            case KEYWORD_NUMBER:
+            case KEYWORD_NIL:
+                
+                // RULE 18: <ret_type_list> → <dtype> <ret_type_list_n>
+            
+                // <dtype>
+                result = dtype(parser);
+                CHECK_RESULT_VALUE(EXIT_OK); 
+                
+                // <ret_type_list_n>
+                result = ret_type_list_n(parser);
+                CHECK_RESULT_VALUE(EXIT_OK); 
+                
+                PARSER_EAT();
+                return EXIT_OK;
+            
+            case KEYWORD_FUNCTION:
+            case KEYWORD_RETURN:
+            case KEYWORD_WHILE:
+            case KEYWORD_GLOBAL:
+            case KEYWORD_LOCAL:
+            case KEYWORD_END:
+            case KEYWORD_IF:
+            
+                // RULE 19: <ret_type_list> → ε
+                
+                PARSER_EAT();
+                return EXIT_OK;
 
-            // RULE 18: <ret_type_list> → <dtype> <ret_type_list_n>
-            
-            // <dtype>
-            result = dtype(parser);
-            CHECK_RESULT_VALUE(EXIT_OK); 
-            
-            // <ret_type_list_n>
-            result = ret_type_list_n(parser);
-            CHECK_RESULT_VALUE(EXIT_OK); 
-            
-            PARSER_EAT();
-            return EXIT_OK;
-
-        case TOKEN_EOF:
-        case TOKEN_GLOBAL:
-        case TOKEN_ID: // TODO: HOW TO SYMTABLE
-        case TOKEN_FUNCTION:
-        case TOKEN_END:
-        case TOKEN_LOCAL:
-        case TOKEN_IF:
-        case TOKEN_WHILE:
-        case TOKEN_RETURN:
-        case TOKEN_EXPR: // TODO: HANDLE THIS - switch context ?
-            
-            // RULE 19: <ret_type_list> → ε
-            PARSER_EAT();
-            return EXIT_OK;
+            default:
+                break;
+        } // switch()
+    } else if (parser->token->type == TOKEN_ID) {
+        
+        // RULE 19: <ret_type_list> → ε
+        
+        // TODO: add to symtable
+        PARSER_EAT();
+        return EXIT_OK;
+    } else if (parser->token->type == TOKEN_EOF) {
+        
+        // RULE 19: <ret_type_list> → ε
+        
+        PARSER_EAT();
+        return EXIT_OK;
     }
 
     return ERR_SYNTAX;
 }
 
+#if 0
 // <ret_type_list_n>
 int ret_type_list_n(parser_t *parser)
 {
