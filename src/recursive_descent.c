@@ -774,8 +774,6 @@ int else_nt(parser_t *parser)
 // Nonterminal <var_def>
 int var_def(parser_t *parser)
 {
-    int result;
-
     if (parser->token->type == TOKEN_KEYWORD) {
         switch (TOKEN_KW_TYPE) 
         { 
@@ -848,12 +846,9 @@ int assign(parser_t *parser)
 }
 
 
-#if 0
-// <id_n>
+// Nonterminal <id_n>
 int id_n(parser_t *parser)
 {
-    int result;
-
     switch (parser->token->type)
     {
         case TOKEN_COMMA:
@@ -872,12 +867,15 @@ int id_n(parser_t *parser)
 
             PARSER_EAT();
             return EXIT_OK;
+        default:
+            break;
     }
 
     return ERR_SYNTAX;
 }
 
 
+#if 0
 // <expr_list>
 int expr_list(parser_t *parser)
 {
