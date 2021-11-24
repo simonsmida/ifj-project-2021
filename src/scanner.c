@@ -55,7 +55,7 @@ token_t *get_next_token(FILE *file)
                     state = START_COMMENT_OR_MINUS;
                 }
                     // Found number
-                else if (isdigit(c) && c != '0') { 
+                else if (isdigit(c)) { 
                     append_character(buffer, c);
                     state = NUMBER_SEQUENCE;
                 }
@@ -96,6 +96,10 @@ token_t *get_next_token(FILE *file)
 					append_character(buffer, c);
                     state = OPERATOR;
                 }
+				else {
+					// Found an illegal character for example ';'
+					return generate_token(buffer, STATE_ERROR, error);
+				}
                 break;
 
             case START_COMMENT_OR_MINUS:
@@ -105,9 +109,8 @@ token_t *get_next_token(FILE *file)
                     buffer->current_index = 0;
                 }
                 else {
+					ungetc(c, file);
                     return generate_token(buffer,  OPERATOR, error);
-                    ungetc(c, file);
-                    state = DEFAULT_STATE;
                 }
                 break;
         
@@ -379,8 +382,9 @@ token_t *get_next_token(FILE *file)
                     fprintf(stderr, "Invalid escape sequence in string literal");
 					error = -1;
 					return generate_token(buffer, state, error);
-                    break;
+                   
                 }
+				break;
             case ESCAPE_2:
                 if (c >= '0' && c <= '9') {
                     escape_seq_bufer[2] = c;
@@ -396,8 +400,8 @@ token_t *get_next_token(FILE *file)
                     }
 
                     state = STRING_LITERAL;
-                    break;
                 }
+				break;
 
 
             case ASSIGN_OR_EQUALS:
@@ -418,6 +422,7 @@ token_t *get_next_token(FILE *file)
     } // while
     if (c == EOF) {
         if (buffer->current_index > 0 ) {
+			ungetc(c, file);
 			if (state == DOUBLE_E_SEQUENCE || state == DOUBLE_DOT_SEQUENCE || state == DOUBLE_E_PLUS_MINUS_SEQUENCE){
 				fprintf(stderr, "There has to be non-empty digit after '.' or 'e' or 'e+/-'\n");
 				error = -1;
@@ -426,8 +431,7 @@ token_t *get_next_token(FILE *file)
             return generate_token(buffer, state, error);
         }
         else {
-            destroy_buffer(buffer);
-            return NULL; // Found no more tokens
+            return generate_token(buffer, STATE_EOF, error);
         }
     }
 
@@ -477,6 +481,7 @@ token_t *generate_token(string_t *buffer,  int type, int error)
 
             if (is_keyword(buffer->string) || is_variable_type(buffer->string)) {
                 token->type = TOKEN_KEYWORD;
+				token->attribute->keyword_type = determine_keyword(buffer->string);
                 break;
             }
             else {
@@ -495,6 +500,7 @@ token_t *generate_token(string_t *buffer,  int type, int error)
 			 		break;
 				case '*':
 					token->type = TOKEN_MUL;
+					break;
 				case '#':
 					token->type = TOKEN_STRLEN;
 					break;
@@ -560,11 +566,9 @@ token_t *generate_token(string_t *buffer,  int type, int error)
             token->type = TOKEN_COMMA;
             break;
 
-        case NUMBER_SEQUENCE:
-            token->type = TOKEN_INT_LIT;
-			int num = (int) strtol(buffer->string, NULL, 10);
-			token->attribute->integer = num;
-            break;
+
+       
+
         case L_PAREN:
             token->type = TOKEN_L_PAR;
             break;
@@ -573,19 +577,36 @@ token_t *generate_token(string_t *buffer,  int type, int error)
             token->type = TOKEN_R_PAR;
             break;
 
+
+		case NUMBER_SEQUENCE:
+			token->type = TOKEN_INT_LIT;
+			int num = (int) strtol(buffer->string, NULL, 10);
+			token->attribute->integer = num;
+		
+            break;
+
 		case DOUBLE_DOT_SEQUENCE_VALID:
 		case DOUBLE_E_PLUS_MINUS_SEQUENCE_VALID:
 		case DOUBLE_E_SEQUENCE_VALID:
 			token->type = TOKEN_NUM_LIT;
+      double number = strtod(buffer->string, NULL);
+			token->attribute->number = number;
+
+      break;
+
+		case STATE_EOF:
+			token->type = TOKEN_EOF;
 			break;
 
-        case DOUBLE_DOT_SEQUENCE:
-            token->type = TOKEN_NUM_LIT;
-            break;
-            
-        case DOUBLE_E_SEQUENCE:
-            token->type = TOKEN_NUM_LIT;
-            break;
+		case START_COMMENT_OR_MINUS:
+			if (!strcmp(buffer->string, "-")){
+				token->type = TOKEN_MINUS;
+			}
+			break;
+
+		case STATE_ERROR:
+			token->type =  TOKEN_ERROR;
+			break;
     } // switch
     
     destroy_buffer(buffer);
@@ -705,5 +726,65 @@ const char *token_type_to_str(int type)
 void print_token(token_t *token)
 {
     // TODO change token->attribute->string to its actual representation
+	if (token->attribute->keyword_type == KEYWORD_STRING){
+		printf("Next token is STRING\n");
+	}
+	if (token->attribute->keyword_type == KEYWORD_INTEGER){
+		printf("Next token is INTEGER\n");
+	}
+	if (token->attribute->keyword_type == KEYWORD_NIL){
+		printf("Next token is NIL\n");
+	}
+	
     printf("Token: [%s '%s']\n", token_type_to_str(token->type), token->attribute->string);
+}
+
+
+keyword_type_t determine_keyword(const char *string){
+	if(!strcmp(string,"require")){
+		return KEYWORD_REQUIRE;
+	}
+	else if(!strcmp(string,"nil")){
+		return KEYWORD_NIL;
+	}
+	else if(!strcmp(string,"if")){
+		return KEYWORD_IF;
+	}
+	else if(!strcmp(string,"else")){
+		return KEYWORD_ELSE;
+	}
+	else if(!strcmp(string,"do")){
+		return KEYWORD_DO;
+	}
+	else if(!strcmp(string,"end")){
+		return KEYWORD_END;
+	}
+	else if(!strcmp(string,"function")){
+		return KEYWORD_FUNCTION;
+	}
+	else if(!strcmp(string,"global")){
+		return KEYWORD_GLOBAL;
+	}
+	else if(!strcmp(string,"local")){
+		return KEYWORD_LOCAL;
+	}
+	else if(!strcmp(string,"return")){
+		return KEYWORD_RETURN;
+	}
+	else if(!strcmp(string,"then")){
+		return KEYWORD_THEN;
+	}
+	else if(!strcmp(string,"while")){
+		return KEYWORD_WHILE;
+	}
+	else if(!strcmp(string,"string")){
+		return KEYWORD_STRING;
+	}
+	else if(!strcmp(string,"integer")){
+		return KEYWORD_INTEGER;
+	}
+	else if(!strcmp(string,"number")){
+		return KEYWORD_NUMBER;
+	}
+
 }

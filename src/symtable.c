@@ -6,8 +6,17 @@
  *         Šimon Šmída   - xsmida03
  */
 
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
+#include <stdint.h> // uint32_t
 #include "include/symtable.h"
 #include "include/error.h"
+
+#include "include/scanner.h"
+
 
 /**
  * @brief Hashing function - calculate index for given key
@@ -148,7 +157,7 @@ symtable_item_t *symtable_search(symtable_t *s, const char *key)
     return NULL;
 }
 
-item_function_t *create_symtable_function(symtable_t *s, const char *key){
+item_function_t *symtable_create_function(symtable_t *s, const char *key){
 	
 	symtable_item_t *item = symtable_search(s, key);
 	if (item == NULL){
@@ -177,7 +186,7 @@ item_function_t *create_symtable_function(symtable_t *s, const char *key){
 	return function;
 }
 
-const_var_t *create_symtable_const_var(bool is_var, bool is_defined, data_type_t type){
+const_var_t *symtable_create_const_var(bool is_var, bool is_defined, data_type_t type){
 	const_var_t *param;
 	param = calloc(1, sizeof(const_var_t));
 	if (param == NULL){
@@ -204,20 +213,28 @@ void symtable_insert_const_var(symtable_t *s, char *key, const_var_t *const_var)
 }
 
 
-void symtable_insert_new_function_param(symtable_item_t *item ,data_type_t data){
-	data_type_t *function;
-	function = realloc(item->function->type_params, sizeof(data_type_t) * item->function->num_params + 1);
-	if (function == NULL){
-		ERROR_MSG_SYMTABLE;
+void symtable_insert_new_function_param(symtable_t *s ,data_type_t data, const char *key){
+	symtable_item_t *item = symtable_search(s, key);
+	if ( item != NULL ){
+		data_type_t *function;
+		function = realloc(item->function->type_params, sizeof(data_type_t) * (item->function->num_params + 1) );
+		if (function == NULL){
+			ERROR_MSG_SYMTABLE;
+		}
+		function[item->function->num_params] = data;
+		item->function->num_params++;
+		item->function->type_params = function;
 	}
-	function[item->function->num_params] = data;
-	item->function->num_params++;
-	item->function->type_params = function;
+	else {
+		fprintf(stderr, "%s item doesnt exist in symtab\n", key);
+	}
 
 	return;
 }
 
-void symtable_insert_new_function_ret_type(symtable_item_t *item ,data_type_t data){
+void symtable_insert_new_function_ret_type(symtable_t *s ,data_type_t data, const char *key){
+	symtable_item_t *item = symtable_search(s, key);
+	if ( item != NULL ){
 	data_type_t *ret_types;
 	ret_types = realloc(item->function->ret_types, sizeof(data_type_t) * (item->function->num_ret_types + 1));
 	if (ret_types == NULL){
@@ -226,6 +243,6 @@ void symtable_insert_new_function_ret_type(symtable_item_t *item ,data_type_t da
 	ret_types[item->function->num_ret_types] = data;
 	item->function->num_ret_types++;
 	item->function->ret_types = ret_types;
-
+	}
 	return;
 }
