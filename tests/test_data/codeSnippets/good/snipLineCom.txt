@@ -1,0 +1,2 @@
+vysl = vysl * a -- dva prikazy vysl = vysl * a
+vysl = vysl / b

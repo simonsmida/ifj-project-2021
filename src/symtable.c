@@ -50,13 +50,13 @@ symtable_t *symtable_init(size_t n)
 {
     symtable_t *s = calloc(1, sizeof(symtable_t) + n*sizeof(symtable_item_t));
     if (s == NULL) {
-        error_message("symtable", ERR_INTERNAL,  "Calloc failure.\n"); // TODO internal compiler err? 
+        //error_message("symtable", ERR_INTERNAL,  "Calloc failure.\n"); // TODO internal compiler err? 
         return NULL; // TODO: calloc failure error message
     } 
     s->size = 0; // current number of records
     s->items_size = n; // size of an array of pointers
 
-    for (int i = 0; i < n; i++) {
+    for (size_t i = 0; i < n; i++) {
         s->items[i] = NULL;
     }
 
@@ -76,7 +76,7 @@ void symtable_destroy(symtable_t *s)
 {
 	symtable_item_t *next;
 	symtable_item_t *tmp;
-    for (int i = 0; i < s->items_size; i++){
+    for (size_t i = 0; i < s->items_size; i++){
 		tmp = s->items[i];
 		while (tmp != NULL){
 			if (tmp->function != NULL){
@@ -117,11 +117,11 @@ symtable_item_t *symtable_insert(symtable_t *s, const char *key)
 		}
 		item = calloc(1, sizeof(symtable_item_t));
 		if (item == NULL){
-			error_message("Symtable", ERR_INTERNAL, "Failed calloc");
+			//error_message("Symtable", ERR_INTERNAL, "Failed calloc");
 		}
 		item->key = calloc(1, strlen(key) + 1);
 		if (item->key == NULL){
-			error_message("Symtable", ERR_INTERNAL, "Failed calloc");
+			//error_message("Symtable", ERR_INTERNAL, "Failed calloc");
 		}
 		strcpy( item->key, key );
 		item->const_var = NULL;
@@ -136,7 +136,7 @@ symtable_item_t *symtable_insert(symtable_t *s, const char *key)
 		}
 	}
 	
-	s->items_size++;
+	s->size++;
 
 	return item;
 }
@@ -168,7 +168,7 @@ item_function_t *symtable_create_function(symtable_t *s, const char *key){
 
 	function = calloc(1,sizeof(item_function_t));
 	if (function == NULL){
-		ERROR_MSG_SYMTABLE;
+		//ERROR_MSG_SYMTABLE;
 		return NULL;
 	}
 	function->num_params = 0;
@@ -178,7 +178,7 @@ item_function_t *symtable_create_function(symtable_t *s, const char *key){
 	function->type_params = calloc(1, sizeof(data_type_t));
 
 	if (function->ret_types == NULL || function->type_params == NULL){
-		ERROR_MSG_SYMTABLE;
+		//ERROR_MSG_SYMTABLE;
 		return NULL;
 	}
 
@@ -190,7 +190,7 @@ const_var_t *symtable_create_const_var(bool is_var, bool is_defined, data_type_t
 	const_var_t *param;
 	param = calloc(1, sizeof(const_var_t));
 	if (param == NULL){
-		ERROR_MSG_SYMTABLE;
+		//ERROR_MSG_SYMTABLE;
 		return NULL;
 	}
 	param->is_var = is_var;
@@ -219,7 +219,7 @@ void symtable_insert_new_function_param(symtable_t *s ,data_type_t data, const c
 		data_type_t *function;
 		function = realloc(item->function->type_params, sizeof(data_type_t) * (item->function->num_params + 1) );
 		if (function == NULL){
-			ERROR_MSG_SYMTABLE;
+			//ERROR_MSG_SYMTABLE;
 		}
 		function[item->function->num_params] = data;
 		item->function->num_params++;
@@ -238,7 +238,7 @@ void symtable_insert_new_function_ret_type(symtable_t *s ,data_type_t data, cons
 	data_type_t *ret_types;
 	ret_types = realloc(item->function->ret_types, sizeof(data_type_t) * (item->function->num_ret_types + 1));
 	if (ret_types == NULL){
-		ERROR_MSG_SYMTABLE;
+		//ERROR_MSG_SYMTABLE;
 	}
 	ret_types[item->function->num_ret_types] = data;
 	item->function->num_ret_types++;
