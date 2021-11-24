@@ -55,7 +55,7 @@ token_t *get_next_token(FILE *file)
                     state = START_COMMENT_OR_MINUS;
                 }
                     // Found number
-                else if (isdigit(c) && c != '0') { 
+                else if (isdigit(c)) { 
                     append_character(buffer, c);
                     state = NUMBER_SEQUENCE;
                 }
@@ -96,6 +96,10 @@ token_t *get_next_token(FILE *file)
 					append_character(buffer, c);
                     state = OPERATOR;
                 }
+				else {
+					// Found an illegal character for example ';'
+					return generate_token(buffer, STATE_ERROR, error);
+				}
                 break;
 
             case START_COMMENT_OR_MINUS:
@@ -105,9 +109,8 @@ token_t *get_next_token(FILE *file)
                     buffer->current_index = 0;
                 }
                 else {
+					ungetc(c, file);
                     return generate_token(buffer,  OPERATOR, error);
-                    ungetc(c, file);
-                    state = DEFAULT_STATE;
                 }
                 break;
         
@@ -429,7 +432,6 @@ token_t *get_next_token(FILE *file)
         }
         else {
             return generate_token(buffer, STATE_EOF, error);
-            return NULL; // Found no more tokens
         }
     }
 
@@ -545,7 +547,7 @@ token_t *generate_token(string_t *buffer,  int type, int error)
         		return NULL;
 			}
 			memcpy(token->attribute->string,buffer->string,  strlen(buffer->string));
-            token->type = TOKEN_STRING;
+            token->type = TOKEN_STR_LIT;
             break;
 
         case ASSIGN_OR_EQUALS:
@@ -575,7 +577,7 @@ token_t *generate_token(string_t *buffer,  int type, int error)
 
 
 		case NUMBER_SEQUENCE:
-			token->type = TOKEN_INTEGER;
+			token->type = TOKEN_INT_LIT;
 			int num = (int) strtol(buffer->string, NULL, 10);
 			token->attribute->integer = num;
 		
@@ -584,7 +586,7 @@ token_t *generate_token(string_t *buffer,  int type, int error)
 		case DOUBLE_DOT_SEQUENCE_VALID:
 		case DOUBLE_E_PLUS_MINUS_SEQUENCE_VALID:
 		case DOUBLE_E_SEQUENCE_VALID:
-			token->type = TOKEN_NUMBER;
+			token->type = TOKEN_NUM_LIT;
 			double number = strtod(buffer->string, NULL);
 			token->attribute->number = number;
 			
@@ -592,6 +594,16 @@ token_t *generate_token(string_t *buffer,  int type, int error)
 
 		case STATE_EOF:
 			token->type = TOKEN_EOF;
+			break;
+
+		case START_COMMENT_OR_MINUS:
+			if (!strcmp(buffer->string, "-")){
+				token->type = TOKEN_MINUS;
+			}
+			break;
+
+		case STATE_ERROR:
+			token->type =  TOKEN_ERROR;
 			break;
 		
     } // switch
@@ -687,11 +699,11 @@ const char *token_type_to_str(int type)
             return "separator";
         case TOKEN_ID: 
             return "identifier";
-        case TOKEN_NUMBER: 
+        case TOKEN_NUM_LIT: 
             return "number_literal";
-        case TOKEN_INTEGER: 
+        case TOKEN_INT_LIT: 
             return "int_literal";
-        case TOKEN_STRING: 
+        case TOKEN_STR_LIT: 
             return "str_literal";
         case TOKEN_EQ: 
         case TOKEN_NOT_EQ:

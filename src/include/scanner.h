@@ -45,6 +45,7 @@
 #define SEPARATOR 224
 
 #define STATE_EOF 225
+#define STATE_ERROR 226
 
 
 #define SIZE_STRING 5
@@ -66,10 +67,6 @@ typedef enum token_types {
     TOKEN_R_PAR,
     TOKEN_COMMA,
     TOKEN_COLON,
-
-	TOKEN_STRING,
-	TOKEN_INTEGER,
-	TOKEN_NUMBER,
 
     // Arithmetic operators
     TOKEN_PLUS,
