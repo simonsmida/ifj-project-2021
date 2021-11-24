@@ -575,7 +575,6 @@ token_t *generate_token(string_t *buffer,  int type, int error)
             token->type = TOKEN_R_PAR;
             break;
 
-
 		case NUMBER_SEQUENCE:
 			token->type = TOKEN_INT_LIT;
 			int num = (int) strtol(buffer->string, NULL, 10);
