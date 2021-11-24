@@ -44,6 +44,8 @@
 #define COLON 223
 #define SEPARATOR 224
 
+#define STATE_EOF 225
+
 
 #define SIZE_STRING 5
 

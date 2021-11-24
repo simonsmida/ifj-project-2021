@@ -419,6 +419,7 @@ token_t *get_next_token(FILE *file)
     } // while
     if (c == EOF) {
         if (buffer->current_index > 0 ) {
+			ungetc(c, file);
 			if (state == DOUBLE_E_SEQUENCE || state == DOUBLE_DOT_SEQUENCE || state == DOUBLE_E_PLUS_MINUS_SEQUENCE){
 				fprintf(stderr, "There has to be non-empty digit after '.' or 'e' or 'e+/-'\n");
 				error = -1;
@@ -427,7 +428,7 @@ token_t *get_next_token(FILE *file)
             return generate_token(buffer, state, error);
         }
         else {
-            destroy_buffer(buffer);
+            return generate_token(buffer, STATE_EOF, error);
             return NULL; // Found no more tokens
         }
     }
@@ -587,6 +588,10 @@ token_t *generate_token(string_t *buffer,  int type, int error)
 			double number = strtod(buffer->string, NULL);
 			token->attribute->number = number;
 			
+			break;
+
+		case STATE_EOF:
+			token->type = TOKEN_EOF;
 			break;
 		
     } // switch
