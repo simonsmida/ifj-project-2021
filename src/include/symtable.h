@@ -16,6 +16,10 @@
 	
 
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h> // uint32_t
+#include <string.h>
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -29,7 +33,7 @@ typedef enum data_type {
 
 typedef struct symbol_data {
     data_type_t type;
-    bool define; // whether variable had been defined or not
+    bool defined; // whether variable had been defined or not
 } symbol_data_t;
 
 typedef struct item_function {

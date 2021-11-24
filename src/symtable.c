@@ -6,6 +6,7 @@
  *         Šimon Šmída   - xsmida03
  */
 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -15,7 +16,6 @@
 #include "include/error.h"
 
 #include "include/scanner.h"
-
 
 
 /**
@@ -195,7 +195,7 @@ const_var_t *symtable_create_const_var(bool is_var, bool is_defined, data_type_t
 	}
 	param->is_var = is_var;
 	param->data.type = type;
-	param->data.define = is_defined;
+	param->data.defined = is_defined;
 	return param;
 }
 

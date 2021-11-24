@@ -566,7 +566,9 @@ token_t *generate_token(string_t *buffer,  int type, int error)
             token->type = TOKEN_COMMA;
             break;
 
+
        
+
         case L_PAREN:
             token->type = TOKEN_L_PAR;
             break;
@@ -587,10 +589,10 @@ token_t *generate_token(string_t *buffer,  int type, int error)
 		case DOUBLE_E_PLUS_MINUS_SEQUENCE_VALID:
 		case DOUBLE_E_SEQUENCE_VALID:
 			token->type = TOKEN_NUM_LIT;
-			double number = strtod(buffer->string, NULL);
+      double number = strtod(buffer->string, NULL);
 			token->attribute->number = number;
-			
-			break;
+
+      break;
 
 		case STATE_EOF:
 			token->type = TOKEN_EOF;
@@ -605,7 +607,6 @@ token_t *generate_token(string_t *buffer,  int type, int error)
 		case STATE_ERROR:
 			token->type =  TOKEN_ERROR;
 			break;
-		
     } // switch
     
     destroy_buffer(buffer);
