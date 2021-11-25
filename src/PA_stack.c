@@ -20,6 +20,11 @@
 void PA_stack_init(PA_stack *stack){
 	if( stack != NULL ){
 		stack -> top_index = -1;
+		/** Init all pointers to the NULL */
+		for(int i = 0; i < MAX_STACK_SIZE; i++){
+			stack -> items[i].terminal  = NULL;
+			stack -> items[i].item_type = 0;
+		}
 	}
 }
 
@@ -65,33 +70,31 @@ void PA_stack_top(const PA_stack *stack, PA_item_t* item){
 	}
 }
 
-void skuska(PA_stack *zasobnicek){
-	PA_stack_init(zasobnicek);
-	PA_item_t polozka;
-	char* filename = "regex.txt";
-	FILE *f = fopen(filename,"r");
-	if ( f == NULL){
-		fprintf(stderr,"Error while opening the file %s\n",filename);
+/** 
+ * @brief Function returns the terminal
+ *	      which is closest to the top of the stack
+ * 
+ * @param stack Pointer to stack structure
+ * @param item  Pointer to item structure
+ *
+ * @return If the terminal was found on stack returns zero, else 1
+ */
+int PA_stack_top_terminal(const PA_stack *stack, PA_item_t* item){
+	if ( !PA_stack_empty(stack) ){
+		/** 1. Set the iteration index, which does not change the top index */
+		int index = stack -> top_index;
+		/** 2. Start searching the nearest terminal */
+		while(index > -1){
+			if ( stack -> items[index].item_type ){
+				*item = stack -> items[index];
+				return 0;
+			}
+			index--;
+		}
 	}
-	for(int i=0; i<3;i++){
-		token_t* new_token = get_next_token(f);
-		polozka.terminal = *new_token;
-		printf("\nZiskany terminal\n");
-		printf("Token type: %d\n", polozka.terminal.type);
-		printf("Token name: %s\n",polozka.terminal.attribute->string);
-		PA_stack_push(zasobnicek, polozka);
-	}
-	
-	for(int i=0; i<2;i++){
-		printf("\nPopujem\n");
-		PA_stack_top(zasobnicek,&polozka);
-		PA_stack_pop(zasobnicek);
-		printf("Ziskany terminal\n");
-		printf("Token type: %d\n", polozka.terminal.type);
-		printf("Token name: %s\n",polozka.terminal.attribute->string);
-	}
-	fclose(f);
+	return 1;
 }
+
 /** 
  * @brief Function removes the item from the top of the stack
  * 
@@ -100,6 +103,13 @@ void skuska(PA_stack *zasobnicek){
 void PA_stack_pop(PA_stack *stack){
 	if( !PA_stack_empty(stack) ){
 		stack -> top_index--;
+		if(stack -> items[stack -> top_index].terminal != NULL){
+			if(stack -> items[stack -> top_index].terminal->attribute->string != NULL){
+				free(stack -> items[stack -> top_index].terminal->attribute->string);
+			}
+			free(stack -> items[stack -> top_index].terminal->attribute);
+			free(stack -> items[stack -> top_index].terminal);
+		}
 	}
 }
 
@@ -108,11 +118,14 @@ void PA_stack_pop(PA_stack *stack){
  * 
  * @param stack Pointer to stack structure
  * @param item  Item structure
+ * @param type  Type of item being pushed (Terminal/Nonterminal)
  */
-void PA_stack_push(PA_stack *stack, PA_item_t item){
-//TODO structure on stack is changing make a deep copy	
+void PA_stack_push(PA_stack *stack, PA_item_t item,int type){
+	/** 1. For assigning the structure create a deep copy*/
+	//TODO structure on stack is changing make a deep copy	
 	if ( !PA_stack_full(stack) ){
 		stack -> top_index++;
-		stack -> items[stack -> top_index] = item;
+		stack -> items[stack -> top_index].terminal = item.terminal;
+		//stack -> items[stack -> top_index].item_type = type;
 	}
 }

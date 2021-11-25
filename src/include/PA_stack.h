@@ -22,7 +22,7 @@ typedef enum non_terminals_type{
 
 /** Structure for storing non-terminals */
 typedef struct nonterminal{
-	non_terminal_type type;
+	non_terminal_type expr_type;
 	int attribute;
 }non_terminal_t;
 
@@ -30,12 +30,14 @@ typedef struct nonterminal{
 typedef struct pa_item{
 	//Terminal
 	//TODO Probalby add ptr to token -> functions return ptr to tokens
-	token_t terminal;
+	token_t* terminal;
 	//Nonterminal
 	//TODO Probalby add ptr to non_terminal_t, for comparing with NULL
 	non_terminal_t non_terminal;
 	//Symtabptr
-	symtable_t * symtable;	
+	symtable_t * symtable;
+	//Specifies, whether the item is terminal or nonterminal
+	int item_type;	
 }PA_item_t;
 
 /** Stack structure */
@@ -81,6 +83,17 @@ int PA_stack_full(const PA_stack *stack);
 void PA_stack_top(const PA_stack *stack, PA_item_t* item);
 
 /** 
+ * @brief Function returns the terminal
+ *	      which is closest to the top of the stack
+ * 
+ * @param stack Pointer to stack structure
+ * @param item  Pointer to item structure
+ *
+ * @return If the terminal was found on stack returns zero, else 1
+ */
+int PA_stack_top_terminal(const PA_stack *stack, PA_item_t* item);
+
+/** 
  * @brief Function removes the item from the top of the stack
  * 
  * @param stack Pointer to stack structure
@@ -92,8 +105,9 @@ void PA_stack_pop(PA_stack *stack);
  * 
  * @param stack Pointer to stack structure
  * @param item  Item structure
+ * @param type  Type of item being pushed (Terminal/Nonterminal)
  */
-void PA_stack_push(PA_stack *stack, PA_item_t item);
+void PA_stack_push(PA_stack *stack, PA_item_t item, int type);
 
 void skuska(PA_stack *zasobnicek);
 #endif /** PA_STACK_H */

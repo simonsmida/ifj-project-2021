@@ -12,7 +12,7 @@ OBJ_FILES = $(SRC_FILES:.c=.o)
 $(OUT): $(OBJ_FILES)
 	$(CC) $(CFLAGS) $^ -o $@
 
-%.o: %.c include/%.h include/symtable.h include/scanner.h
+%.o: %.c include/%.h 
 	$(CC) -c $(CFLAGS) $< -o $@
 
 clean:
