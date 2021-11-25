@@ -1,9 +1,19 @@
-OUT=main
-CC=gcc
-CFLAGS=-std=c11 -Wall -pedantic -g -lm
+OUT = main
+CC = gcc
+CFLAGS = -std=c11 -Wall -pedantic -g -lm
+TEST_FLAGS = -Wall -g -ggdb3 -W -std=c99 -I tests/unity/src tests/unity/src/unity.c
 
-SRC_FILES = $(wildcard src/*.c)
+# Path to source files
+PATHS = src/
+# Path to tests
+PATHT = tests/
+# Path to test binaries
+PATHB = tests/bin/
+
+TEST_SRC  = $(wildcard $(PATHT)*.c)
+SRC_FILES = $(wildcard $(PATHS)*.c)
 OBJ_FILES = $(SRC_FILES:.c=.o)
+BIN_TESTS = $(addprefix $(PATHB), $(basename $(notdir $(TEST_SRC))))
 
 #example usage: ./main examples/fact_recur.ifj21
 #if you get bored, type 'q', to quit scanning process
@@ -11,8 +21,26 @@ OBJ_FILES = $(SRC_FILES:.c=.o)
 $(OUT): $(OBJ_FILES)
 	$(CC) $(CFLAGS) $^ -o $@
 
-%.o: %.c src/include/%.h
+%.o: %.c $(PATHS)include/%.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
+# ------------------------------------ TESTS ---------------------------------------
+$(PATHB):
+	mkdir $(PATHB)
+
+test: $(PATHB) $(BIN_TESTS)
+	$(PATHB)scanner_test
+	#$(PATHB)symtable_test
+
+$(PATHB)scanner_test: $(PATHT)scanner_test.c $(PATHS)scanner.c $(PATHS)buffer.c
+	$(CC) $(TEST_FLAGS) $^ -o $@
+
+$(PATHB)symtable_test: $(PATHT)symtable_test.c $(PATHS)symtable.c $(PATHS)buffer.c
+	$(CC) $(TEST_FLAGS) $^ -o $@
+# ----------------------------------------------------------------------------------
+
+.PHONY: main
+
 clean:
-	rm -f *.o src/*.o main
+	rm -f *.o src/*.o main  
+	rm -r -f tests/bin/
