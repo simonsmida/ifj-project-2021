@@ -4,8 +4,8 @@
 
 void setUp(void)
 {
-    symtable_t *table;
-    symtable_init(CAPACITY);
+    // symtable_t *table;
+    // symtable_init(CAPACITY);
 }
 
 void tearDown(void)

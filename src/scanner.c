@@ -33,7 +33,7 @@ token_t *get_next_token(FILE *file)
 	
 
     if (buffer == NULL) {
-        printf("EROOR\n");
+        printf("ERROR\n");
         exit(1);
     }
 	int error = 0;
@@ -472,12 +472,12 @@ token_t *generate_token(string_t *buffer,  int type, int error)
     switch (type) 
     {
         case ID_OR_KEYWORD:
-			token->attribute->string = malloc(strlen(buffer->string));
+			token->attribute->string = malloc(strlen(buffer->string)+1);
 			if (token->attribute->string == NULL){
 				fprintf(stderr, "Intern malloc problem\n");
 				return NULL;
 			}
-			memcpy(token->attribute->string,buffer->string, strlen(buffer->string));
+			memcpy(token->attribute->string,buffer->string, strlen(buffer->string)+1);
 
             if (is_keyword(buffer->string) || is_variable_type(buffer->string)) {
                 token->type = TOKEN_KEYWORD;
@@ -541,12 +541,12 @@ token_t *generate_token(string_t *buffer,  int type, int error)
             break;
         
         case STRING_LITERAL:
-			token->attribute->string = malloc(strlen(buffer->string));
+			token->attribute->string = malloc(strlen(buffer->string)+1);
 			if (token->attribute->string == NULL){
 				fprintf(stderr,"Intern malloc problem");
         		return NULL;
 			}
-			memcpy(token->attribute->string,buffer->string,  strlen(buffer->string));
+			memcpy(token->attribute->string,buffer->string,  strlen(buffer->string)+1);
             token->type = TOKEN_STR_LIT;
             break;
 

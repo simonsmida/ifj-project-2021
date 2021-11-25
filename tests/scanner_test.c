@@ -27,9 +27,14 @@ void TEST_blockCom(void)
     token = get_next_token(srcfile);
     TEST_ASSERT(token->type == TOKEN_ID);
     TEST_ASSERT_EQUAL_STRING("dd",token->attribute->string);
+    free(token);
 
     token = get_next_token(srcfile);
     TEST_ASSERT(token->type == TOKEN_EOF);
+    token->attribute->string = NULL;
+    token->attribute = NULL;
+    free(token);
+    
 }
 
 void TEST_EOF(void)
@@ -41,6 +46,9 @@ void TEST_EOF(void)
     FILE *srcfile = fopen("tests/test_data/codeSnippets/good/snipEOF.txt", "r");
     token = get_next_token(srcfile);
     TEST_ASSERT(token->type == TOKEN_EOF);
+    token->attribute->string = NULL;
+    token->attribute = NULL;
+    free(token);
 }
 
 void TEST_op_id_comment(void)
@@ -51,7 +59,6 @@ void TEST_op_id_comment(void)
     */
     token_t *token;
     FILE *srcfile = fopen("tests/test_data/codeSnippets/good/snipLineCom.txt", "r");
-
     token = get_next_token(srcfile);
     TEST_ASSERT(token->type == TOKEN_ID);
     TEST_ASSERT_EQUAL_STRING("vysl",token->attribute->string);
@@ -578,9 +585,48 @@ void TEST_goodOP(void)
     TEST_ASSERT(token->type == TOKEN_EOF);
 }
 
-void TEST_checkWholeExample(void){
+void TEST_Error(void){
+    token_t *token;
+    FILE *srcfile = fopen("tests/test_data/codeSnippets/bad/snipError.txt", "r");
+    token = get_next_token(srcfile);
+    TEST_ASSERT(token->type == TOKEN_ERROR);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT(token->type == TOKEN_ERROR);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT(token->type == TOKEN_ERROR);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT(token->type == TOKEN_ERROR);
+
+     token = get_next_token(srcfile);
+    TEST_ASSERT(token->type == TOKEN_ERROR);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT(token->type == TOKEN_ERROR);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT(token->type == TOKEN_ERROR);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT(token->type == TOKEN_EOF);
+}
+
+void TEST_checkWholeExampleFactIter(void){
     token_t *token;
     FILE *srcfile = fopen("tests/test_data/codeExamples/fact_iter.ifj21", "r");
+    token = get_next_token(srcfile);
+    print_token(token);
+    while(token->type != TOKEN_EOF){
+        token = get_next_token(srcfile);
+        print_token(token);
+    }
+}
+
+void TEST_checkWholeExampleFactRec(void){
+    token_t *token;
+    FILE *srcfile = fopen("tests/test_data/codeExamples/fact_recur.ifj21", "r");
     token = get_next_token(srcfile);
     print_token(token);
     while(token->type != TOKEN_EOF){
@@ -604,12 +650,20 @@ int main(void)
     RUN_TEST(TEST_goodKeywords);
     RUN_TEST(TEST_badKeywords);
     RUN_TEST(TEST_goodOP);
+    RUN_TEST(TEST_Error);
     printf("\n");
-    printf("TEST_checkWholeExample MESSAGES:\n");
+    printf("TEST_checkFactIter MESSAGES:\n");
     printf("----------------------------------------------\n");
-    RUN_TEST(TEST_checkWholeExample);
+    RUN_TEST(TEST_checkWholeExampleFactIter);
     printf("----------------------------------------------\n");
-    printf("\n");    
+    printf("\n");
+
+    printf("\n");
+    printf("TEST_checkFactRec MESSAGES:\n");
+    printf("----------------------------------------------\n");
+    RUN_TEST(TEST_checkWholeExampleFactRec);
+    printf("----------------------------------------------\n");
+    printf("\n");      
 
     // RUN_TEST(test6_id_or_TOKEN_KEYWORD);
     // RUN_TEST(test7_numbers);
