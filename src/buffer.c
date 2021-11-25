@@ -39,12 +39,13 @@ string_t *init_buffer(void)
 void append_character(string_t *buffer, int c)
 {
     if (buffer->current_index >= buffer->size - 1) {
-        buffer->string = realloc(buffer->string, buffer->size * 2);
-        if (buffer->string == NULL) {
+		char *temp = realloc(buffer->string, buffer->size * 2);
+        if (temp == NULL) {
             fprintf(stderr, "Intern reallo problem in lexer\n");
             exit(1);
         }
         buffer->size = buffer->size * 2;
+		buffer->string = temp;
     } 
     buffer->string[buffer->current_index] = c;
     buffer->current_index = buffer->current_index + 1;

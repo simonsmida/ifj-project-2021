@@ -102,7 +102,7 @@ void symtable_destroy(symtable_t *s);
  * @param s Pointer to the hashtable
  * @param key key to the hashtable
  */
-item_function_t *symtable_create_function(symtable_t *s, const char *key);
+item_function_t *symtable_create_and_insert_function(symtable_t *s, const char *key);
 
 /**
  * @brief Create a structure for const/vars in hashtable
@@ -173,5 +173,7 @@ symtable_item_t *symtable_insert(symtable_t *s, const char *key);
  * @return Pointer to the item with item->key key if it exits, otherwise NULL 
  */ 
 symtable_item_t *symtable_search(symtable_t *s, const char *key);
+
+// TODO Funkcia definovana aj deklarovana?
 
 #endif

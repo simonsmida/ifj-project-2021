@@ -157,7 +157,7 @@ symtable_item_t *symtable_search(symtable_t *s, const char *key)
     return NULL;
 }
 
-item_function_t *symtable_create_function(symtable_t *s, const char *key){
+item_function_t *symtable_create_and_insert_function(symtable_t *s, const char *key){
 	
 	symtable_item_t *item = symtable_search(s, key);
 	if (item == NULL){
@@ -174,7 +174,6 @@ item_function_t *symtable_create_function(symtable_t *s, const char *key){
 	function->num_params = 0;
 	function->num_ret_types = 0;
 	function->ret_types = calloc(1, sizeof(data_type_t));
-	function->ret_types[0] = DTYPE_STRING;
 	function->type_params = calloc(1, sizeof(data_type_t));
 
 	if (function->ret_types == NULL || function->type_params == NULL){
