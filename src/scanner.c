@@ -161,6 +161,12 @@ token_t *get_next_token(FILE *file)
                 else if ( c == '\\' ) {
                     state = ESCAPE_SEQUENCE;
                 }
+				else if ( c == ' ' ){
+					append_character(buffer, '\\');
+					append_character(buffer, '0');
+					append_character(buffer, '3');
+					append_character(buffer, '2');
+				}
                 else {
                     append_character(buffer, c);
                 }
@@ -355,7 +361,11 @@ token_t *get_next_token(FILE *file)
                     state = STRING_LITERAL;
                 }
                 else if ( c == 'n' ) {
-                    append_character(buffer, '\n');
+					// code for new line is 
+                    append_character(buffer, '\\');
+					append_character(buffer, '0');
+					append_character(buffer, '1');
+					append_character(buffer, '0');
                     state = STRING_LITERAL;
                 }
                 else if ( c == 't' ) {
