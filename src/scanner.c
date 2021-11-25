@@ -55,7 +55,7 @@ token_t *get_next_token(FILE *file)
                     state = START_COMMENT_OR_MINUS;
                 }
                     // Found number
-                else if (isdigit(c) && c != '0') { 
+                else if (isdigit(c)) { 
                     append_character(buffer, c);
                     state = NUMBER_SEQUENCE;
                 }
@@ -66,7 +66,7 @@ token_t *get_next_token(FILE *file)
                 }
                     // Found String literal
                 else if (c == '"') {
-                    append_character(buffer, c);
+                  //  append_character(buffer, c);
                     state = STRING_LITERAL;
                 }
                     // Found separator
@@ -76,8 +76,8 @@ token_t *get_next_token(FILE *file)
                 }
                     // Found equals '='
                 else if ( c == '=' ) {
-                    state = ASSIGN_OR_EQUALS;
                     append_character(buffer , c);
+					state = ASSIGN_OR_EQUALS;
                 }
                 else if ( c == '(' ) {
                     append_character(buffer, c);
@@ -96,6 +96,10 @@ token_t *get_next_token(FILE *file)
 					append_character(buffer, c);
                     state = OPERATOR;
                 }
+				else {
+					// Found an illegal character for example ';'
+					return generate_token(buffer, STATE_ERROR, error);
+				}
                 break;
 
             case START_COMMENT_OR_MINUS:
@@ -105,9 +109,8 @@ token_t *get_next_token(FILE *file)
                     buffer->current_index = 0;
                 }
                 else {
+					ungetc(c, file);
                     return generate_token(buffer,  OPERATOR, error);
-                    ungetc(c, file);
-                    state = DEFAULT_STATE;
                 }
                 break;
         
@@ -152,7 +155,7 @@ token_t *get_next_token(FILE *file)
             
             case STRING_LITERAL:
                 if (c == '"') {
-                    append_character(buffer, c);
+                   // append_character(buffer, c);
                     return generate_token(buffer , state, error);
                 }
                 else if ( c == '\\' ) {
@@ -379,8 +382,9 @@ token_t *get_next_token(FILE *file)
                     fprintf(stderr, "Invalid escape sequence in string literal");
 					error = -1;
 					return generate_token(buffer, state, error);
-                    break;
+                   
                 }
+				break;
             case ESCAPE_2:
                 if (c >= '0' && c <= '9') {
                     escape_seq_bufer[2] = c;
@@ -396,8 +400,8 @@ token_t *get_next_token(FILE *file)
                     }
 
                     state = STRING_LITERAL;
-                    break;
                 }
+				break;
 
 
             case ASSIGN_OR_EQUALS:
@@ -409,6 +413,7 @@ token_t *get_next_token(FILE *file)
                     ungetc(c, file);
                     return generate_token(buffer, state, error);
                 }
+				break;
 
             default:
                 break;
@@ -418,6 +423,7 @@ token_t *get_next_token(FILE *file)
     } // while
     if (c == EOF) {
         if (buffer->current_index > 0 ) {
+			ungetc(c, file);
 			if (state == DOUBLE_E_SEQUENCE || state == DOUBLE_DOT_SEQUENCE || state == DOUBLE_E_PLUS_MINUS_SEQUENCE){
 				fprintf(stderr, "There has to be non-empty digit after '.' or 'e' or 'e+/-'\n");
 				error = -1;
@@ -426,8 +432,7 @@ token_t *get_next_token(FILE *file)
             return generate_token(buffer, state, error);
         }
         else {
-            destroy_buffer(buffer);
-            return NULL; // Found no more tokens
+            return generate_token(buffer, STATE_EOF, error);
         }
     }
 
@@ -444,39 +449,40 @@ token_t *get_next_token(FILE *file)
  */
 token_t *generate_token(string_t *buffer,  int type, int error) 
 {
-	
 
     token_t *token = (token_t *) malloc(sizeof(token_t));
     if (token == NULL) {
         fprintf(stderr,"Intern malloc problem");
         return NULL;
     }
-    	
 
-    token->attribute = calloc(1, sizeof(token_attribute_t));
+    token->attribute = calloc(1,sizeof(token_attribute_t));
 
 	if (token->attribute == NULL){
 		fprintf(stderr,"Intern malloc problem");
         return NULL;
 	}
 	// Initializing attributes
+	token->type = TOKEN_ERROR;
 	token->attribute->integer = 0;
 	token->attribute->number = 0.0f;
 	token->attribute->string = NULL;
-    buffer->string[buffer->current_index] = '\0';
+	token->attribute->keyword_type = -1;
+	append_character(buffer, '\0');
 	
     switch (type) 
     {
         case ID_OR_KEYWORD:
-			token->attribute->string = malloc(strlen(buffer->string));
+			token->attribute->string = malloc(strlen(buffer->string) + 1);
 			if (token->attribute->string == NULL){
 				fprintf(stderr, "Intern malloc problem\n");
 				return NULL;
 			}
-			memcpy(token->attribute->string,buffer->string, strlen(buffer->string));
+			strcpy(token->attribute->string, buffer->string);
 
             if (is_keyword(buffer->string) || is_variable_type(buffer->string)) {
                 token->type = TOKEN_KEYWORD;
+				token->attribute->keyword_type = determine_keyword(buffer->string);
                 break;
             }
             else {
@@ -485,20 +491,25 @@ token_t *generate_token(string_t *buffer,  int type, int error)
             }
 			break;
         case OPERATOR:
-			 // + - *
-			switch (buffer->string[buffer->current_index - 1]){
-				case '-':
-					token->type = TOKEN_MINUS;
-					break;
-				case '+':
-					token->type = TOKEN_PLUS;
-			 		break;
-				case '*':
-					token->type = TOKEN_MUL;
-				case '#':
-					token->type = TOKEN_STRLEN;
-					break;
-			 } // switch
+		 	// + - *
+			if (!strcmp((buffer->string), "+")){
+				token->type = TOKEN_PLUS;
+				break;
+			}
+			if (!strcmp((buffer->string), "-")){
+				token->type = TOKEN_MINUS;
+				break;
+			}
+			if (!strcmp((buffer->string), "*")){
+				token->type = TOKEN_MUL;
+				break;
+			}
+			if (!strcmp((buffer->string), "#")){
+				token->type = TOKEN_STRLEN;
+				break;
+			}
+			
+			
 
 			if (!strcmp((buffer->string), "~=")){
 				token->type = TOKEN_NOT_EQ;
@@ -535,13 +546,13 @@ token_t *generate_token(string_t *buffer,  int type, int error)
             break;
         
         case STRING_LITERAL:
-			token->attribute->string = malloc(strlen(buffer->string));
+			token->attribute->string = malloc(strlen(buffer->string) + 1);
 			if (token->attribute->string == NULL){
 				fprintf(stderr,"Intern malloc problem");
         		return NULL;
 			}
-			memcpy(token->attribute->string,buffer->string,  strlen(buffer->string));
-            token->type = TOKEN_STRING;
+			strcpy(token->attribute->string,buffer->string);
+            token->type = TOKEN_STR_LIT;
             break;
 
         case ASSIGN_OR_EQUALS:
@@ -560,11 +571,6 @@ token_t *generate_token(string_t *buffer,  int type, int error)
             token->type = TOKEN_COMMA;
             break;
 
-        case NUMBER_SEQUENCE:
-            token->type = TOKEN_INTEGER;
-			int num = (int) strtol(buffer->string, NULL, 10);
-			token->attribute->integer = num;
-            break;
         case L_PAREN:
             token->type = TOKEN_L_PAR;
             break;
@@ -573,19 +579,35 @@ token_t *generate_token(string_t *buffer,  int type, int error)
             token->type = TOKEN_R_PAR;
             break;
 
+		case NUMBER_SEQUENCE:
+			token->type = TOKEN_INT_LIT;
+			int num = (int) strtol(buffer->string, NULL, 10);
+			token->attribute->integer = num;
+		
+            break;
+
 		case DOUBLE_DOT_SEQUENCE_VALID:
 		case DOUBLE_E_PLUS_MINUS_SEQUENCE_VALID:
 		case DOUBLE_E_SEQUENCE_VALID:
-			token->type = TOKEN_NUMBER;
+			token->type = TOKEN_NUM_LIT;
+      double number = strtod(buffer->string, NULL);
+			token->attribute->number = number;
+
+      break;
+
+		case STATE_EOF:
+			token->type = TOKEN_EOF;
 			break;
 
-        case DOUBLE_DOT_SEQUENCE:
-            token->type = TOKEN_NUMBER;
-            break;
-            
-        case DOUBLE_E_SEQUENCE:
-            token->type = TOKEN_NUMBER;
-            break;
+		case START_COMMENT_OR_MINUS:
+			if (!strcmp(buffer->string, "-")){
+				token->type = TOKEN_MINUS;
+			}
+			break;
+
+		case STATE_ERROR:
+			token->type =  TOKEN_ERROR;
+			break;
     } // switch
     
     destroy_buffer(buffer);
@@ -642,6 +664,8 @@ bool is_variable_type(char *string) {
     return false;
 }
 
+
+
 /**
  * @brief Converts given integer type of a token to its string version
  */
@@ -649,30 +673,49 @@ const char *token_type_to_str(int type)
 {
     switch (type)
     {
+        case TOKEN_ERROR:
+            return "TOKEN_ERROR";
+        case TOKEN_PLUS:
+            return "plus";
+        case TOKEN_MINUS:
+            return "minus";
+        case TOKEN_MUL:
+            return "mul";
+        case TOKEN_DIV:
+            return "div";
+        case TOKEN_INT_DIV:
+            return "int div";
+        case TOKEN_EOF:
+            return "EOF";
         case TOKEN_COLON:
             return "colon";
-        case TOKEN_EQ: 
-            return "equals";
         case TOKEN_ASSIGN: 
             return "assign";
         case TOKEN_L_PAR: 
             return "l_paren";
         case TOKEN_R_PAR: 
             return "r_paren";
-        case TOKEN_INTEGER: 
-            return "integer";
         case TOKEN_KEYWORD: 
             return "keyword";
-        case TOKEN_NUMBER: 
-            return "t_double";
-        case TOKEN_GE: 
-            return "operator";
         case TOKEN_COMMA: 
             return "separator";
         case TOKEN_ID: 
             return "identifier";
-        case TOKEN_STRING: 
+        case TOKEN_NUM_LIT: 
+            return "number_literal";
+        case TOKEN_INT_LIT: 
+            return "int_literal";
+        case TOKEN_STR_LIT: 
             return "str_literal";
+        case TOKEN_EQ: 
+        case TOKEN_NOT_EQ:
+        case TOKEN_CONCAT:
+        case TOKEN_STRLEN:
+        case TOKEN_GT:
+        case TOKEN_GE:
+        case TOKEN_LT:
+        case TOKEN_LE: 
+            return "operator";
   }
   return "unrecognized token type";
 }
@@ -683,6 +726,75 @@ const char *token_type_to_str(int type)
  */
 void print_token(token_t *token)
 {
-    // TODO line/token number!!
-    printf("Token: [%s %s]\n", token_type_to_str(token->type), token->attribute->string);
+    // TODO change token->attribute->string to its actual representation
+	
+	if (token->attribute->string != NULL){
+    	printf("Token: [%s '%s']\n", token_type_to_str(token->type), token->attribute->string);
+	}
+}
+
+
+keyword_type_t determine_keyword(const char *string){
+	if(!strcmp(string,"require")){
+		return KEYWORD_REQUIRE;
+	}
+	else if(!strcmp(string,"nil")){
+		return KEYWORD_NIL;
+	}
+	else if(!strcmp(string,"if")){
+		return KEYWORD_IF;
+	}
+	else if(!strcmp(string,"else")){
+		return KEYWORD_ELSE;
+	}
+	else if(!strcmp(string,"do")){
+		return KEYWORD_DO;
+	}
+	else if(!strcmp(string,"end")){
+		return KEYWORD_END;
+	}
+	else if(!strcmp(string,"function")){
+		return KEYWORD_FUNCTION;
+	}
+	else if(!strcmp(string,"global")){
+		return KEYWORD_GLOBAL;
+	}
+	else if(!strcmp(string,"local")){
+		return KEYWORD_LOCAL;
+	}
+	else if(!strcmp(string,"return")){
+		return KEYWORD_RETURN;
+	}
+	else if(!strcmp(string,"then")){
+		return KEYWORD_THEN;
+	}
+	else if(!strcmp(string,"while")){
+		return KEYWORD_WHILE;
+	}
+	else if(!strcmp(string,"string")){
+		return KEYWORD_STRING;
+	}
+	else if(!strcmp(string,"integer")){
+		return KEYWORD_INTEGER;
+	}
+	else if(!strcmp(string,"number")){
+		return KEYWORD_NUMBER;
+	}
+
+	return KEYWORD_IF;
+}
+
+
+void destroy_token(token_t *token){
+	if (token != NULL){
+		if (token->attribute != NULL){
+			if(token->attribute->string != NULL){
+				free(token->attribute->string);
+			}
+			free(token->attribute);
+		}
+		free(token);
+	}
+
+	return;
 }

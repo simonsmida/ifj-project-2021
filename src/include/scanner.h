@@ -44,6 +44,9 @@
 #define COLON 223
 #define SEPARATOR 224
 
+#define STATE_EOF 225
+#define STATE_ERROR 226
+
 
 #define SIZE_STRING 5
 
@@ -57,6 +60,7 @@ typedef enum token_types {
     // Special
     TOKEN_ERROR,
     TOKEN_EOF,
+	TOKEN_IFJ21, // TODO: prob. redundant
 
     // Separators
     TOKEN_L_PAR,
@@ -77,7 +81,7 @@ typedef enum token_types {
     TOKEN_LE,     // <=
     TOKEN_GT,     // >
     TOKEN_GE,     // >=
-	TOKEN_INT_DIV, // //
+    TOKEN_INT_DIV, // //
 
     
     // Other operators
@@ -92,12 +96,10 @@ typedef enum token_types {
 
     // Keyword
     TOKEN_KEYWORD,
-    TOKEN_STRING,
-    TOKEN_INTEGER,
-    TOKEN_NIL,
-    TOKEN_NUMBER,
-    TOKEN_DOUBLE,
-	TOKEN_IFJ21
+
+    TOKEN_STR_LIT,
+    TOKEN_INT_LIT,
+    TOKEN_NUM_LIT,
 
 } token_type_t;
 
@@ -110,10 +112,10 @@ typedef enum keyword_type {
     KEYWORD_FUNCTION,
     KEYWORD_GLOBAL,
     KEYWORD_LOCAL,
-    KEYWORD_NIL,
-    KEYWORD_STRING,
-    KEYWORD_INTEGER,
-    KEYWORD_NUMBER,
+    KEYWORD_NIL,    // data type
+    KEYWORD_STRING, // data type
+    KEYWORD_INTEGER,// data type
+    KEYWORD_NUMBER, // data type
     KEYWORD_DOUBLE,
     KEYWORD_RETURN,
     KEYWORD_THEN,
@@ -131,6 +133,7 @@ typedef struct token {
     token_type_t type;
     token_attribute_t *attribute;
 } token_t;
+
 
 
 /**
@@ -191,4 +194,13 @@ const char *token_type_to_str(int type);
  * @param token token to be printed
  */
 void print_token(token_t *token);
+
+/**
+ * @brief Function to determine which keyword is in string
+ * 
+ * @param string 
+ */ 
+keyword_type_t determine_keyword(const char *string);
+
+void destroy_token(token_t *token);
 #endif // LEX_AN_H

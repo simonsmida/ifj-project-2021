@@ -9,7 +9,7 @@ int main(){
 	PA_stack zasobnicek;
 	PA_stack_init(&zasobnicek);
 	PA_item_t polozka;
-	
+	token_t* new_token;
 	char* filename = "regex.txt";
 	FILE *f = fopen(filename,"r");
 	if ( f == NULL){
@@ -18,7 +18,7 @@ int main(){
 
 	//Push nonterminal -> the only difference is in the item.type	
 	for(int i=0; i<3;i++){
-		token_t* new_token = get_next_token(f);
+		new_token = get_next_token(f);
 		polozka.terminal = new_token;
 		printf("\nZiskany terminal\n");
 		printf("Token type: %d\n", polozka.terminal->type);
@@ -39,17 +39,19 @@ int main(){
 	printf("Token name: %s\n",polozka.terminal->attribute->string);
 	printf("-------------------------------\n");
 	
-	for(int i=0;i<3;i++){
-		PA_stack_pop(&zasobnicek);
-	}
-#if 0	
-	for(int i=0; i<2;i++){
+#if 1	
+	for(int i=0; i<3;i++){
 		printf("\nPopujem\n");
 		PA_stack_top(&zasobnicek,&polozka);
-		PA_stack_pop(&zasobnicek);
 		printf("Ziskany terminal\n");
-		printf("Token type: %d\n", polozka.terminal.type);
-		printf("Token name: %s\n",polozka.terminal.attribute->string);
+		printf("Token type: %d\n", polozka.terminal->type);
+		printf("Token name: %s\n",polozka.terminal->attribute->string);
+		PA_stack_pop(&zasobnicek);
+	}
+#endif 
+#if 0
+	for(int i=0;i<3;i++){
+		PA_stack_pop(&zasobnicek);
 	}
 #endif 
 	fclose(f);

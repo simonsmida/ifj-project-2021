@@ -102,14 +102,8 @@ int PA_stack_top_terminal(const PA_stack *stack, PA_item_t* item){
  */
 void PA_stack_pop(PA_stack *stack){
 	if( !PA_stack_empty(stack) ){
+		destroy_token(stack -> items[stack -> top_index].terminal);
 		stack -> top_index--;
-		if(stack -> items[stack -> top_index].terminal != NULL){
-			if(stack -> items[stack -> top_index].terminal->attribute->string != NULL){
-				free(stack -> items[stack -> top_index].terminal->attribute->string);
-			}
-			free(stack -> items[stack -> top_index].terminal->attribute);
-			free(stack -> items[stack -> top_index].terminal);
-		}
 	}
 }
 
@@ -126,6 +120,6 @@ void PA_stack_push(PA_stack *stack, PA_item_t item,int type){
 	if ( !PA_stack_full(stack) ){
 		stack -> top_index++;
 		stack -> items[stack -> top_index].terminal = item.terminal;
-		//stack -> items[stack -> top_index].item_type = type;
+		stack -> items[stack -> top_index].item_type = type;
 	}
 }
