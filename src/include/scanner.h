@@ -135,6 +135,7 @@ typedef struct token {
 } token_t;
 
 
+
 /**
  * @brief Scans the input file - the main function of the scanner
  *
@@ -200,4 +201,6 @@ void print_token(token_t *token);
  * @param string 
  */ 
 keyword_type_t determine_keyword(const char *string);
+
+void destroy_token(token_t *token);
 #endif // LEX_AN_H

@@ -66,7 +66,7 @@ token_t *get_next_token(FILE *file)
                 }
                     // Found String literal
                 else if (c == '"') {
-                    append_character(buffer, c);
+                  //  append_character(buffer, c);
                     state = STRING_LITERAL;
                 }
                     // Found separator
@@ -76,8 +76,8 @@ token_t *get_next_token(FILE *file)
                 }
                     // Found equals '='
                 else if ( c == '=' ) {
-                    state = ASSIGN_OR_EQUALS;
                     append_character(buffer , c);
+					state = ASSIGN_OR_EQUALS;
                 }
                 else if ( c == '(' ) {
                     append_character(buffer, c);
@@ -155,7 +155,7 @@ token_t *get_next_token(FILE *file)
             
             case STRING_LITERAL:
                 if (c == '"') {
-                    append_character(buffer, c);
+                   // append_character(buffer, c);
                     return generate_token(buffer , state, error);
                 }
                 else if ( c == '\\' ) {
@@ -413,6 +413,7 @@ token_t *get_next_token(FILE *file)
                     ungetc(c, file);
                     return generate_token(buffer, state, error);
                 }
+				break;
 
             default:
                 break;
@@ -448,36 +449,36 @@ token_t *get_next_token(FILE *file)
  */
 token_t *generate_token(string_t *buffer,  int type, int error) 
 {
-	
 
     token_t *token = (token_t *) malloc(sizeof(token_t));
     if (token == NULL) {
         fprintf(stderr,"Intern malloc problem");
         return NULL;
     }
-    	
 
-    token->attribute = calloc(1, sizeof(token_attribute_t));
+    token->attribute = calloc(1,sizeof(token_attribute_t));
 
 	if (token->attribute == NULL){
 		fprintf(stderr,"Intern malloc problem");
         return NULL;
 	}
 	// Initializing attributes
+//	token->type = TOKEN_ERROR;
 	token->attribute->integer = 0;
 	token->attribute->number = 0.0f;
 	token->attribute->string = NULL;
-    buffer->string[buffer->current_index] = '\0';
+	token->attribute->keyword_type = -1;
+	append_character(buffer, '\0');
 	
     switch (type) 
     {
         case ID_OR_KEYWORD:
-			token->attribute->string = malloc(strlen(buffer->string));
+			token->attribute->string = malloc(strlen(buffer->string) + 1);
 			if (token->attribute->string == NULL){
 				fprintf(stderr, "Intern malloc problem\n");
 				return NULL;
 			}
-			memcpy(token->attribute->string,buffer->string, strlen(buffer->string));
+			strcpy(token->attribute->string, buffer->string);
 
             if (is_keyword(buffer->string) || is_variable_type(buffer->string)) {
                 token->type = TOKEN_KEYWORD;
@@ -490,21 +491,25 @@ token_t *generate_token(string_t *buffer,  int type, int error)
             }
 			break;
         case OPERATOR:
-			 // + - *
-			switch (buffer->string[buffer->current_index - 1]){
-				case '-':
-					token->type = TOKEN_MINUS;
-					break;
-				case '+':
-					token->type = TOKEN_PLUS;
-			 		break;
-				case '*':
-					token->type = TOKEN_MUL;
-					break;
-				case '#':
-					token->type = TOKEN_STRLEN;
-					break;
-			 } // switch
+		 	// + - *
+			if (!strcmp((buffer->string), "+")){
+				token->type = TOKEN_PLUS;
+				break;
+			}
+			if (!strcmp((buffer->string), "-")){
+				token->type = TOKEN_MINUS;
+				break;
+			}
+			if (!strcmp((buffer->string), "*")){
+				token->type = TOKEN_MUL;
+				break;
+			}
+			if (!strcmp((buffer->string), "#")){
+				token->type = TOKEN_STRLEN;
+				break;
+			}
+			
+			
 
 			if (!strcmp((buffer->string), "~=")){
 				token->type = TOKEN_NOT_EQ;
@@ -541,12 +546,12 @@ token_t *generate_token(string_t *buffer,  int type, int error)
             break;
         
         case STRING_LITERAL:
-			token->attribute->string = malloc(strlen(buffer->string));
+			token->attribute->string = malloc(strlen(buffer->string) + 1);
 			if (token->attribute->string == NULL){
 				fprintf(stderr,"Intern malloc problem");
         		return NULL;
 			}
-			memcpy(token->attribute->string,buffer->string,  strlen(buffer->string));
+			strcpy(token->attribute->string,buffer->string);
             token->type = TOKEN_STR_LIT;
             break;
 
@@ -565,9 +570,6 @@ token_t *generate_token(string_t *buffer,  int type, int error)
         case SEPARATOR:
             token->type = TOKEN_COMMA;
             break;
-
-
-       
 
         case L_PAREN:
             token->type = TOKEN_L_PAR;
@@ -725,17 +727,10 @@ const char *token_type_to_str(int type)
 void print_token(token_t *token)
 {
     // TODO change token->attribute->string to its actual representation
-	if (token->attribute->keyword_type == KEYWORD_STRING){
-		printf("Next token is STRING\n");
-	}
-	if (token->attribute->keyword_type == KEYWORD_INTEGER){
-		printf("Next token is INTEGER\n");
-	}
-	if (token->attribute->keyword_type == KEYWORD_NIL){
-		printf("Next token is NIL\n");
-	}
 	
-    printf("Token: [%s '%s']\n", token_type_to_str(token->type), token->attribute->string);
+	if (token->attribute->string != NULL){
+    	printf("Token: [%s '%s']\n", token_type_to_str(token->type), token->attribute->string);
+	}
 }
 
 
@@ -786,4 +781,20 @@ keyword_type_t determine_keyword(const char *string){
 		return KEYWORD_NUMBER;
 	}
 
+	return KEYWORD_IF;
+}
+
+
+void destroy_token(token_t *token){
+	if (token != NULL){
+		if (token->attribute != NULL){
+			if(token->attribute->string != NULL){
+				free(token->attribute->string);
+			}
+			free(token->attribute);
+		}
+		free(token);
+	}
+
+	return;
 }
