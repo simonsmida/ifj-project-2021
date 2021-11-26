@@ -1,6 +1,7 @@
 #include <stdio.h>
 // #include "include/scanner.h"
 #include "include/parser.h"
+#include "include/error.h"
 
 int main(int argc, char *argv[])
 {
@@ -11,8 +12,8 @@ int main(int argc, char *argv[])
 
     FILE *f = fopen(argv[1], "r");
     if (f == NULL) {
-        fprintf(stderr, "Error: file failed to be opened.\n");
-        return -1;
+        error_message("Fatal", ERR_INTERNAL, "INTERNAL INTERPRET ERROR!");
+        return ERR_INTERNAL;
     }
 
     /*
