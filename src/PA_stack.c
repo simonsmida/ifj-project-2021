@@ -128,10 +128,14 @@ void PA_stack_pop(PA_stack *stack){
  */
 void PA_stack_push(PA_stack *stack, PA_item_t item,int type){
 	/** 1. For assigning the structure create a deep copy*/
-	//TODO structure on stack is changing make a deep copy	
+	//TODO structure on stack is changing make a deep copy
 	if ( !PA_stack_full(stack) ){
 		stack -> top_index++;
-		stack -> items[stack -> top_index].terminal = item.terminal;
+		if(type){
+			token_t *copy;
+			copy = copy_token(item.terminal);
+			stack -> items[stack -> top_index].terminal = copy;
+		}
 		stack -> items[stack -> top_index].non_terminal = item.non_terminal;
 		stack -> items[stack -> top_index].item_type = type;
 	}

@@ -644,6 +644,37 @@ token_t *generate_empty_token(void){
 }
 
 /**
+ * @brief Deep copy of one token structure to another
+ *
+ * @param src Token which will be copied
+ *
+ * @return token structure
+ */
+token_t *copy_token(token_t* src){
+	/** 1. Alloc token structure */
+	token_t *copy = generate_empty_token();
+	
+	/** 2. Initialize */
+	copy->type = src->type;
+	copy->attribute->keyword_type = src->attribute->keyword_type;
+	copy->attribute->integer = src->attribute->integer;
+	copy->attribute->number  = src->attribute->number;
+	
+	/** 3. If the string attribute is not empty alloc and init it */
+	if(src->attribute->string != NULL){
+		int str_len = strlen(src->attribute->string);
+		copy->attribute->string = malloc(str_len + 1);
+		if (copy->attribute->string == NULL){
+			fprintf(stderr, "Intern malloc problem\n");
+			return NULL;
+		}
+		copy->attribute->string[str_len] = '\0';
+	}
+	strcpy(copy->attribute->string, src->attribute->string);
+	
+	return copy;
+}
+/**
  * @brief Determines wether a given character is operator
  * 
  * @param c Character to be determined whether is operator

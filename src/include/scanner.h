@@ -163,6 +163,15 @@ token_t *generate_token(string_t *buffer, int type, int error);
 token_t *generate_empty_token(void);
 
 /**
+ * @brief Deep copy of one token structure to another
+ *
+ * @param src Token which will be copied
+ *
+ * @return token structure
+ */
+token_t *copy_token(token_t *src);
+
+/**
  * @brief Determines whether a given character is operator
  * 
  * @param int c
