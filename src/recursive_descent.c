@@ -4,37 +4,61 @@
 #include "include/parser.h"
 
 #define STRING_TOKEN_T token_type_to_str(parser->token->type)
+#define TOKEN_REPR parser->token->attribute->string
 
-#define GET_TOKEN() parser->token = get_next_token(parser->src)
+#define GET_TOKEN() do {                          \
+    /* check current token, and deallocate it */  \
+    if (parser->token != NULL) {                  \
+        free(parser->token->attribute->string);   \
+        free(parser->token);                      \
+    }                                             \
+    parser->token = get_next_token(parser->src);  \
+    if (parser->token == NULL) {                  \
+        error_message("Fatal", ERR_INTERNAL, "INTERNAL INTERPRET ERROR!");\
+        return ERR_INTERNAL;\
+    }\
+} while(0)
 
+// TODO: make me func
 // TODO: error message for specific nonterminal rule function
-#define CHECK_RESULT_VALUE(_value) do {                          \
+#define CHECK_RESULT_VALUE(_value) do {                                         \
+    if (result != (_value)) {                                                   \
+        if (parser->token->type == TOKEN_ERROR) {                               \
+            error_message("Scanner", result, "unknown token '%s'", TOKEN_REPR); \
+        } else {                                                                \
+            error_message("Parser", result, "compile time error");              \
+        }                                                                       \
+        return result;                                                          \
+    }                                                                           \
+} while(0)
+
+#define CHECK_RESULT_VALUE_SILENT(_value) do {                   \
     if (result != (_value)) {                                    \
-        error_message("Parser", result, "compile time error");   \
         return result;                                           \
     }                                                            \
 } while(0)
 
 #define CHECK_TOKEN_ERROR() do {                            \
     if (parser->token->type == TOKEN_ERROR) {               \
+        error_message("Scanner", ERR_LEX, "unknown token '%s'", TOKEN_REPR); \
         return ERR_LEX; /* scanner handles error message */ \
     }                                                       \
 } while(0)
 
-#define CHECK_TOKEN_TYPE(_type) do {                                                        \
-    if (parser->token->type != (_type)) {                                                   \
-        error_message("Parser", ERR_SYNTAX, "unexpected token, expected: '%s', is: '%s'\n", \
+#define CHECK_TOKEN_TYPE(_type) do {                                                      \
+    if (parser->token->type != (_type)) {                                                 \
+        error_message("Parser", ERR_SYNTAX, "unexpected token, expected: '%s', is: '%s'", \
+            STRING_TOKEN_T, token_type_to_str(_type));                                    \
+        return ERR_SYNTAX;                                                                \
+    }                                                                                     \
+} while(0)
+
+#define CHECK_KEYWORD(_type) do {                                                           \
+    if (parser->token->attribute->keyword_type != (_type)) {                                \
+        error_message("Parser", ERR_SYNTAX, "unexpected keyword, expected: '%s', is: '%s'", \
             STRING_TOKEN_T, token_type_to_str(_type));                                      \
         return ERR_SYNTAX;                                                                  \
     }                                                                                       \
-} while(0)
-
-#define CHECK_KEYWORD(_type) do {                                                             \
-    if (parser->token->attribute->keyword_type != (_type)) {                                  \
-        error_message("Parser", ERR_SYNTAX, "unexpected keyword, expected: '%s', is: '%s'\n", \
-            STRING_TOKEN_T, token_type_to_str(_type));                                        \
-        return ERR_SYNTAX;                                                                    \
-    }                                                                                         \
 } while(0)
 
 #define TOKEN_KW_TYPE parser->token->attribute->keyword_type 
@@ -69,7 +93,7 @@ int prog(parser_t *parser)
 
             // <func_dec>
             result = func_dec(parser);
-            CHECK_RESULT_VALUE(EXIT_OK);
+            CHECK_RESULT_VALUE_SILENT(EXIT_OK);
 
             // <func_def>
             result = func_def(parser);
@@ -111,9 +135,8 @@ int prolog(parser_t *parser)
                 return ERR_LEX;
             }
             
-            // TODO: STRCMP / *a = *b?
             // Check if next token is precisely "ifj21"
-            if (strcmp(parser->token->attribute->string, "\"ifj21\"")) {
+            if (strcmp(parser->token->attribute->string, "ifj21")) {
                 return ERR_SYNTAX;
             }
             
@@ -160,18 +183,20 @@ int func_dec(parser_t *parser)
                 CHECK_TOKEN_TYPE(TOKEN_L_PAR);     // '('
 
                 // <param_fdec>
+                PARSER_EAT();
                 result = param_fdec(parser); 
                 CHECK_RESULT_VALUE(EXIT_OK);
-
-                PARSER_EAT();
+                
+                // Already eaten - just check validity PARSER_EAT();
                 CHECK_TOKEN_TYPE(TOKEN_R_PAR);     // ')'
 
                 PARSER_EAT();
                 CHECK_TOKEN_TYPE(TOKEN_COLON);     // ':'
                 
                 // <ret_type_list>
+                PARSER_EAT();
                 result = ret_type_list(parser); 
-                CHECK_RESULT_VALUE(EXIT_OK);
+                CHECK_RESULT_VALUE_SILENT(EXIT_OK);
 
                 PARSER_EAT();
 
@@ -197,6 +222,7 @@ int func_dec(parser_t *parser)
             break;
     }
 
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s'", STRING_TOKEN_T);    
     return ERR_SYNTAX;
 }
 
@@ -240,6 +266,7 @@ int func_def(parser_t *parser)
             break;
     }
 
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s'", STRING_TOKEN_T);    
     return ERR_SYNTAX;
 }
 
@@ -346,6 +373,7 @@ int param_fdef(parser_t *parser)
             break;
     }
 
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s'", STRING_TOKEN_T);    
     return ERR_SYNTAX;
 }
 
@@ -385,6 +413,7 @@ int param_fdef_n(parser_t *parser)
             break;
     }
 
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s'", STRING_TOKEN_T);    
     return ERR_SYNTAX;
 }
 
@@ -401,13 +430,13 @@ int param_fdec(parser_t *parser)
 
                 // <dtype>
                 result = dtype(parser);
-                CHECK_RESULT_VALUE(EXIT_OK); 
-                
-                // <param_fdef_n>
-                result = param_fdef_n(parser);
-                CHECK_RESULT_VALUE(EXIT_OK); 
-                
+                CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
                 PARSER_EAT();
+
+                // <param_fdec_n>
+                result = param_fdec_n(parser);
+                CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+                
                 return EXIT_OK;
             }
             break; // TODO: beware, must end up in error
@@ -415,12 +444,13 @@ int param_fdec(parser_t *parser)
             
             // RULE 15: <param_fdec> → ε
             
-            PARSER_EAT();
+            //PARSER_EAT();
             return EXIT_OK;
         default:
             break;
     }
 
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s'", STRING_TOKEN_T);    
     return ERR_SYNTAX;
 }
 
@@ -436,8 +466,9 @@ int param_fdec_n(parser_t *parser)
             // RULE 16: <param_fdec_n> → ',' <dtype> <param_fdec_n>
             
             // <dtype>
+            PARSER_EAT();
             result = dtype(parser);
-            CHECK_RESULT_VALUE(EXIT_OK); 
+            CHECK_RESULT_VALUE_SILENT(EXIT_OK); // TODO: check me 
             
             PARSER_EAT();
             return param_fdec_n(parser); // calls itself
@@ -445,12 +476,13 @@ int param_fdec_n(parser_t *parser)
         case TOKEN_R_PAR:
             
             // RULE 17: <param_fdec_n> → ε
-            PARSER_EAT();
             return EXIT_OK;
+        
         default:
             break;
     }
 
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s'", STRING_TOKEN_T);    
     return ERR_SYNTAX;
 }
 
@@ -472,13 +504,13 @@ int ret_type_list(parser_t *parser)
             
                 // <dtype>
                 result = dtype(parser);
-                CHECK_RESULT_VALUE(EXIT_OK); 
+                CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
                 
                 // <ret_type_list_n>
-                result = ret_type_list_n(parser);
-                CHECK_RESULT_VALUE(EXIT_OK); 
-                
                 PARSER_EAT();
+                result = ret_type_list_n(parser);
+                CHECK_RESULT_VALUE_SILENT(EXIT_OK);  // TODO: check me
+                
                 return EXIT_OK;
             
             case KEYWORD_FUNCTION:
@@ -512,6 +544,7 @@ int ret_type_list(parser_t *parser)
         return EXIT_OK;
     }
 
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s'", STRING_TOKEN_T);    
     return ERR_SYNTAX;
 }
 
@@ -543,12 +576,13 @@ int ret_type_list_n(parser_t *parser)
         // RULE 20: <ret_type_list_n> → ',' <dtype> <ret_type_list_n>
             
         // <dtype>
+        PARSER_EAT();
         result = dtype(parser);
-        CHECK_RESULT_VALUE(EXIT_OK); 
+        CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
         
         PARSER_EAT();
         return ret_type_list_n(parser); // calls itself          
-    } else if (parser->token->type == TOKEN_ID) {
+    } else if (parser->token->type == TOKEN_ID) { // TODO: check table, maybe bs
         // TODO: add to symtable 
         
         // RULE 21: <ret_type_list_n> → ε
@@ -563,6 +597,7 @@ int ret_type_list_n(parser_t *parser)
         return EXIT_OK;
     }
 
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s'", STRING_TOKEN_T);    
     return ERR_SYNTAX;
 }
 
@@ -926,13 +961,13 @@ int dtype(parser_t *parser)
             case KEYWORD_NUMBER:  // RULE 40: <dtype> → 'number'
             case KEYWORD_INTEGER: // RULE 41: <dtype> → 'integer'
             case KEYWORD_STRING:  // RULE 42: <dtype> → 'string'
-                PARSER_EAT();
                 return EXIT_OK;
             default:
                 break;
         } // switch()
     }
 
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s'", STRING_TOKEN_T);   
     return ERR_SYNTAX;
 }
 
