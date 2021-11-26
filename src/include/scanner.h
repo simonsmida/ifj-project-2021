@@ -155,6 +155,14 @@ token_t *get_next_token(FILE *file);
 token_t *generate_token(string_t *buffer, int type, int error);
 
 /**
+ * @brief Generates an empty token of TOKEN_EOF type, for
+ *		  needs of operator precedence parser
+ *
+ * @return token structure
+ */
+token_t *generate_empty_token(void);
+
+/**
  * @brief Determines whether a given character is operator
  * 
  * @param int c

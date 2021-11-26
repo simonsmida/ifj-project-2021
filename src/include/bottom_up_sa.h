@@ -8,63 +8,21 @@
  * Compiled : gcc version 9.3.0
  */
 
-#ifdef  BOTTOM_UP_PARSER
+#ifndef  BOTTOM_UP_PARSER
 #define BOTTOM_UP_PARSER
+
+#include "PA_stack.h"
+#include "scanner.h"
 
 #define ERR '0'
 /**
- *	Array for storing precedence table
+ *	@brief Function return index to the precedence table,
+ *		   according to the type of the terminal
+ *	@param token Terminal of given string
+ *	@return 
  */
+int get_index(int token);
 
-char precedence_table[19][19] = 
-{
-		/************************************** Input *********************************************/
-/*stack  |  #  | * |  /  |  //  | + | - | .. | < | > | <= | >= | == | ~= | ( | ) | id | f | , | $ */
-/*	#  */{ ERR ,'>', '>' , '>'  ,'>','>', '>','>','>', '>', '>', '>', '>','<','>', '<','<','>', '>'},
-/*	*  */{ '<' ,'>', '>' , '>'  ,'>','>', '>','>','>', '>', '>', '>', '>','<','>', '<','<','>', '>'},
-/*	/  */{ '<' ,'>', '>' , '>'  ,'>','>', '>','>','>', '>', '>', '>', '>','<','>', '<','<','>', '>'},
-/*	// */{ '<' ,'>', '>' , '>'  ,'>','>', '>','>','>', '>', '>', '>', '>','<','>', '<','<','>', '>'},
-/*	+  */{ '<' ,'<', '<' , '<'  ,'>','>', '>','>','>', '>', '>', '>', '>','<','>', '<','<','>', '>'},
-/*	-  */{ '<' ,'<', '<' , '<'  ,'>','>', '>','>','>', '>', '>', '>', '>','<','>', '<','<','>', '>'},
-/*	.. */{ '<' ,'<', '<' , '<'  ,'<','<', '<','>','>', '>', '>', '>', '>','<','>', '<','<','>', '>'},
-/*	<  */{ '<' ,'<', '<' , '<'  ,'<','<', '<','>','>', '>', '>', '>', '>','<','>', '<','<','>', '>'},
-/*	>  */{ '<' ,'<', '<' , '<'  ,'<','<', '<','>','>', '>', '>', '>', '>','<','>', '<','<','>', '>'},
-/*	<= */{ '<' ,'<', '<' , '<'  ,'<','<', '<','>','>', '>', '>', '>', '>','<','>', '<','<','>', '>'},
-/*	>= */{ '<' ,'<', '<' , '<'  ,'<','<', '<','>','>', '>', '>', '>', '>','<','>', '<','<','>', '>'},
-/*	== */{ '<' ,'<', '<' , '<'  ,'<','<', '<','>','>', '>', '>', '>', '>','<','>', '<','<','>', '>'},
-/*	~= */{ '<' ,'<', '<' , '<'  ,'<','<', '<','>','>', '>', '>', '>', '>','<','>', '<','<','>', '>'},
-/*	(  */{ '<' ,'<', '<' , '<'  ,'<','<', '<','<','<', '<', '<', '<', '<','<','=', '<','<','=', ERR},
-/*	)  */{ ERR ,'>', '>' , '>'  ,'>','>', '>','>','>', '>', '>', '>', '>',ERR,'>', ERR,ERR,'>', '>'},
-/*	id */{ ERR ,'>', '>' , '>'  ,'>','>', '>','>','>', '>', '>', '>', '>',ERR,'>', ERR,ERR,'>', '>'},
-/*	f  */{ ERR ,ERR, ERR , ERR  ,ERR,ERR, ERR,ERR,ERR, ERR, ERR, ERR, ERR,'=',ERR, ERR,ERR,ERR, ERR},
-/*	,  */{ '<' ,'<', '<' , '<'  ,'<','<', '<','<','<', '<', '<', '<', '<','<','=', '<','<','=', ERR},
-/*	$  */{ '<' ,'<', '<' , '<'  ,'<','<', '<','<','<', '<', '<', '<', '<','<',ERR, '<','<',ERR, ERR}};
-
-int get_index(int token){
-	switch(token){
-		case TOKEN_STRLEN	: return  0;
-		case TOKEN_MULL  	: return  1;
-		case TOKEN_DIV  	: return  2;
-		case TOKEN_INT_DIV  : return  3;
-		case TOKEN_PLUS		: return  4;
-		case TOKEN_MINUS	: return  5;
-		case TOKEN_CONCAT   : return  6;
-		case TOKEN_LT		: return  7;
-		case TOKEN_GT  		: return  8;
-		case TOKEN_LE		: return  9;
-		case TOKEN_GE		: return 10;
-		case TOKEN_EQ		: return 11;
-		case TOKEN_NOT_EQ	: return 12;
-		case TOKEN_L_PAR	: return 13;
-		case TOKEN_R_PAR	: return 14;
-		case TOKEN_ID		: return 15;
-		//TODO Add funcion control, check the symtable
-		//case TOKEN_ID		: return 16;
-		case TOKEN_COLON	: return 17;
-		case TOKEN_EOF		: return 18;
-	}; 
-}
-
-int analyze_bottom_up(void);
+int analyze_bottom_up(FILE *f);
 
 #endif /** BOTOM_UP_PARSER */

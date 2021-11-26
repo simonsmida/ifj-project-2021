@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h> // uint32_t
-#include "symtable.h"
+#include "include/symtable.h"
 
 /**
  * @brief Hashing function - calculate index for given key

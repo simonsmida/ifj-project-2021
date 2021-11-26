@@ -23,7 +23,6 @@ void PA_stack_init(PA_stack *stack){
 		/** Init all pointers to the NULL */
 		for(int i = 0; i < MAX_STACK_SIZE; i++){
 			stack -> items[i].terminal  = NULL;
-			stack -> items[i].item_type = 0;
 		}
 	}
 }
@@ -96,13 +95,26 @@ int PA_stack_top_terminal(const PA_stack *stack, PA_item_t* item){
 }
 
 /** 
+ * @brief Function deallocates all dynamic elements in the stack
+ *		  and empties it.
+ * 
+ * @param stack Pointer to stack structure
+ */
+void PA_stack_destroy(PA_stack *stack){
+	while (stack->top_index != -1){
+		PA_stack_pop(stack);	
+	}
+}
+/** 
  * @brief Function removes the item from the top of the stack
  * 
  * @param stack Pointer to stack structure
  */
 void PA_stack_pop(PA_stack *stack){
 	if( !PA_stack_empty(stack) ){
-		destroy_token(stack -> items[stack -> top_index].terminal);
+		if(stack -> items[stack->top_index].item_type){
+			destroy_token(stack -> items[stack -> top_index].terminal);
+		}
 		stack -> top_index--;
 	}
 }
@@ -120,6 +132,7 @@ void PA_stack_push(PA_stack *stack, PA_item_t item,int type){
 	if ( !PA_stack_full(stack) ){
 		stack -> top_index++;
 		stack -> items[stack -> top_index].terminal = item.terminal;
+		stack -> items[stack -> top_index].non_terminal = item.non_terminal;
 		stack -> items[stack -> top_index].item_type = type;
 	}
 }
