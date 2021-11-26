@@ -116,5 +116,12 @@ void PA_stack_push(PA_stack *stack, PA_item_t item, int type);
  * @param stack Pointer to stack structure
  */
 void PA_stack_destroy(PA_stack *stack);
-void skuska(PA_stack *zasobnicek);
+
+/** 
+ * @brief Function deallocates all dynamic elements in the item of the stack.
+ * 
+ * @param item  Pointer to the item which will be deallocated
+ */
+void PA_item_destroy(PA_item_t item);
+
 #endif /** PA_STACK_H */

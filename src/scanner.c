@@ -853,6 +853,7 @@ void destroy_token(token_t *token){
 			free(token->attribute);
 		}
 		free(token);
+		token = NULL;
 	}
 
 	return;

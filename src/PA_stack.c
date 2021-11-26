@@ -65,7 +65,14 @@ int PA_stack_full(const PA_stack *stack){
  */
 void PA_stack_top(const PA_stack *stack, PA_item_t* item){
 	if( !PA_stack_empty(stack) ){
-		*item = stack -> items[stack -> top_index];
+		/** 1. If there is terminal on the top of the stack create a deep copy */
+		if ( stack -> items[stack -> top_index].item_type ){
+			token_t *copy;
+			copy = copy_token(stack -> items[stack -> top_index].terminal);
+			(*item).terminal = copy;
+		}
+		(*item).non_terminal = stack -> items[stack -> top_index].non_terminal;
+		(*item).item_type = stack -> items[stack -> top_index].item_type;
 	}
 }
 
@@ -105,6 +112,18 @@ void PA_stack_destroy(PA_stack *stack){
 		PA_stack_pop(stack);	
 	}
 }
+
+/** 
+ * @brief Function deallocates all dynamic elements in the item of the stack.
+ * 
+ * @param item  Pointer to the item which will be deallocated
+ */
+void PA_item_destroy(PA_item_t item){
+	if ( item.item_type ){
+		destroy_token(item.terminal);
+	}
+}
+
 /** 
  * @brief Function removes the item from the top of the stack
  * 
@@ -128,7 +147,6 @@ void PA_stack_pop(PA_stack *stack){
  */
 void PA_stack_push(PA_stack *stack, PA_item_t item,int type){
 	/** 1. For assigning the structure create a deep copy*/
-	//TODO structure on stack is changing make a deep copy
 	if ( !PA_stack_full(stack) ){
 		stack -> top_index++;
 		if(type){
