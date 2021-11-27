@@ -17,6 +17,7 @@ int param_fdec_n(parser_t *parser);
 int ret_type_list(parser_t *parser);
 int ret_type_list_n(parser_t *parser);
 int expr_list(parser_t *parser);
+int expr_nt(parser_t *parser);
 int stat_list(parser_t *parser);
 int else_nt(parser_t *parser);
 int var_def(parser_t *parser);
