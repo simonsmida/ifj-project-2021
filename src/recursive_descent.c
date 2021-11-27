@@ -236,7 +236,7 @@ int func_dec(parser_t *parser)
                 // <param_fdec>
                 PARSER_EAT();
                 result = param_fdec(parser); 
-                CHECK_RESULT_VALUE(EXIT_OK);
+                CHECK_RESULT_VALUE_SILENT(EXIT_OK);
                 
                 // Already eaten - just check validity 
                 CHECK_TOKEN_TYPE(TOKEN_R_PAR); /* ')' */
@@ -318,34 +318,115 @@ int func_def(parser_t *parser)
 // Nonterminal <func_call>
 int func_call(parser_t *parser)
 {
-    if (parser->token->type == TOKEN_EOF) {
+    int result;
+    if (parser->token->type == TOKEN_ID) {
 
-        // RULE 8: <func_call> → ε
+        // RULE 9: <func_call> → 'id' '(' <arg> ')'
         
-        PARSER_EAT(); // TODO: should you really eat if there is nothing to be eaten
-        return EXIT_OK; 
-    } else if (parser->token->type == TOKEN_ID) {
-        // TODO: handle expression - switch context
-        // ADhoc solution
-        // if id is validly declared *function* continue
-
-        // RULE 7: <func_call> → 'expr' <func_call>
-        
-        /* TODO: temp solution func() no parameters */
+        // Check whether function was previously declared/defined
         if (!(parser->curr_item = symtable_search(parser->global_symtable, TOKEN_REPR))) {
             error_message("Parser", ERR_SEMANTIC_DEF, "function '%s' not declared\n", TOKEN_REPR);
             return ERR_SEMANTIC_DEF;
-        } 
-        PARSER_EAT();
+        }
+    
+        PARSER_EAT(); /* '(' */
         CHECK_TOKEN_TYPE(TOKEN_L_PAR); 
         
+        // <arg>
         PARSER_EAT();
+        result = arg(parser);
+        CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+        
+        PARSER_EAT(); /* ')' */
         CHECK_TOKEN_TYPE(TOKEN_R_PAR); 
 
         return func_call(parser);
     }
 
     return ERR_SYNTAX;
+}
+
+// Nonterminal <arg>
+int arg(parser_t *parser)
+{
+    int result;
+
+    if (parser->token->type == TOKEN_ID) {
+        
+        // RULE 10: <arg> → <val> <arg_n>
+        
+        // <val>
+        PARSER_EAT(); 
+        result = val(parser);
+        CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+
+        // <arg_n>
+        PARSER_EAT(); 
+        result = arg_n(parser);
+        CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+        
+        return EXIT_OK;
+
+    } else if (parser->token->type == TOKEN_R_PAR) {
+    
+        // RULE 11: <arg> → ε
+
+        return EXIT_OK;
+
+    } else {
+        
+        // RULE 10: <arg> → <val> <arg_n>
+        
+        // TODO: expecting expr
+        // context switch
+        return EXIT_OK;
+    }
+}
+
+// Nonterminal <arg_n>
+int arg_n(parser_t *parser)
+{
+    int result;
+    if (parser->token->type == TOKEN_COMMA) {
+    
+        // RULE 14: <arg> → ',' <val> <arg_n>
+    
+        // <val>
+        PARSER_EAT(); 
+        result = val(parser);
+        CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+        
+        // <arg_n> calls itself
+        PARSER_EAT();
+        return arg_n(parser);
+
+    } else if (parser->token->type == TOKEN_R_PAR) {
+    
+        // RULE 15: <arg> → ε
+
+        return EXIT_OK;
+    }
+
+    return ERR_SYNTAX;
+}
+
+// Nonterminal <val>
+int val(parser_t *parser)
+{
+    if (parser->token->type == TOKEN_ID) {
+    
+        // RULE 12: <val> → 'id'
+        // TODO: symtab
+        
+        return EXIT_OK;
+    } else {
+        
+        // RULE 13: <arg> → 'expr'
+        
+        // TODO: expected expr
+        // context switch
+        return EXIT_OK;
+    }
 }
 
 // Nonterminal <func_head>
