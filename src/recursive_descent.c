@@ -150,7 +150,6 @@ int seq(parser_t *parser)
                 // Rule 3: <seq> → <func_dec> <seq>
 
                 // <func_dec>
-                PARSER_EAT();
                 result = func_dec(parser);
                 CHECK_RESULT_VALUE_SILENT(EXIT_OK);
                 
@@ -162,7 +161,6 @@ int seq(parser_t *parser)
                 // Rule 4: <seq> → <func_def> <seq>
                 
                 // <func_def>
-                PARSER_EAT();
                 result = func_def(parser);
                 CHECK_RESULT_VALUE_SILENT(EXIT_OK);
                 
@@ -204,45 +202,47 @@ int seq(parser_t *parser)
 int func_dec(parser_t *parser)
 {
     int result;
+
     switch (parser->token->type) 
     {
         case TOKEN_KEYWORD: // 'global' or 'function'
+
             if (TOKEN_KW_TYPE == KEYWORD_GLOBAL) {
                 // We are inside function declaration
                 parser->inside_func_dec = true;
                 parser->declared_function = false;
-                // RULE 3: 
-                // <func_dec> → 'global' 'id' ':' 'function' '(' <param_fdec> ')' ':' <ret_type_list> <func_dec>
+
+                // RULE 7:< func_dec> → 'global' 'id' ':' 'function' '(' <param_fdec> ')' ':' <ret_type_list>
             
-                PARSER_EAT();
-                CHECK_TOKEN_TYPE(TOKEN_ID);       // 'id'
-                
+                PARSER_EAT(); /* 'id' */
+                CHECK_TOKEN_TYPE(TOKEN_ID);    
+
                 // Add 'id' to the global symtable
                 parser->curr_item = symtable_insert(parser->global_symtable, TOKEN_REPR);
                 if (parser->curr_item == NULL) {
                     return ERR_SEMANTIC_DEF; // TODO: check internal error
                 }
                  
-                PARSER_EAT();
-                CHECK_TOKEN_TYPE(TOKEN_COLON);    // ':'
+                PARSER_EAT(); /* ':' */
+                CHECK_TOKEN_TYPE(TOKEN_COLON);    
 
-                PARSER_EAT();
+                PARSER_EAT(); /* 'function' */
                 CHECK_TOKEN_TYPE(TOKEN_KEYWORD); 
-                CHECK_KEYWORD(KEYWORD_FUNCTION);  // 'function'
+                CHECK_KEYWORD(KEYWORD_FUNCTION);  
                 
-                PARSER_EAT();
-                CHECK_TOKEN_TYPE(TOKEN_L_PAR);     // '('
+                PARSER_EAT(); /* '(' */
+                CHECK_TOKEN_TYPE(TOKEN_L_PAR);     
 
                 // <param_fdec>
                 PARSER_EAT();
                 result = param_fdec(parser); 
                 CHECK_RESULT_VALUE(EXIT_OK);
                 
-                // Already eaten - just check validity PARSER_EAT();
-                CHECK_TOKEN_TYPE(TOKEN_R_PAR);     // ')'
+                // Already eaten - just check validity 
+                CHECK_TOKEN_TYPE(TOKEN_R_PAR); /* ')' */
 
-                PARSER_EAT();
-                CHECK_TOKEN_TYPE(TOKEN_COLON);     // ':'
+                PARSER_EAT(); /* ':' */
+                CHECK_TOKEN_TYPE(TOKEN_COLON);    
                 
                 // <ret_type_list>
                 PARSER_EAT();
@@ -253,23 +253,21 @@ int func_dec(parser_t *parser)
                 return func_dec(parser); // calls itself
             
             } else if (TOKEN_KW_TYPE == KEYWORD_FUNCTION) {
+                
                 // RULE 4: <func_dec> → ε
-                //PARSER_EAT();
+                
                 return EXIT_OK;
             }
             break;
+
         case TOKEN_EOF: 
-        // case TOKEN_EXPR: // TODO: check this
-            
-            // TODO: CONTROL SWITCH TO PRECEDENCE SA
             
             // RULE 4: <func_dec> → ε
             
-            PARSER_EAT();
             return EXIT_OK;
-        default:
-            break;
-    }
+        
+        default: break;
+    } // switch()
 
     error_message("Parser", ERR_SYNTAX, "unexpected token '%s'", STRING_TOKEN_T);    
     return ERR_SYNTAX;
@@ -326,7 +324,7 @@ int func_call(parser_t *parser)
         
         PARSER_EAT(); // TODO: should you really eat if there is nothing to be eaten
         return EXIT_OK; 
-    } else if (parser->token == TOKEN_ID) {
+    } else if (parser->token->type == TOKEN_ID) {
         // TODO: handle expression - switch context
         // ADhoc solution
         // if id is validly declared *function* continue
@@ -704,7 +702,7 @@ int stat_list(parser_t *parser)
         } // switch()
     } else if (parser->token->type == TOKEN_ID) {
         // TODO: add to symtab
-        if (
+        
         // RULE 22: <stat_list> → <stat> <stat_list>
         
         // <stat>
@@ -802,11 +800,14 @@ int stat(parser_t *parser)
 
             case KEYWORD_RETURN:
 
-                // RULE 28: <stat> → 'return' <ret_expr_list>
+                // RULE 28: <stat> → 'return' 'expr' <expr_list>
+                
+                PARSER_EAT();
+                // TODO: SWITCH CONTEXT
 
                 // <ret_expr_list> 
-                PARSER_EAT();
-                result = ret_expr_list(parser);
+                // TODO: maybe useful PARSER_EAT();
+                result = expr_list(parser);
                 CHECK_RESULT_VALUE(EXIT_OK); 
                 
                 PARSER_EAT();
@@ -815,14 +816,24 @@ int stat(parser_t *parser)
             default: break;
         }
     } else if (parser->token->type == TOKEN_ID) {
-        // RULE 27: <stat> → <assign>
+
+        // RULE 27: <stat> → 'id' <id_n> '=' 'expr' <expr_list>
         
         // TODO: SYMTABLE
-
-        // <assign> 
-        result = assign(parser);
-        CHECK_RESULT_VALUE(EXIT_OK); 
         
+        PARSER_EAT();
+        result = id_n(parser);
+        CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+        
+        /* '=' */
+        CHECK_TOKEN_TYPE(TOKEN_ASSIGN);
+        
+        PARSER_EAT();
+        // TODO: SWITCH CONTEXT
+
+        result = expr_list(parser);
+        CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+
         PARSER_EAT();
         return EXIT_OK;
     }
@@ -903,42 +914,6 @@ int var_def(parser_t *parser)
         PARSER_EAT();
         return EXIT_OK;
     }
-    return ERR_SYNTAX;
-}
-
-
-// Nonterminal <assign>
-int assign(parser_t *parser)
-{
-    int result;
-
-    switch (parser->token->type)
-    {
-        case TOKEN_ID:
-            
-            // TODO: add to symtable
-
-            // RULE 33: <assign> → 'id' <id_n> '=' 'expr' <expr_list>
-
-            // <id_n> 
-            result = id_n(parser);
-            CHECK_RESULT_VALUE(EXIT_OK); 
-            
-            PARSER_EAT();
-            CHECK_TOKEN_TYPE(TOKEN_ASSIGN); // '='
-
-            // TODO: SWITCH CONTEXT
-
-            // <expr_list> 
-            result = expr_list(parser);
-            CHECK_RESULT_VALUE(EXIT_OK); 
-            
-            PARSER_EAT();
-            return EXIT_OK;
-        default:
-            break;
-    }
-
     return ERR_SYNTAX;
 }
 
@@ -1036,49 +1011,6 @@ int dtype(parser_t *parser)
     }
 
     error_message("Parser", ERR_SYNTAX, "unexpected token '%s'", STRING_TOKEN_T);   
-    return ERR_SYNTAX;
-}
-
-// Nonterminal <ret_expr_list>
-int ret_expr_list(parser_t *parser)
-{
-    int result;
-    
-    if (parser->token->type == TOKEN_KEYWORD) {
-        switch (TOKEN_KW_TYPE) 
-        {
-            case KEYWORD_END:
-            case KEYWORD_LOCAL:
-            case KEYWORD_IF:
-            case KEYWORD_WHILE:
-            case KEYWORD_RETURN:
-            case KEYWORD_ELSE:
-                
-                // RULE 44: <ret_expr_list> → ε
-                PARSER_EAT();
-                return EXIT_OK;
-
-            default: break;
-        }
-    } else if (parser->token->type == TOKEN_ID) {
-        // TODO: insert to symtable
-        // RULE 44: <ret_expr_list> → ε
-        // TODO: immediate context switch?
-        // TODO: PARSER_EAT();
-        return EXIT_OK;
-    } else {
-        // TODO: expr - switching context, what if token other?
-
-        // RULE 43: <ret_expr_list> → 'expr' <expr_list>
-        
-        // <expr_list> 
-        result = expr_list(parser);
-        CHECK_RESULT_VALUE(EXIT_OK); 
-        
-        PARSER_EAT();
-        return EXIT_OK;
-    }
-
     return ERR_SYNTAX;
 }
 
