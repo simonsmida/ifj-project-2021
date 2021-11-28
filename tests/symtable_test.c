@@ -4,8 +4,8 @@
 
 void setUp(void)
 {
-    symtable_t *table;
-    symtable_init(CAPACITY);
+    // symtable_t *table;
+    // symtable_init(CAPACITY);
 }
 
 void tearDown(void)
@@ -94,6 +94,7 @@ void test_symtable_delete(void)
 
 int main(void) 
 {
+    printf("\n");
     UNITY_BEGIN();
 
     RUN_TEST(test_symtable_init);
