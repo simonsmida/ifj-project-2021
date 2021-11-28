@@ -30,7 +30,7 @@ $(PATHB):
 
 test: $(PATHB) $(BIN_TESTS)
 	$(PATHB)scanner_test
-	#$(PATHB)symtable_test
+	$(PATHB)symtable_test
 
 $(PATHB)scanner_test: $(PATHT)scanner_test.c $(PATHS)scanner.c $(PATHS)buffer.c
 	$(CC) $(TEST_FLAGS) $^ -o $@
