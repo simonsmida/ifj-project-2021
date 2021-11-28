@@ -31,7 +31,8 @@ parser_t *parser_init(FILE *src)
         return NULL;
     }  
     
-    parser->in_function = false;
+    parser->inside_func_def = false;
+    parser->inside_func_dec = false;
     parser->declared_function = false;
     parser->src = src;
     parser->curr_item = NULL;
@@ -75,6 +76,7 @@ int parser_parse(FILE *src)
  */
 void parser_destroy(parser_t *parser)
 {
+    destroy_token(parser->token);
     symtable_destroy(parser->local_symtable);
     symtable_destroy(parser->global_symtable);
     free(parser);
