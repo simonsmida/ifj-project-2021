@@ -1,6 +1,6 @@
+#include "./unity/src/unity.h"
 #include  "../src/include/scanner.h"
 #include "../src/include/buffer.h"
-#include "../unity/src/unity.h"
 #include "../src/include/error.h"
 
 
