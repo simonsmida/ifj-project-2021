@@ -94,6 +94,7 @@ void test_symtable_delete(void)
 
 int main(void) 
 {
+    printf("\n");
     UNITY_BEGIN();
 
     RUN_TEST(test_symtable_init);
