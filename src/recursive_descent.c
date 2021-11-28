@@ -6,14 +6,10 @@
 #define STRING_TOKEN_T token_type_to_str(parser->token->type)
 #define TOKEN_REPR parser->token->attribute->string
 
-#define GET_TOKEN() do {                          \
-    /* check current token, and deallocate it */  \
-    if (parser->token != NULL) {                  \
-        free(parser->token->attribute->string);   \
-        free(parser->token);                      \
-    }                                             \
-    parser->token = get_next_token(parser->src);  \
-    if (parser->token == NULL) {                  \
+#define GET_TOKEN() do {                         \
+    destroy_token(parser->token);                \
+    parser->token = get_next_token(parser->src); \
+    if (parser->token == NULL) {                 \
         error_message("Fatal", ERR_INTERNAL, "INTERNAL INTERPRET ERROR!");\
         return ERR_INTERNAL;\
     }\
@@ -750,7 +746,7 @@ int stat_list(parser_t *parser)
                 result = stat(parser);
                 CHECK_RESULT_VALUE(EXIT_OK); 
                 
-                // TODO: PARSER_EAT();
+                PARSER_EAT();
                 return stat_list(parser); // calls itself  
 
             case KEYWORD_END:
@@ -772,7 +768,7 @@ int stat_list(parser_t *parser)
         result = stat(parser);
         CHECK_RESULT_VALUE(EXIT_OK); 
                 
-        // TODO: adhoc solution PARSER_EAT();
+        PARSER_EAT();
         return stat_list(parser); // calls itself  
     } 
     
@@ -870,6 +866,7 @@ int stat(parser_t *parser)
                 CHECK_RESULT_VALUE(EXIT_OK); 
                 
                 // <expr_list> 
+                PARSER_EAT();
                 result = expr_list(parser);
                 CHECK_RESULT_VALUE(EXIT_OK); 
                 
