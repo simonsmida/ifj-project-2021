@@ -5,14 +5,15 @@
 
 #define STRING_TOKEN_T token_type_to_str(parser->token->type)
 #define TOKEN_REPR parser->token->attribute->string
+#define TOKEN_KW_TYPE parser->token->attribute->keyword_type 
 
-#define GET_TOKEN() do {                         \
-    destroy_token(parser->token);                \
-    parser->token = get_next_token(parser->src); \
-    if (parser->token == NULL) {                 \
-        error_message("Fatal", ERR_INTERNAL, "INTERNAL INTERPRET ERROR!");\
-        return ERR_INTERNAL;\
-    }\
+#define GET_TOKEN() do {                                                   \
+    destroy_token(parser->token);                                          \
+    parser->token = get_next_token(parser->src);                           \
+    if (parser->token == NULL) {                                           \
+        error_message("Fatal", ERR_INTERNAL, "INTERNAL INTERPRET ERROR!"); \
+        return ERR_INTERNAL;                                               \
+    }                                                                      \
 } while(0)
 
 // TODO: make me func
@@ -22,30 +23,30 @@
         if (parser->token->type == TOKEN_ERROR) {                               \
             error_message("Scanner", result, "unknown token '%s'", TOKEN_REPR); \
         } else {                                                                \
-            error_message("Parser", result, "compile time error");              \
+            error_message("Parser", result, "unexpected token '%s' (%s)",       \
+                    TOKEN_REPR, STRING_TOKEN_T);                                \
         }                                                                       \
         return result;                                                          \
     }                                                                           \
 } while(0)
 
-#define CHECK_RESULT_VALUE_SILENT(_value) do {                   \
-    if (result != (_value)) {                                    \
-        return result;                                           \
-    }                                                            \
+#define CHECK_RESULT_VALUE_SILENT(_value) do { \
+    if (result != (_value)) {                  \
+        return result;                         \
+    }                                          \
 } while(0)
 
-#define CHECK_TOKEN_ERROR() do {                            \
-    if (parser->token->type == TOKEN_ERROR) {               \
+#define CHECK_TOKEN_ERROR() do {                                             \
+    if (parser->token->type == TOKEN_ERROR) {                                \
         error_message("Scanner", ERR_LEX, "unknown token '%s'", TOKEN_REPR); \
-        return ERR_LEX; /* scanner handles error message */ \
-    }                                                       \
+        return ERR_LEX; /* scanner handles error message */                  \
+    }                                                                        \
 } while(0)
 
 #define CHECK_TOKEN_TYPE(_type) do {                                    \
     if (parser->token->type != (_type)) {                               \
         error_message("Parser", ERR_SYNTAX, "expected: '%s', is: '%s'", \
-                      token_type_to_str(_type),                         \
-                      STRING_TOKEN_T);                                  \
+                      token_type_to_str(_type), STRING_TOKEN_T);        \
         return ERR_SYNTAX;                                              \
     }                                                                   \
 } while(0)
@@ -53,20 +54,18 @@
 #define CHECK_KEYWORD(_type) do {                                       \
     if (parser->token->attribute->keyword_type != (_type)) {            \
         error_message("Parser", ERR_SYNTAX, "expected: '%s', is: '%s'", \
-                      token_type_to_str(_type),                         \
-                      STRING_TOKEN_T);                                  \
+                      token_type_to_str(_type), STRING_TOKEN_T);        \
         return ERR_SYNTAX;                                              \
     }                                                                   \
 } while(0)
 
-#define TOKEN_KW_TYPE parser->token->attribute->keyword_type 
 
 #define PARSER_EAT() do { \
     GET_TOKEN();          \
     CHECK_TOKEN_ERROR();  \
 } while(0)
 
-#define IS_DTYPE(_keyword) \
+#define IS_DTYPE(_keyword)           \
     (_keyword) == KEYWORD_NIL     || \
     (_keyword) == KEYWORD_NUMBER  || \
     (_keyword) == KEYWORD_INTEGER || \
@@ -79,9 +78,6 @@ int prog(parser_t *parser)
     
     // Rule 1: <prog> → <prolog> <seq> 'EOF'
     
-    CHECK_TOKEN_TYPE(TOKEN_KEYWORD);
-    CHECK_KEYWORD(KEYWORD_REQUIRE);
-
     // <prolog>
     result = prolog(parser); 
     CHECK_RESULT_VALUE_SILENT(EXIT_OK);
@@ -163,6 +159,7 @@ int seq(parser_t *parser)
                 CHECK_RESULT_VALUE_SILENT(EXIT_OK);
                 
                 // <seq> calls itself
+                PARSER_EAT();
                 return seq(parser); 
             }
             // Invalid keyword 
@@ -290,7 +287,6 @@ int func_def(parser_t *parser)
         CHECK_TOKEN_TYPE(TOKEN_KEYWORD); 
         CHECK_KEYWORD(KEYWORD_END);  // 'end'
         
-        PARSER_EAT();
         return EXIT_OK; 
     }
 
@@ -744,9 +740,8 @@ int stat_list(parser_t *parser)
                 
                 // <stat>
                 result = stat(parser);
-                CHECK_RESULT_VALUE(EXIT_OK); 
+                CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
                 
-                PARSER_EAT();
                 return stat_list(parser); // calls itself  
 
             case KEYWORD_END:
@@ -756,9 +751,9 @@ int stat_list(parser_t *parser)
                 
                 return EXIT_OK;
 
-            default:
-                break;    
+            default:break;    
         } // switch()
+
     } else if (parser->token->type == TOKEN_ID) {
         // TODO: add to symtab
         
@@ -766,12 +761,13 @@ int stat_list(parser_t *parser)
         
         // <stat>
         result = stat(parser);
-        CHECK_RESULT_VALUE(EXIT_OK); 
+        CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
                 
         PARSER_EAT();
         return stat_list(parser); // calls itself  
     } 
     
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s' (%s)", TOKEN_REPR, STRING_TOKEN_T);    
     return ERR_SYNTAX;
 }
 
@@ -865,8 +861,9 @@ int stat(parser_t *parser)
                 result = expr_nt(parser);
                 CHECK_RESULT_VALUE(EXIT_OK); 
                 
-                // <expr_list> 
-                PARSER_EAT();
+                // <expr_list>
+                PARSER_EAT(); 
+                // TODO: solve parse eat 
                 result = expr_list(parser);
                 CHECK_RESULT_VALUE(EXIT_OK); 
                 
