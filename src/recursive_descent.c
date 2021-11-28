@@ -214,7 +214,7 @@ int func_dec(parser_t *parser)
                 parser->inside_func_dec = true;
                 parser->declared_function = false;
 
-                // RULE 7:< func_dec> → 'global' 'id' ':' 'function' '(' <param_fdec> ')' ':' <ret_type_list>
+                // RULE 7: <func_dec> → 'global' 'id' ':' 'function' '(' <param_fdec> ')' <ret_type_list>
             
                 PARSER_EAT(); /* 'id' */
                 CHECK_TOKEN_TYPE(TOKEN_ID);   // TODO 
@@ -243,9 +243,6 @@ int func_dec(parser_t *parser)
                 // Already eaten - just check validity 
                 CHECK_TOKEN_TYPE(TOKEN_R_PAR); /* ')' */
 
-                PARSER_EAT(); /* ':' */
-                CHECK_TOKEN_TYPE(TOKEN_COLON);    
-                
                 // <ret_type_list>
                 PARSER_EAT();
                 result = ret_type_list(parser); 
@@ -441,7 +438,7 @@ int func_head(parser_t *parser)
             // Expected keyword is 'function' 
             CHECK_KEYWORD(KEYWORD_FUNCTION);
             
-            // RULE 9: <func_head> → 'function' 'id' '(' <param_fdef> ')' ':' <ret_type_list>
+            // RULE 9: <func_head> → 'function' 'id' '(' <param_fdef> ')' <ret_type_list>
             
             PARSER_EAT();
             CHECK_TOKEN_TYPE(TOKEN_ID); // 'id'
@@ -463,9 +460,6 @@ int func_head(parser_t *parser)
 
             // TODO: PARSER_EAT();
             CHECK_TOKEN_TYPE(TOKEN_R_PAR); // ')'
-            
-            PARSER_EAT();
-            CHECK_TOKEN_TYPE(TOKEN_COLON); // ':'
             
             // <ret_type_list>
             PARSER_EAT();
@@ -533,16 +527,17 @@ int param_fdef_n(parser_t *parser)
     {
         case TOKEN_COMMA:
 
-            // RULE 12: <param_fdef_n> → ',' 'id' ':' <dtype> <param_fdef_n>
+            // RULE 19: <param_fdef_n> → ',' 'id' ':' <dtype> <param_fdef_n>
             
             PARSER_EAT();
             CHECK_TOKEN_TYPE(TOKEN_ID); // 'id'
             // TODO: add to symtable
             
-            PARSER_EAT();
-            CHECK_TOKEN_TYPE(TOKEN_COLON); // ':'
+            PARSER_EAT(); /* ':' */
+            CHECK_TOKEN_TYPE(TOKEN_COLON);
 
             // <dtype>
+            PARSER_EAT();
             result = dtype(parser);
             CHECK_RESULT_VALUE(EXIT_OK); 
             
@@ -552,12 +547,11 @@ int param_fdef_n(parser_t *parser)
 
         case TOKEN_R_PAR:
             
-            // RULE 13: <param_fdef_n> → ε
-
-            // TODO: PARSER_EAT();
+            // RULE 20: <param_fdef_n> → ε
+            
             return EXIT_OK;
-        default:
-            break;
+
+        default: break;
     }
 
     error_message("Parser", ERR_SYNTAX, "unexpected token '%s'", STRING_TOKEN_T);    
@@ -637,27 +631,29 @@ int param_fdec_n(parser_t *parser)
 int ret_type_list(parser_t *parser)
 {
     int result;
-    if (parser->token->type == TOKEN_KEYWORD) {
+    if (parser->token->type == TOKEN_COLON) {
+        
+        // RULE 25: <ret_type_list> → ':' <dtype> <ret_type_list_n>
+        
+        /* ':' */ 
+        CHECK_TOKEN_TYPE(TOKEN_COLON);
+
+        // <dtype>
+        PARSER_EAT();
+        result = dtype(parser);
+        CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+        
+        // <ret_type_list_n>
+        PARSER_EAT();
+        result = ret_type_list_n(parser);
+        CHECK_RESULT_VALUE_SILENT(EXIT_OK);  // TODO: check me
+        
+        return EXIT_OK;
+
+    } else if (parser->token->type == TOKEN_KEYWORD) {
+                
         switch (TOKEN_KW_TYPE) 
         {
-            case KEYWORD_STRING:
-            case KEYWORD_INTEGER:
-            case KEYWORD_NUMBER:
-            case KEYWORD_NIL:
-                
-                // RULE 25: <ret_type_list> → <dtype> <ret_type_list_n>
-            
-                // <dtype>
-                result = dtype(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
-                
-                // <ret_type_list_n>
-                PARSER_EAT();
-                result = ret_type_list_n(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK);  // TODO: check me
-                
-                return EXIT_OK;
-            
             case KEYWORD_FUNCTION:
             case KEYWORD_RETURN:
             case KEYWORD_WHILE:
@@ -671,9 +667,9 @@ int ret_type_list(parser_t *parser)
                 // TODO: PARSER_EAT();
                 return EXIT_OK;
 
-            default:
-                break;
+            default: break;
         } // switch()
+
     } else if (parser->token->type == TOKEN_ID) {
         
         // RULE 26: <ret_type_list> → ε
@@ -715,6 +711,7 @@ int ret_type_list_n(parser_t *parser)
 
             default: break;
         } // switch()
+
     } else if (parser->token->type == TOKEN_COMMA) {
 
         // RULE 27: <ret_type_list_n> → ',' <dtype> <ret_type_list_n>
@@ -736,7 +733,7 @@ int ret_type_list_n(parser_t *parser)
 
     } else if (parser->token->type == TOKEN_EOF) {
         
-        // RULE 21: <ret_type_list_n> → ε
+        // RULE 28: <ret_type_list_n> → ε
         
         return EXIT_OK;
     }
@@ -814,14 +811,15 @@ int stat(parser_t *parser)
                 CHECK_TOKEN_TYPE(TOKEN_COLON); // ':'
                 
                 // <dtype>
+                PARSER_EAT();
                 result = dtype(parser);
                 CHECK_RESULT_VALUE(EXIT_OK); 
 
                 // <var_def>
+                PARSER_EAT();
                 result = var_def(parser);
                 CHECK_RESULT_VALUE(EXIT_OK); 
                 
-                PARSER_EAT();
                 return EXIT_OK;
             
             case KEYWORD_IF:
@@ -881,16 +879,14 @@ int stat(parser_t *parser)
                 // RULE 35: <stat> → 'return' <expr> <expr_list>
                 
                 // <expr> 
-                PARSER_EAT();
                 result = expr_nt(parser);
                 CHECK_RESULT_VALUE(EXIT_OK); 
                 
-                // <ret_expr_list> 
-                PARSER_EAT();
+                // <expr_list> 
                 result = expr_list(parser);
                 CHECK_RESULT_VALUE(EXIT_OK); 
                 
-                PARSER_EAT();
+                // TODO: PARSER_EAT();
                 return EXIT_OK;
 
             default: break;
@@ -1004,11 +1000,10 @@ int var_def(parser_t *parser)
                 
                 // RULE 32: <var_def> → ε
 
-                PARSER_EAT();
                 return EXIT_OK;
-            default:
-                break;
-        }
+
+            default: break;
+        } // switch()
     } else if (parser->token->type == TOKEN_ASSIGN) {
 
         // RULE 31: <var_def> → '=' 'expr'
