@@ -152,7 +152,7 @@ token_t *get_next_token(FILE *file);
  * @param type type of the token
  * @return token structure
  */
-token_t *generate_token(string_t *buffer, int type, int error);
+token_t *generate_token(string_t *buffer, int type);
 
 /**
  * @brief Determines whether a given character is operator
