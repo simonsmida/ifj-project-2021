@@ -126,7 +126,7 @@ void TEST_blockCom_stringLit(void)
     FILE *srcfile = fopen("tests/test_data/codeSnippets/good/snipComment.txt", "r");
     token = get_next_token(srcfile);
     TEST_ASSERT_EQUAL_INT32(TOKEN_STR_LIT,token->type);
-    TEST_ASSERT_EQUAL_STRING(token->attribute->string,"i like comments");
+    TEST_ASSERT_EQUAL_STRING("i\\032like\\032comments",token->attribute->string);
     destroy_token(token);
 
     token = get_next_token(srcfile);
@@ -166,22 +166,22 @@ void TEST_assignOrEqual(void)
 
     token = get_next_token(srcfile);
     TEST_ASSERT(token->type == TOKEN_ASSIGN);
-    //TEST_ASSERT_EQUAL_STRING("=",token->attribute->string);
+    TEST_ASSERT_EQUAL_STRING("=",token->attribute->string);
     destroy_token(token);
 
     token = get_next_token(srcfile);
     TEST_ASSERT(token->type == TOKEN_EQ);
-    //TEST_ASSERT_EQUAL_STRING(token->attribute->string,"==");
+    TEST_ASSERT_EQUAL_STRING(token->attribute->string,"==");
     destroy_token(token);
 
     token = get_next_token(srcfile);
     TEST_ASSERT(token->type == TOKEN_EQ);
-    //TEST_ASSERT_EQUAL_STRING(token->attribute->string,"==");
+    TEST_ASSERT_EQUAL_STRING(token->attribute->string,"==");
     destroy_token(token);
 
     token = get_next_token(srcfile);
     TEST_ASSERT(token->type == TOKEN_EQ);
-    //TEST_ASSERT_EQUAL_STRING(token->attribute->string,"==");
+    TEST_ASSERT_EQUAL_STRING(token->attribute->string,"==");
     destroy_token(token);
 
     token = get_next_token(srcfile);
