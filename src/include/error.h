@@ -23,6 +23,8 @@
 #define ERR_RUNTIME_ZERODIV  9  ///< integer division by constant zero
 #define ERR_INTERNAL         99 ///< not influenced by input program
 
+/* Makes text representation of given value */
+#define TEXTIFY(A) #A
 
 /**
  *  @brief Write formatted error message to stderr
@@ -33,5 +35,10 @@
  *  @param ...      ellipsis - variadic arguments
  */
 void error_message(const char *where, int err_code, const char *fmt, ...);
+
+/**
+ * @brief Returns textified representation of given error code
+ */
+char *textify(int err_code);
 
 #endif // ERROR_H
