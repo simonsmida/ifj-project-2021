@@ -71,7 +71,11 @@
     (_keyword) == KEYWORD_INTEGER || \
     (_keyword) == KEYWORD_STRING     \
 
-// Starting nonterminal <prog>
+
+/**
+ * Starting nonterminal <prog>
+ * @param parser pointer to the parser structure
+ */
 int prog(parser_t *parser)
 {
     int result;
@@ -94,7 +98,11 @@ int prog(parser_t *parser)
     return EXIT_OK; 
 }
 
-// Nonterminal <prolog>
+
+/**
+ * @brief Nonterminal <prolog>
+ * @param parser pointer to the parser structure
+ */
 int prolog(parser_t *parser)
 {
     switch (parser->token->type) 
@@ -130,7 +138,11 @@ int prolog(parser_t *parser)
     return ERR_SYNTAX;
 }
 
-// Nonterminal <seq>
+
+/**
+ * @brief Nonterminal <seq>
+ * @param parser pointer to the parser structure
+ */
 int seq(parser_t *parser) 
 {
     int result;
@@ -191,8 +203,10 @@ int seq(parser_t *parser)
 }
 
 
-
-// Nonterminal <func_dec>
+/**
+ * @brief Nonterminal <func_dec>
+ * @param parser pointer to the parser structure
+ */
 int func_dec(parser_t *parser)
 {
     int result;
@@ -263,7 +277,11 @@ int func_dec(parser_t *parser)
     return ERR_SYNTAX;
 }
 
-// Nonterminal <func_def>
+
+/**
+ * @brief Nonterminal <func_def>
+ * @param parser pointer to the parser structure
+ */
 int func_def(parser_t *parser)
 {
     int result;
@@ -294,7 +312,11 @@ int func_def(parser_t *parser)
     return ERR_SYNTAX;
 }
 
-// Nonterminal <func_call>
+
+/**
+ * @brief Nonterminal <func_call>
+ * @param parser pointer to the parser structure
+ */
 int func_call(parser_t *parser)
 {
     int result;
@@ -325,7 +347,11 @@ int func_call(parser_t *parser)
     return ERR_SYNTAX;
 }
 
-// Nonterminal <arg>
+
+/**
+ * @brief Nonterminal <arg>
+ * @param parser pointer to the parser structure
+ */
 int arg(parser_t *parser)
 {
     int result;
@@ -361,7 +387,11 @@ int arg(parser_t *parser)
     }
 }
 
-// Nonterminal <arg_n>
+
+/**
+ * @brief Nonterminal <arg_n>
+ * @param parser pointer to the parser structure
+ */
 int arg_n(parser_t *parser)
 {
     int result;
@@ -388,7 +418,11 @@ int arg_n(parser_t *parser)
     return ERR_SYNTAX;
 }
 
-// Nonterminal <val>
+
+/**
+ * @brief Nonterminal <val>
+ * @param parser pointer to the parser structure
+ */
 int val(parser_t *parser)
 {
     if (parser->token->type == TOKEN_ID) {
@@ -407,7 +441,11 @@ int val(parser_t *parser)
     }
 }
 
-// Nonterminal <func_head>
+
+/**
+ * @brief Nonterminal <func_head>
+ * @param parser pointer to the parser structure
+ */
 int func_head(parser_t *parser) 
 {
     int result;
@@ -446,7 +484,6 @@ int func_head(parser_t *parser)
             result = ret_type_list(parser); 
             CHECK_RESULT_VALUE_SILENT(EXIT_OK);
 
-            // TODO: PARSER_EAT();
             return EXIT_OK;
 
         default: break; 
@@ -455,7 +492,11 @@ int func_head(parser_t *parser)
     return ERR_SYNTAX;
 }
 
-// <param_fdef>
+
+/**
+ * @brief Nonterminal <param_fdef>
+ * @param parser pointer to the parser structure
+ */
 int param_fdef(parser_t *parser)
 {
     int result;
@@ -480,25 +521,26 @@ int param_fdef(parser_t *parser)
             result = param_fdef_n(parser);
             CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
             
-            // TODO: PARSER_EAT();
-
             return EXIT_OK;
 
         case TOKEN_R_PAR:
             
             // RULE 11: <param_fdef> → ε
             
-            // TODO: PARSER_EAT();
             return EXIT_OK;
-        default:
-            break;
+
+        default: break;
     }
 
     error_message("Parser", ERR_SYNTAX, "unexpected token '%s'", STRING_TOKEN_T);    
     return ERR_SYNTAX;
 }
 
-// Nonterminal <param_fdef_n>
+
+/**
+ * @brief Nonterminal <param_fdef_n>
+ * @param parser pointer to the parser structure
+ */
 int param_fdef_n(parser_t *parser)
 {
     int result;
@@ -538,7 +580,11 @@ int param_fdef_n(parser_t *parser)
     return ERR_SYNTAX;
 }
 
-// Nonterminal <param_fdec>
+
+/**
+ * @brief Nonterminal <param_fdec>
+ * @param parser pointer to the parser structure
+ */
 int param_fdec(parser_t *parser)
 {
     int result;
@@ -576,7 +622,11 @@ int param_fdec(parser_t *parser)
     return ERR_SYNTAX;
 }
 
-// Nonterminal <param_fdec_n>
+
+/**
+ * @brief Nonterminal <param_fdec_n>
+ * @param parser pointer to the parser structure
+ */
 int param_fdec_n(parser_t *parser)
 {
     int result;
@@ -607,7 +657,10 @@ int param_fdec_n(parser_t *parser)
 }
 
 
-// Nonterminal <ret_type_list>
+/**
+ * @brief Nonterminal <ret_type_list>
+ * @param parser pointer to the parser structure
+ */
 int ret_type_list(parser_t *parser)
 {
     int result;
@@ -668,7 +721,11 @@ int ret_type_list(parser_t *parser)
     return ERR_SYNTAX;
 }
 
-// Nonterminal <ret_type_list_n>
+
+/**
+ * @brief Nonterminal <ret_type_list_n>
+ * @param parser pointer to the parser structure
+ */
 int ret_type_list_n(parser_t *parser)
 {
     int result;
@@ -723,7 +780,10 @@ int ret_type_list_n(parser_t *parser)
 }
 
 
-// <stat_list>
+/**
+ * @brief Nonterminal <stat_list>
+ * @param parser pointer to the parser structure
+ */
 int stat_list(parser_t *parser)
 {
     int result;
@@ -771,7 +831,11 @@ int stat_list(parser_t *parser)
     return ERR_SYNTAX;
 }
 
-// Nonterminal <stat>
+
+/**
+ * @brief Nonterminal <stat>
+ * @param parser pointer to the parser structure
+ */
 int stat(parser_t *parser)
 {
     int result;
@@ -863,7 +927,6 @@ int stat(parser_t *parser)
                 
                 // <expr_list>
                 PARSER_EAT(); 
-                // TODO: solve parse eat 
                 result = expr_list(parser);
                 CHECK_RESULT_VALUE(EXIT_OK); 
                 
@@ -895,10 +958,15 @@ int stat(parser_t *parser)
         return EXIT_OK;
     }
 
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s' (%s)", TOKEN_REPR, STRING_TOKEN_T);    
     return ERR_SYNTAX;
 }
 
-// Nonterminal <expr_nt>
+
+/**
+ * @brief Nonterminal <expr_nt>
+ * @param parser pointer to the parser structure
+ */
 int expr_nt(parser_t *parser)
 {
     if (parser->token->type == TOKEN_KEYWORD) {
@@ -916,8 +984,8 @@ int expr_nt(parser_t *parser)
                 return EXIT_OK;
 
             default: break;
-
         } // switch()
+
     } else if (parser->token->type == TOKEN_ID) {
                 
         // RULE 49: <expr> → ε
@@ -937,11 +1005,14 @@ int expr_nt(parser_t *parser)
     return EXIT_OK;
 }
 
-// Nonterminal <else>
+
+/**
+ * @brief Nonterminal <else>
+ * @param parser pointer to the parser structure
+ */
 int else_nt(parser_t *parser)
 {
     int result;
-
     switch (parser->token->type)
     {
         case TOKEN_KEYWORD:
@@ -971,7 +1042,11 @@ int else_nt(parser_t *parser)
     return ERR_SYNTAX;
 } 
 
-// Nonterminal <var_def>
+
+/**
+ * @brief Nonterminal <var_def>
+ * @param parser pointer to the parser structure
+ */
 int var_def(parser_t *parser)
 {
     if (parser->token->type == TOKEN_KEYWORD) {
@@ -1009,7 +1084,10 @@ int var_def(parser_t *parser)
 }
 
 
-// Nonterminal <id_n>
+/**
+ * @brief Nonterminal <id_n>
+ * @param parser pointer to the parser structure
+ */
 int id_n(parser_t *parser)
 {
     switch (parser->token->type)
@@ -1037,7 +1115,11 @@ int id_n(parser_t *parser)
     return ERR_SYNTAX;
 }
 
-// Nonterminal <expr_list>
+
+/**
+ * @brief Nonterminal <expr_list>
+ * @param parser pointer to the parser structure
+ */
 int expr_list(parser_t *parser)
 {
     if (parser->token->type == TOKEN_KEYWORD) {
@@ -1077,7 +1159,11 @@ int expr_list(parser_t *parser)
     return ERR_SYNTAX;
 }
 
-// Nonterminal <dtype>
+
+/**
+ * @brief Nonterminal <dtype>
+ * @param parser pointer to the parser structure
+ */
 int dtype(parser_t *parser)
 {
     if (parser->token->type == TOKEN_KEYWORD) {
