@@ -711,11 +711,57 @@ const char *token_type_to_str(int type)
         case TOKEN_LT:
         case TOKEN_LE: 
             return "operator";
-  }
+        default:
+            break;
+  } // switch()
   return "unrecognized token type";
 }
 
-// TODO: add line number?
+/**
+ * @brief Auxiliary function returning string version of the given keyword
+ */
+const char *kw_type_to_str(int keyword_type)
+{
+    switch (keyword_type) 
+    {
+        case KEYWORD_REQUIRE:
+            return "require";
+        case KEYWORD_DO:
+            return "do";
+        case KEYWORD_IF:
+            return "if";
+        case KEYWORD_ELSE:
+            return "else";
+        case KEYWORD_END:
+            return "end";
+        case KEYWORD_FUNCTION:
+            return "function";
+        case KEYWORD_GLOBAL:
+            return "global";
+        case KEYWORD_LOCAL:
+            return "local";
+        case KEYWORD_NIL:
+            return "nil";
+        case KEYWORD_STRING:
+            return "string";
+        case KEYWORD_INTEGER:
+            return "integer";
+        case KEYWORD_NUMBER:
+            return "number";
+        case KEYWORD_DOUBLE:
+            return "double";
+        case KEYWORD_RETURN:
+            return "return";
+        case KEYWORD_THEN:
+            return "then";
+        case KEYWORD_WHILE:
+            return "while";
+        default:
+            break;
+    } // switch()
+    return "unknown keyword";
+}
+
 /**
  * @brief Auxiliary function that prints string representation of current token
  */

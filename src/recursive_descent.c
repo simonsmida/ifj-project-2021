@@ -4,6 +4,8 @@
 #include "include/parser.h"
 
 #define STRING_TOKEN_T token_type_to_str(parser->token->type)
+#define STRING_KW_T kw_type_to_str(parser->token->attribute->keyword_type)
+
 #define TOKEN_REPR parser->token->attribute->string
 #define TOKEN_KW_TYPE parser->token->attribute->keyword_type 
 
@@ -51,12 +53,12 @@
     }                                                                   \
 } while(0)
 
-#define CHECK_KEYWORD(_type) do {                                       \
-    if (parser->token->attribute->keyword_type != (_type)) {            \
-        error_message("Parser", ERR_SYNTAX, "expected: '%s', is: '%s'", \
-                      token_type_to_str(_type), STRING_TOKEN_T);        \
-        return ERR_SYNTAX;                                              \
-    }                                                                   \
+#define CHECK_KEYWORD(_type) do {                                               \
+    if (parser->token->attribute->keyword_type != (_type)) {                    \
+        error_message("Parser", ERR_SYNTAX, "expected keyword: '%s', is: '%s'", \
+                      kw_type_to_str(_type), STRING_KW_T);                      \
+        return ERR_SYNTAX;                                                      \
+    }                                                                           \
 } while(0)
 
 
@@ -134,7 +136,7 @@ int prolog(parser_t *parser)
         default: break;
     }
 
-    error_message("Parser", ERR_SYNTAX, "unexpected token '%s'", STRING_TOKEN_T);    
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s' (%s)", TOKEN_REPR, STRING_TOKEN_T);
     return ERR_SYNTAX;
 }
 
@@ -198,7 +200,7 @@ int seq(parser_t *parser)
         default: break; 
     } // switch()
     
-    error_message("Parser", ERR_SYNTAX, "unexpected token '%s'", TOKEN_REPR);    
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s' (%s)", TOKEN_REPR, STRING_TOKEN_T);
     return ERR_SYNTAX;
 }
 
@@ -273,7 +275,7 @@ int func_dec(parser_t *parser)
         default: break;
     } // switch()
 
-    error_message("Parser", ERR_SYNTAX, "unexpected token '%s'", TOKEN_REPR);    
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s' (%s)", TOKEN_REPR, STRING_TOKEN_T);
     return ERR_SYNTAX;
 }
 
@@ -308,7 +310,7 @@ int func_def(parser_t *parser)
         return EXIT_OK; 
     }
 
-    error_message("Parser", ERR_SYNTAX, "unexpected token '%s'", STRING_TOKEN_T);    
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s' (%s)", TOKEN_REPR, STRING_TOKEN_T);
     return ERR_SYNTAX;
 }
 
@@ -532,7 +534,7 @@ int param_fdef(parser_t *parser)
         default: break;
     }
 
-    error_message("Parser", ERR_SYNTAX, "unexpected token '%s'", STRING_TOKEN_T);    
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s' (%s)", TOKEN_REPR, STRING_TOKEN_T);
     return ERR_SYNTAX;
 }
 
@@ -576,7 +578,7 @@ int param_fdef_n(parser_t *parser)
         default: break;
     }
 
-    error_message("Parser", ERR_SYNTAX, "unexpected token '%s'", STRING_TOKEN_T);    
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s' (%s)", TOKEN_REPR, STRING_TOKEN_T);
     return ERR_SYNTAX;
 }
 
@@ -618,7 +620,7 @@ int param_fdec(parser_t *parser)
         default: break;
     }
 
-    error_message("Parser", ERR_SYNTAX, "unexpected token '%s'", STRING_TOKEN_T);    
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s' (%s)", TOKEN_REPR, STRING_TOKEN_T);
     return ERR_SYNTAX;
 }
 
@@ -652,7 +654,7 @@ int param_fdec_n(parser_t *parser)
         default: break;
     } // switch()
 
-    error_message("Parser", ERR_SYNTAX, "unexpected token '%s'", STRING_TOKEN_T);    
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s' (%s)", TOKEN_REPR, STRING_TOKEN_T);
     return ERR_SYNTAX;
 }
 
@@ -717,7 +719,7 @@ int ret_type_list(parser_t *parser)
         return EXIT_OK;
     }
 
-    error_message("Parser", ERR_SYNTAX, "unexpected token '%s'", STRING_TOKEN_T);    
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s' (%s)", TOKEN_REPR, STRING_TOKEN_T);
     return ERR_SYNTAX;
 }
 
@@ -775,7 +777,7 @@ int ret_type_list_n(parser_t *parser)
         return EXIT_OK;
     }
 
-    error_message("Parser", ERR_SYNTAX, "unexpected token '%s'", STRING_TOKEN_T);    
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s' (%s)", TOKEN_REPR, STRING_TOKEN_T);
     return ERR_SYNTAX;
 }
 
@@ -1178,7 +1180,7 @@ int dtype(parser_t *parser)
         } // switch()
     }
 
-    error_message("Parser", ERR_SYNTAX, "unexpected token '%s'", STRING_TOKEN_T);   
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s' (%s)", TOKEN_REPR, STRING_TOKEN_T);
     return ERR_SYNTAX;
 }
 
