@@ -187,8 +187,14 @@ bool is_keyword(char *string);
  */
 const char *token_type_to_str(int type);
 
+/**
+ * @brief Auxiliary function returning string version of the given keyword
+ *
+ * @param keyword_type type of the keyword
+ * @return pointer to the string version of a keyword type
+ */
+const char *kw_type_to_str(int keyword_type);
 
-// TODO: add line number?
 /**
  * @brief Auxiliary function that prints string representation of current token
  * @param token token to be printed
