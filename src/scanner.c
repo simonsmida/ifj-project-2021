@@ -33,10 +33,9 @@ token_t *get_next_token(FILE *file)
 	
 
     if (buffer == NULL) {
-        printf("EROOR\n");
+        printf("ERROR\n");
         exit(1);
     }
-	int error = 0;
     int state = DEFAULT_STATE;
     int c;
     char escape_seq_bufer[5]; // used if escape sequence is in \ddd form
@@ -72,7 +71,7 @@ token_t *get_next_token(FILE *file)
                     // Found separator
                 else if ( c == ',' ) {
                     append_character(buffer, c);
-                    return generate_token(buffer, SEPARATOR, error);
+                    return generate_token(buffer, SEPARATOR);
                 }
                     // Found equals '='
                 else if ( c == '=' ) {
@@ -81,15 +80,15 @@ token_t *get_next_token(FILE *file)
                 }
                 else if ( c == '(' ) {
                     append_character(buffer, c);
-                    return generate_token(buffer,  L_PAREN, error);
+                    return generate_token(buffer,  L_PAREN);
                 }
                 else if ( c == ')' ) {
                     append_character(buffer, c);
-                    return generate_token(buffer, R_PAREN, error);
+                    return generate_token(buffer, R_PAREN);
                 }
                 else if ( c == ':') {
                     append_character(buffer, c);
-                    return generate_token(buffer,  COLON, error);
+                    return generate_token(buffer,  COLON);
                 }
                     // Found an operator
                 else if ( is_operator(c) ) {
@@ -98,7 +97,8 @@ token_t *get_next_token(FILE *file)
                 }
 				else {
 					// Found an illegal character for example ';'
-					return generate_token(buffer, STATE_ERROR, error);
+                    append_character(buffer, c);
+					return generate_token(buffer, STATE_ERROR);
 				}
                 break;
 
@@ -110,7 +110,7 @@ token_t *get_next_token(FILE *file)
                 }
                 else {
 					ungetc(c, file);
-                    return generate_token(buffer,  OPERATOR, error);
+                    return generate_token(buffer,  OPERATOR);
                 }
                 break;
         
@@ -156,11 +156,17 @@ token_t *get_next_token(FILE *file)
             case STRING_LITERAL:
                 if (c == '"') {
                    // append_character(buffer, c);
-                    return generate_token(buffer , state, error);
+                    return generate_token(buffer , state);
                 }
                 else if ( c == '\\' ) {
                     state = ESCAPE_SEQUENCE;
                 }
+				else if ( c == ' ' ){
+					append_character(buffer, '\\');
+					append_character(buffer, '0');
+					append_character(buffer, '3');
+					append_character(buffer, '2');
+				}
                 else {
                     append_character(buffer, c);
                 }
@@ -181,7 +187,7 @@ token_t *get_next_token(FILE *file)
                 
                 else {
                     ungetc(c, file);
-                    return generate_token(buffer, state , error);
+                    return generate_token(buffer, state );
                 }
                 break;
         
@@ -192,8 +198,7 @@ token_t *get_next_token(FILE *file)
                 }
 				else {
 					fprintf(stderr, "Error, there has to be a digit after '.' in number sequence\n " );
-					error = -1;
-					return generate_token(buffer, state, error);
+					return generate_token(buffer, state);
 				}
                 break;
 
@@ -207,12 +212,12 @@ token_t *get_next_token(FILE *file)
 					state = DOUBLE_E_SEQUENCE;
                 }
 				else if (isspace(c)) {
-                    return generate_token(buffer,  state, error);
+                    return generate_token(buffer,  state);
 				 }
 				else {
                     // No space between number and other token
                     ungetc(c ,file);
-                    return generate_token(buffer, state, error);
+                    return generate_token(buffer, state);
                 }
 				break;
 
@@ -227,9 +232,8 @@ token_t *get_next_token(FILE *file)
                 }
                 else {
 					
-					fprintf(stderr, "After 'e' in number sequence, there has to be digit or '+' or '-' ");
-					error = -1;
-					return generate_token(buffer, state, error);
+					fprintf(stderr, "After 'e' in number sequence, there has to be digit or '+' or '-'\n");
+					return generate_token(buffer, state);
 				}
                 break;
 
@@ -238,11 +242,11 @@ token_t *get_next_token(FILE *file)
                     append_character(buffer, c);
                 }
                 else if (isspace(c)) {
-                    return generate_token(buffer, state, error);
+                    return generate_token(buffer, state);
                 }
                 else { 
                     ungetc(c ,file);
-                    return generate_token(buffer, state, error);
+                    return generate_token(buffer, state);
                 }
 				break;
 
@@ -254,8 +258,7 @@ token_t *get_next_token(FILE *file)
                 else {
 					// TODO : Exit program
 					fprintf(stderr, "After 'e-' 'e+' in number sequence, there has to be digit\n");
-					error = -1;
-					return generate_token(buffer, state, error);
+					return generate_token(buffer, state);
 				}
                 break;
 
@@ -264,12 +267,12 @@ token_t *get_next_token(FILE *file)
                     append_character(buffer, c);
                 }
                 else if (isspace(c)) {
-                    return generate_token(buffer, state, error);
+                    return generate_token(buffer, state);
                 }
                 else {
                     // No space between number and other token
                     ungetc(c, file);
-                    return generate_token(buffer, state, error);
+                    return generate_token(buffer, state);
                 }
                 break;
 
@@ -279,73 +282,88 @@ token_t *get_next_token(FILE *file)
                 }
                 else {
                     ungetc(c, file);
-                    return generate_token(buffer,  state, error);
+                    return generate_token(buffer,  state);
                 }
                 break; 
 
             case OPERATOR:
                 if ( buffer->string[buffer->current_index - 1] == '/' && c == '/' )  {
                     append_character(buffer, c);
-                    return generate_token(buffer,  state, error);
+                    return generate_token(buffer,  state);
                 }
 
 				if ( buffer->string[buffer->current_index - 1] == '*' ){
 					ungetc(c, file);
-					return generate_token(buffer, state, error);
+					return generate_token(buffer, state);
 				}
 
 				if ( buffer->string[buffer->current_index - 1] == '/' ){
 					ungetc(c, file);
-					return generate_token(buffer, state, error);
+					return generate_token(buffer, state);
 				}
 
 				if ( buffer->string[buffer->current_index - 1] == '-' ){
 					ungetc(c, file);
-					return generate_token(buffer, state, error);
+					return generate_token(buffer, state);
 				}
 
 				if ( buffer->string[buffer->current_index - 1] == '+' ){
 					ungetc(c, file);
-					return generate_token(buffer, state, error);
+					return generate_token(buffer, state);
+				}
+
+                if ( buffer->string[buffer->current_index - 1] == '#' ){
+					ungetc(c, file);
+					return generate_token(buffer, state);
+				}
+
+                if ( buffer->string[buffer->current_index - 1] == '<' && c != '='){
+					ungetc(c, file);
+					return generate_token(buffer, state);
+				}
+
+                if ( buffer->string[buffer->current_index - 1] == '>' && c != '='){
+					ungetc(c, file);
+					return generate_token(buffer, state);
 				}
 
                 if ( buffer->string[buffer->current_index - 1] == '.' && c == '.' ) {
                     append_character(buffer, c);
-                    return generate_token(buffer,  state, error);
+                    return generate_token(buffer,  state);
                 }
-				else if ((buffer->string[buffer->current_index] - 1) == '.' && c != '.') {
-					fprintf(stderr, "there is no token that can start with dot and its not '..' \n");
-					error = -1;
-					return generate_token(buffer, state, error);
+				else if ((buffer->string[buffer->current_index-1]) == '.' && c != '.') {
+					fprintf(stderr, "There is no token that can start with dot and its not '..' \n");
+					return generate_token(buffer, STATE_ERROR);
 				}
 
                 if (buffer->string[buffer->current_index - 1] == '=' && c == '=') {
                     append_character(buffer, c);
-                    return generate_token(buffer,  state, error);
+                    return generate_token(buffer,  state);
                 }
                 else if (buffer->string[buffer->current_index - 1] == '<' && c == '=') {
                     append_character(buffer, c);
-                    return generate_token(buffer, state, error);
+                    return generate_token(buffer, state);
                 }
                 else if (buffer->string[buffer->current_index - 1] == '>' && c == '=') {
                     append_character(buffer, c);
-                    return generate_token(buffer, state, error);
+                    return generate_token(buffer, state);
                 }
                 else if (buffer->string[buffer->current_index - 1] == '~' && c == '=') {
                     append_character(buffer, c);
-                    return generate_token(buffer, state, error);
+                    return generate_token(buffer, state);
                 }
-                else if (buffer->string[buffer->current_index] == '~' && c != '=') {
+                else if (buffer->string[buffer->current_index - 1] == '~' && c != '=') {
                     printf("Lexical error, ~ has to be followed by =\n");
-                    exit(1); // TODO : Think of a way to end the program without using exit              
+                    //exit(1); // TODO : Think of a way to end the program without using exit              
                     // Lexical analysis error - incorrect operator use (if using ~, = has to follow immediately)
+                    return generate_token(buffer, STATE_ERROR);
                 }
                 else if (is_operator(c) || c == '=') {
                     printf("Lexical error, %c cannot be followed by %c\n", buffer->string[buffer->current_index], c);
                     exit(1);
                 }
                 else {
-                    return generate_token(buffer, state, error);
+                    return generate_token(buffer, state);
                 }
                 break;
 
@@ -355,7 +373,11 @@ token_t *get_next_token(FILE *file)
                     state = STRING_LITERAL;
                 }
                 else if ( c == 'n' ) {
-                    append_character(buffer, '\n');
+					// code for new line is 
+                    append_character(buffer, '\\');
+					append_character(buffer, '0');
+					append_character(buffer, '1');
+					append_character(buffer, '0');
                     state = STRING_LITERAL;
                 }
                 else if ( c == 't' ) {
@@ -379,9 +401,8 @@ token_t *get_next_token(FILE *file)
                     state = ESCAPE_2;
                 }
                 else {
-                    fprintf(stderr, "Invalid escape sequence in string literal");
-					error = -1;
-					return generate_token(buffer, state, error);
+                    fprintf(stderr, "Invalid escape sequence in string literal\n");
+					return generate_token(buffer, state);
                    
                 }
 				break;
@@ -392,8 +413,8 @@ token_t *get_next_token(FILE *file)
                     int character = strtold(escape_seq_bufer,NULL);
                     if (character > 255) {
                         fprintf(stderr, "Escape character value cannot be higher than 255\n");
-                        error = -1;
-						return generate_token(buffer, state, error);
+
+						return generate_token(buffer, state);
                     }
                     if (isprint(character)) {
                         append_character(buffer, character);
@@ -407,11 +428,11 @@ token_t *get_next_token(FILE *file)
             case ASSIGN_OR_EQUALS:
                 if ( c == '=' ) {
                     append_character(buffer, c);
-                    return generate_token(buffer, state, error);
+                    return generate_token(buffer, state);
                 }
                 else {
                     ungetc(c, file);
-                    return generate_token(buffer, state, error);
+                    return generate_token(buffer, state);
                 }
 				break;
 
@@ -426,13 +447,12 @@ token_t *get_next_token(FILE *file)
 			ungetc(c, file);
 			if (state == DOUBLE_E_SEQUENCE || state == DOUBLE_DOT_SEQUENCE || state == DOUBLE_E_PLUS_MINUS_SEQUENCE){
 				fprintf(stderr, "There has to be non-empty digit after '.' or 'e' or 'e+/-'\n");
-				error = -1;
-				return generate_token(buffer, state, error);
+				return generate_token(buffer, state);
 			}
-            return generate_token(buffer, state, error);
+            return generate_token(buffer, state);
         }
         else {
-            return generate_token(buffer, STATE_EOF, error);
+            return generate_token(buffer, STATE_EOF);
         }
     }
 
@@ -447,39 +467,38 @@ token_t *get_next_token(FILE *file)
  * 
  * @return Pointer to a token if successful, otherwise NULL
  */
-token_t *generate_token(string_t *buffer,  int type, int error) 
+token_t *generate_token(string_t *buffer,  int type) 
 {
 
     token_t *token = (token_t *) malloc(sizeof(token_t));
     if (token == NULL) {
-        fprintf(stderr,"Intern malloc problem");
+        fprintf(stderr,"Intern malloc problem\n");
         return NULL;
     }
 
     token->attribute = calloc(1,sizeof(token_attribute_t));
 
 	if (token->attribute == NULL){
-		fprintf(stderr,"Intern malloc problem");
+		fprintf(stderr,"Intern malloc problem\n");
         return NULL;
 	}
 	// Initializing attributes
 	token->type = TOKEN_ERROR;
 	token->attribute->integer = 0;
 	token->attribute->number = 0.0f;
-	token->attribute->string = NULL;
+	//token->attribute->string = NULL;
+    token->attribute->string = malloc(strlen(buffer->string) + 1);
+    if (token->attribute->string == NULL){
+        fprintf(stderr,"Intern malloc problem\n");
+        return NULL;
+    }
+    strcpy(token->attribute->string,buffer->string);
 	token->attribute->keyword_type = -1;
 	append_character(buffer, '\0');
 	
     switch (type) 
     {
         case ID_OR_KEYWORD:
-			token->attribute->string = malloc(strlen(buffer->string) + 1);
-			if (token->attribute->string == NULL){
-				fprintf(stderr, "Intern malloc problem\n");
-				return NULL;
-			}
-			strcpy(token->attribute->string, buffer->string);
-
             if (is_keyword(buffer->string) || is_variable_type(buffer->string)) {
                 token->type = TOKEN_KEYWORD;
 				token->attribute->keyword_type = determine_keyword(buffer->string);
@@ -508,9 +527,6 @@ token_t *generate_token(string_t *buffer,  int type, int error)
 				token->type = TOKEN_STRLEN;
 				break;
 			}
-			
-			
-
 			if (!strcmp((buffer->string), "~=")){
 				token->type = TOKEN_NOT_EQ;
 				break;
@@ -545,13 +561,7 @@ token_t *generate_token(string_t *buffer,  int type, int error)
 			}
             break;
         
-        case STRING_LITERAL:
-			token->attribute->string = malloc(strlen(buffer->string) + 1);
-			if (token->attribute->string == NULL){
-				fprintf(stderr,"Intern malloc problem");
-        		return NULL;
-			}
-			strcpy(token->attribute->string,buffer->string);
+        case STRING_LITERAL:	
             token->type = TOKEN_STR_LIT;
             break;
 
@@ -606,7 +616,7 @@ token_t *generate_token(string_t *buffer,  int type, int error)
 			break;
 
 		case STATE_ERROR:
-			token->type =  TOKEN_ERROR;
+			token->type = TOKEN_ERROR; 
 			break;
     } // switch
     
@@ -616,63 +626,33 @@ token_t *generate_token(string_t *buffer,  int type, int error)
 
 /**
  * @brief Generates an empty token of TOKEN_EOF type, for
- *		  needs of operator precedence parser
+ *                needs of operator precedence parser
  *
  * @return token structure
  */
 token_t *generate_empty_token(void){
-	/** 1. Alloc token structure */	
+        /** 1. Alloc token structure */
     token_t *token = (token_t *) malloc(sizeof(token_t));
     if (token == NULL) {
         fprintf(stderr,"Intern malloc problem");
         return NULL;
     }
-	/** 2. Alloc token attribute structure */
+        /** 2. Alloc token attribute structure */
     token->attribute = calloc(1,sizeof(token_attribute_t));
 
-	if (token->attribute == NULL){
-		fprintf(stderr,"Intern malloc problem");
+        if (token->attribute == NULL){
+                fprintf(stderr,"Intern malloc problem");
         return NULL;
-	}
-	/** 3. Initializing attributes */
-	token->type = TOKEN_EOF;
-	token->attribute->integer = 0;
-	token->attribute->number = 0.0f;
-	token->attribute->string = NULL;
-	token->attribute->keyword_type = -1;
-	return token;
+        }
+        /** 3. Initializing attributes */
+        token->type = TOKEN_EOF;
+        token->attribute->integer = 0;
+        token->attribute->number = 0.0f;
+        token->attribute->string = NULL;
+        token->attribute->keyword_type = -1;
+        return token;
 }
 
-/**
- * @brief Deep copy of one token structure to another
- *
- * @param src Token which will be copied
- *
- * @return token structure
- */
-token_t *copy_token(token_t* src){
-	/** 1. Alloc token structure */
-	token_t *copy = generate_empty_token();
-	
-	/** 2. Initialize */
-	copy->type = src->type;
-	copy->attribute->integer = src->attribute->integer;
-	copy->attribute->number  = src->attribute->number;
-	copy->attribute->keyword_type = src->attribute->keyword_type;
-	
-	/** 3. If the string attribute is not empty alloc and init it */
-	if(src->attribute->string != NULL){
-		copy->attribute->string = (char*)malloc(strlen(src->attribute->string) + 1);
-		if (copy->attribute->string == NULL){
-			fprintf(stderr, "Intern malloc problem\n");
-			return NULL;
-		}
-		copy->attribute->string[strlen(src->attribute->string)] = '\0';
-		strcpy(copy->attribute->string, src->attribute->string);
-	}
-	
-	return copy;
-}
 /**
  * @brief Determines wether a given character is operator
  * 
@@ -774,11 +754,57 @@ const char *token_type_to_str(int type)
         case TOKEN_LT:
         case TOKEN_LE: 
             return "operator";
-  }
+        default:
+            break;
+  } // switch()
   return "unrecognized token type";
 }
 
-// TODO: add line number?
+/**
+ * @brief Auxiliary function returning string version of the given keyword
+ */
+const char *kw_type_to_str(int keyword_type)
+{
+    switch (keyword_type) 
+    {
+        case KEYWORD_REQUIRE:
+            return "require";
+        case KEYWORD_DO:
+            return "do";
+        case KEYWORD_IF:
+            return "if";
+        case KEYWORD_ELSE:
+            return "else";
+        case KEYWORD_END:
+            return "end";
+        case KEYWORD_FUNCTION:
+            return "function";
+        case KEYWORD_GLOBAL:
+            return "global";
+        case KEYWORD_LOCAL:
+            return "local";
+        case KEYWORD_NIL:
+            return "nil";
+        case KEYWORD_STRING:
+            return "string";
+        case KEYWORD_INTEGER:
+            return "integer";
+        case KEYWORD_NUMBER:
+            return "number";
+        case KEYWORD_DOUBLE:
+            return "double";
+        case KEYWORD_RETURN:
+            return "return";
+        case KEYWORD_THEN:
+            return "then";
+        case KEYWORD_WHILE:
+            return "while";
+        default:
+            break;
+    } // switch()
+    return "unknown keyword";
+}
+
 /**
  * @brief Auxiliary function that prints string representation of current token
  */
@@ -786,9 +812,9 @@ void print_token(token_t *token)
 {
     // TODO change token->attribute->string to its actual representation
 	
-	if (token->attribute->string != NULL){
+	//if (token->attribute->string != NULL){
     	printf("Token: [%s '%s']\n", token_type_to_str(token->type), token->attribute->string);
-	}
+	//}
 }
 
 
@@ -852,7 +878,6 @@ void destroy_token(token_t *token){
 			free(token->attribute);
 		}
 		free(token);
-		token = NULL;
 	}
 
 	return;

@@ -152,24 +152,15 @@ token_t *get_next_token(FILE *file);
  * @param type type of the token
  * @return token structure
  */
-token_t *generate_token(string_t *buffer, int type, int error);
+token_t *generate_token(string_t *buffer, int type);
 
 /**
  * @brief Generates an empty token of TOKEN_EOF type, for
- *		  needs of operator precedence parser
+ *                needs of operator precedence parser
  *
  * @return token structure
  */
 token_t *generate_empty_token(void);
-
-/**
- * @brief Deep copy of one token structure to another
- *
- * @param src Token which will be copied
- *
- * @return token structure
- */
-token_t *copy_token(token_t *src);
 
 /**
  * @brief Determines whether a given character is operator
@@ -204,8 +195,14 @@ bool is_keyword(char *string);
  */
 const char *token_type_to_str(int type);
 
+/**
+ * @brief Auxiliary function returning string version of the given keyword
+ *
+ * @param keyword_type type of the keyword
+ * @return pointer to the string version of a keyword type
+ */
+const char *kw_type_to_str(int keyword_type);
 
-// TODO: add line number?
 /**
  * @brief Auxiliary function that prints string representation of current token
  * @param token token to be printed

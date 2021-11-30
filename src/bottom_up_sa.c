@@ -46,14 +46,7 @@ int reduce_terminal(PA_stack *stack){
 	PA_item_t items[4];
 	PA_item_t top_item;
 	int operands_count = 0;
-	/*PA_stack_top(stack,&top_item);
-	PA_stack_pop(stack);
-	while(top_item.item_type != 2){
-		PA_stack_top(stack,&items[operands_count]);
-		PA_stack_pop(stack);
-		operands_count++;
-		PA_stack_top(stack,&top_item);
-	}*/
+	
 	while(1){
 		PA_stack_top(stack, &top_item);
 		if(top_item.item_type == 2){
@@ -279,23 +272,6 @@ int analyze_bottom_up(FILE *f){
 	/** 3.2 Push $ on the top of the stack */
 	PA_stack_push(&stack, item, 1);
 
-#if 0
-
-	for (int i = 0; i < 4;i++)
-	{	
-		token_in.terminal = get_next_token(f);
-		printf("Type of token:%d\n",token_in.terminal->type);
-		destroy_token(token_in.terminal);
-	}
-		printf("TOKEN EOF %d\n",TOKEN_EOF);
-	//Free empty token $
-	PA_stack_top(&stack, &item);
-	PA_stack_pop(&stack);
-	if( item.item_type == 1 ){
-		destroy_token(item.terminal);
-	}
-#endif 
-#if 1
 	int i=0;
 	int accepted = 0;
 	int reduction = 0;
@@ -313,20 +289,27 @@ int analyze_bottom_up(FILE *f){
 		/**5. Look the operator priority in the precedence table */
 		switch(precedence_table[get_index(top_terminal.terminal->type)][get_index(token_in.terminal->type)]){
 			case '<':
-				/** 5.1 Push the initial char of the handle */
 				printf("Tlacim na zasobnik\n\n");
 				PA_stack_top(&stack,&item);
 				handle.handle = '<';
 				if( item.item_type == 1){
+					/** 5.1 Push the intial char of the handle first */
 					PA_stack_push(&stack,handle,2);
+					
+					/** 5.2 Push terminal from input on the stack */
 					PA_stack_push(&stack,token_in,1);
 				}else if (item.item_type == 0){
+					/** 5.1 Push the intial char of the handle first
+					 	If there is a non-terminal on the top of the stack,
+					 	push behind the non-terminal */
 					PA_stack_pop(&stack);
 					PA_stack_push(&stack,handle,2);
 					PA_stack_push(&stack,item,0);
+					
+					/** 5.2 Push terminal from input on the stack */
 					PA_stack_push(&stack,token_in,1);
 				}
-			reduction = 0;
+				reduction = 0;
 				break;
 			case '=': 
 				printf("Rovnaka priorita, pushni terminal na zasobnik.\n\n");
@@ -339,7 +322,7 @@ int analyze_bottom_up(FILE *f){
 				//Nechcem testovat ci je dno zasobniku prazdne lebo sa tam vyskytuje neterminal
 				printf("Redukujem\n\n");
 				if(!reduce_terminal(&stack)){
-					printf("Chyba jak kokot\n");
+					printf("Error: No rule for reduction\n");
 					return 0;
 				}
 				
@@ -350,8 +333,6 @@ int analyze_bottom_up(FILE *f){
 				}
 				break;
 			case ERR: printf("Chyba\n\n");return 1;break;//Dealloc the stack
-			case END: printf("Accepted\n\n");//accepted = 1;
-					  break;//Dealloc the stack
 		}
 	i++;
 	printf("Type of token:%d\n",token_in.terminal->type);
@@ -370,7 +351,6 @@ int analyze_bottom_up(FILE *f){
 		destroy_token(top_terminal.terminal);
 		destroy_token(token_in.terminal);
 	}
-#endif 
 	return 1; 	
 }
 
