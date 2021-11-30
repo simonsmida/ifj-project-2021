@@ -126,6 +126,11 @@ int PA_stack_top_terminal(const PA_stack *stack, PA_item_t* item){
  */
 void PA_stack_destroy(PA_stack *stack){
 	while (stack->top_index != -1){
+		PA_item_t item;
+		PA_stack_top(stack,&item);
+		if(item.item_type == 1){
+			destroy_token(item.terminal);
+		}
 		PA_stack_pop(stack);	
 	}
 }

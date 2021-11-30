@@ -3,7 +3,7 @@ CC=gcc
 CFLAGS=-std=c11 -Wall -pedantic -g -lm
 
 #SRC_FILES = $(wildcard PA*.c )
-SRC_FILES = $(filter-out main.c symtable.c, $(wildcard *.c))
+SRC_FILES = $(filter-out main.c , $(wildcard *.c))
 OBJ_FILES = $(SRC_FILES:.c=.o)
 
 #example usage: ./main examples/fact_recur.ifj21

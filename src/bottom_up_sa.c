@@ -283,6 +283,7 @@ int analyze_bottom_up(FILE *f, parser_t *parser){
 		//Token in
 		if(!reduction){
 			token_in.terminal = get_next_token(f);
+			//check_if_terminate()
 			reduction = 0;
 		}
 		printf("Type of token:%d\n",token_in.terminal->type);
@@ -351,12 +352,16 @@ int analyze_bottom_up(FILE *f, parser_t *parser){
 						if ( is_stack_id && is_input_id ){
 							printf("Posielam do RZ\n");
 							parser -> token = token_in.terminal;
+							PA_stack_destroy(&stack);
+							//Dealloc stack
 							return 0;
 						}
 						
 						if ( is_right_parenthesis && is_input_id ){
 							printf("Posielam do RZ\n");
 							parser -> token = token_in.terminal;
+							PA_stack_destroy(&stack);
+							//Dealloc stack
 							return 0;
 						}
 					  return 0; 
