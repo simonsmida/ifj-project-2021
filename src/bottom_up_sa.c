@@ -92,7 +92,7 @@ int reduce_terminal(PA_stack *stack){
 	}
 	else if(operands_count == 2){
 		PA_item_t reduced_terminal;
-		printf("Token type: %d\n", items[1].terminal->type);
+		//printf("Token type: %d\n", items[1].terminal->type);
 		if(	((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_STRLEN)) &&
 			(items[0].item_type == 0) ){
 		
@@ -100,6 +100,15 @@ int reduce_terminal(PA_stack *stack){
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
 			return 1;
+		}
+		else{
+			while(operands_count > 0){
+				operands_count--;
+				if(items[operands_count].item_type == 1){
+					destroy_token(items[operands_count].terminal);
+				}
+			}
+			return 0;
 		}
 	}
 	else if(operands_count == 3){
@@ -331,7 +340,7 @@ int analyze_bottom_up(FILE *f){
 				printf("Redukujem\n\n");
 				if(!reduce_terminal(&stack)){
 					printf("Chyba jak kokot\n");
-					return 1;
+					return 0;
 				}
 				
 				reduction = 1;
@@ -354,6 +363,7 @@ int analyze_bottom_up(FILE *f){
 	/** Check if the PA was successful */
 	if( top_terminal.terminal->type != TOKEN_EOF ){
 		printf("Chyba! stack is not empty \n");//Dealloc the stack
+		return 0;
 	}
 	if((top_terminal.terminal->type == TOKEN_EOF) && (token_in.terminal->type == TOKEN_EOF)){
 		printf("USPECH, PLATNY VYRAZ\n");
