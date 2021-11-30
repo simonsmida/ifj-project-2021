@@ -96,7 +96,7 @@ int prog(parser_t *parser)
     CHECK_TOKEN_TYPE(TOKEN_EOF);
 
     // TODO: generate instruction for program end
-    //
+    
     return EXIT_OK; 
 }
 
@@ -322,6 +322,7 @@ int func_def(parser_t *parser)
 int func_call(parser_t *parser)
 {
     int result;
+
     if (parser->token->type == TOKEN_ID) {
 
         // RULE 9: <func_call> → 'id' '(' <arg> ')'
@@ -346,6 +347,7 @@ int func_call(parser_t *parser)
         return EXIT_OK;
     }
 
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s' (%s)", TOKEN_REPR, STRING_TOKEN_T);
     return ERR_SYNTAX;
 }
 
@@ -378,15 +380,17 @@ int arg(parser_t *parser)
         // RULE 11: <arg> → ε
 
         return EXIT_OK;
-
-    } else {
-        
-        // RULE 10: <arg> → <val> <arg_n>
-        
-        // TODO: expecting expr
-        // context switch
-        return EXIT_OK;
     }
+
+    // RULE 10: <arg> → <val> <arg_n>
+    
+    // <val>
+    result = val(parser);
+    CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+    
+    // TODO: expecting expr - precedence analysis reports errors
+    // context switch
+    return EXIT_OK;
 }
 
 
@@ -397,6 +401,7 @@ int arg(parser_t *parser)
 int arg_n(parser_t *parser)
 {
     int result;
+
     if (parser->token->type == TOKEN_COMMA) {
     
         // RULE 14: <arg> → ',' <val> <arg_n>
@@ -417,6 +422,7 @@ int arg_n(parser_t *parser)
         return EXIT_OK;
     }
 
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s' (%s)", TOKEN_REPR, STRING_TOKEN_T);
     return ERR_SYNTAX;
 }
 
@@ -433,14 +439,13 @@ int val(parser_t *parser)
         // TODO: symtab
         
         return EXIT_OK;
-    } else {
+    } 
         
-        // RULE 13: <arg> → 'expr'
-        
-        // TODO: expected expr
-        // context switch
-        return EXIT_OK;
-    }
+    // RULE 13: <arg> → 'expr'
+    
+    // TODO: expected expr - error reported via precedence analysis
+    // context switch
+    return EXIT_OK;
 }
 
 
@@ -491,6 +496,7 @@ int func_head(parser_t *parser)
         default: break; 
     }
 
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s' (%s)", TOKEN_REPR, STRING_TOKEN_T);
     return ERR_SYNTAX;
 }
 
@@ -632,6 +638,7 @@ int param_fdec(parser_t *parser)
 int param_fdec_n(parser_t *parser)
 {
     int result;
+
     switch (parser->token->type)
     {
         case TOKEN_COMMA:
@@ -666,6 +673,7 @@ int param_fdec_n(parser_t *parser)
 int ret_type_list(parser_t *parser)
 {
     int result;
+
     if (parser->token->type == TOKEN_COLON) {
         
         // RULE 25: <ret_type_list> → ':' <dtype> <ret_type_list_n>
@@ -825,7 +833,6 @@ int stat_list(parser_t *parser)
         result = stat(parser);
         CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
                 
-        PARSER_EAT();
         return stat_list(parser); // calls itself  
     } 
     
@@ -841,6 +848,7 @@ int stat_list(parser_t *parser)
 int stat(parser_t *parser)
 {
     int result;
+
     if (parser->token->type == TOKEN_KEYWORD) {
         switch (TOKEN_KW_TYPE) 
         {
@@ -873,25 +881,26 @@ int stat(parser_t *parser)
                 
                 // Current token should be 'if'
                 // TODO: handle expression - switch context 
-
+                PARSER_EAT(); // TODO: only for testing! - no expr implemented
+                
                 PARSER_EAT();
                 CHECK_TOKEN_TYPE(TOKEN_KEYWORD); // 'then'
                 CHECK_KEYWORD(KEYWORD_THEN);
 
                 // <stat_list>
-                // TODO: eat or not
+                PARSER_EAT();
                 result = stat_list(parser);
                 CHECK_RESULT_VALUE(EXIT_OK); 
                 
-                // <else>
-                PARSER_EAT();
-                result = else_nt(parser); // TODO: WATCH OUT
+                // <else> - do not eat, we need this token
+                result = else_nt(parser); 
                 CHECK_RESULT_VALUE(EXIT_OK); 
-
-                PARSER_EAT(); /* 'end' */
+                
+                // Do not eat, 'end' is current token
                 CHECK_TOKEN_TYPE(TOKEN_KEYWORD);
                 CHECK_KEYWORD(KEYWORD_END);
-        
+                
+                PARSER_EAT(); // to get next statement 
                 return EXIT_OK;
             
             case KEYWORD_WHILE:
@@ -900,23 +909,21 @@ int stat(parser_t *parser)
                 
                 // Current token should be 'while'
                 // TODO: Handle expression - switch context 
-
-                PARSER_EAT(); /* 'then' */
-                CHECK_TOKEN_TYPE(TOKEN_KEYWORD);
-                CHECK_KEYWORD(KEYWORD_THEN);
+                PARSER_EAT(); // TODO: for testing purposes only 
 
                 PARSER_EAT(); /* 'do' */
                 CHECK_TOKEN_TYPE(TOKEN_KEYWORD); 
                 CHECK_KEYWORD(KEYWORD_DO);
 
-                // <stat_list> 
+                // <stat_list>
+                PARSER_EAT(); 
                 result = stat_list(parser);
                 CHECK_RESULT_VALUE(EXIT_OK); 
 
-                PARSER_EAT(); /* 'end' */
                 CHECK_TOKEN_TYPE(TOKEN_KEYWORD); // 'end'
                 CHECK_KEYWORD(KEYWORD_END);
 
+                PARSER_EAT(); // to get next statement 
                 return EXIT_OK;
 
             case KEYWORD_RETURN:
@@ -943,6 +950,7 @@ int stat(parser_t *parser)
         
         // TODO: SYMTABLE
         
+        // <id_n> 
         PARSER_EAT();
         result = id_n(parser);
         CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
@@ -954,6 +962,7 @@ int stat(parser_t *parser)
         // TODO: SWITCH CONTEXT
         
         // TODO: EAT OR NOT
+        PARSER_EAT();
         result = expr_list(parser);
         CHECK_RESULT_VALUE_SILENT(EXIT_OK);
 
@@ -1002,7 +1011,7 @@ int expr_nt(parser_t *parser)
     }
     
     // RULE 48: <expr> → 'expr'
-    // TODO: context switch
+    // TODO: context switch - error is reported via precedence analysis
     
     return EXIT_OK;
 }
@@ -1015,6 +1024,7 @@ int expr_nt(parser_t *parser)
 int else_nt(parser_t *parser)
 {
     int result;
+
     switch (parser->token->type)
     {
         case TOKEN_KEYWORD:
@@ -1041,6 +1051,7 @@ int else_nt(parser_t *parser)
         default: break;
     } // switch()
 
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s' (%s)", TOKEN_REPR, STRING_TOKEN_T);
     return ERR_SYNTAX;
 } 
 
@@ -1067,11 +1078,14 @@ int var_def(parser_t *parser)
 
             default: break;
         } // switch()
+
     } else if (parser->token->type == TOKEN_ASSIGN) {
 
         // RULE 40: <var_def> → '=' 'expr'
 
         // TODO: switch context
+        PARSER_EAT(); // TODO: ADDED ONLY FOR TESTING - no expr implemented yet
+        PARSER_EAT(); // TODO: ADDED ONLY FOR TESTING - no expr implemented yet
         
         return EXIT_OK;
 
@@ -1082,6 +1096,7 @@ int var_def(parser_t *parser)
         return EXIT_OK;
     }
 
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s' (%s)", TOKEN_REPR, STRING_TOKEN_T);
     return ERR_SYNTAX;
 }
 
@@ -1112,8 +1127,9 @@ int id_n(parser_t *parser)
             return EXIT_OK;
 
         default: break;
-    }
+    } // switch()
 
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s' (%s)", TOKEN_REPR, STRING_TOKEN_T);
     return ERR_SYNTAX;
 }
 
@@ -1145,8 +1161,9 @@ int expr_list(parser_t *parser)
             
         // RULE 36: <expr_list> → ',' 'expr' <expr_list>
 
-        // Current token should be ','
+        // Current token is ','
         // TODO: handle expression - switch context - sanity needed?
+        PARSER_EAT(); // TODO: testing purpose, remove
 
         PARSER_EAT();
         return expr_list(parser);
@@ -1158,6 +1175,7 @@ int expr_list(parser_t *parser)
         return EXIT_OK;
     }
 
+    error_message("Parser", ERR_SYNTAX, "unexpected token '%s' (%s)", TOKEN_REPR, STRING_TOKEN_T);
     return ERR_SYNTAX;
 }
 
@@ -1178,7 +1196,7 @@ int dtype(parser_t *parser)
                 return EXIT_OK;
             default: break;
         } // switch()
-    }
+    } // if()
 
     error_message("Parser", ERR_SYNTAX, "unexpected token '%s' (%s)", TOKEN_REPR, STRING_TOKEN_T);
     return ERR_SYNTAX;
