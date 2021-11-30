@@ -10,7 +10,8 @@
 int main(){
 	char* filename = "regex.txt";
 	FILE *f = fopen(filename,"r");
-	analyze_bottom_up(f);
+	parser_t parser;
+	analyze_bottom_up(f,&parser);
 #if 0
 	PA_item_t item;
 	item.terminal = get_next_token(f);

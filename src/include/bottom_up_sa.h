@@ -13,9 +13,10 @@
 
 #include "PA_stack.h"
 #include "scanner.h"
+#include "parser.h"
 
 #define ERR '0'
-#define END '1'
+
 /**
  *	@brief Function return index to the precedence table,
  *		   according to the type of the terminal
@@ -24,7 +25,7 @@
  */
 int get_index(int token);
 
-int analyze_bottom_up(FILE *f);
+int analyze_bottom_up(FILE *f,parser_t *parser);
 
 /**
  *	@brief Function reduces terminal on the top of the stack,

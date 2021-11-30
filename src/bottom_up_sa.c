@@ -259,7 +259,7 @@ int reduce_terminal(PA_stack *stack){
 	return 0;
 }
 
-int analyze_bottom_up(FILE *f){
+int analyze_bottom_up(FILE *f, parser_t *parser){
 	/** 1. Create stack */
 	//Static allocation
 	PA_stack stack;
@@ -332,7 +332,35 @@ int analyze_bottom_up(FILE *f){
 						accepted = 1;
 				}
 				break;
-			case ERR: printf("Chyba\n\n");return 1;break;//Dealloc the stack
+			case ERR: printf("Chyba\n\n");
+						int is_stack_id = (top_terminal.terminal->type == TOKEN_ID ||
+						   top_terminal.terminal->type == TOKEN_INT_LIT ||
+						   top_terminal.terminal->type == TOKEN_STR_LIT ||
+						   top_terminal.terminal->type == TOKEN_NUM_LIT);
+						
+					  	int is_input_id = (token_in.terminal->type == TOKEN_ID ||
+						   token_in.terminal->type == TOKEN_INT_LIT ||
+						   token_in.terminal->type == TOKEN_STR_LIT ||
+						   token_in.terminal->type == TOKEN_NUM_LIT);
+						int is_right_parenthesis = (top_terminal.terminal->type == TOKEN_R_PAR);
+						
+						printf("is_stack_id: %d\n",is_stack_id);
+						printf("is_right_parenthesis: %d\n",is_right_parenthesis);
+						printf("is_input_id: %d\n",is_input_id);
+						
+						if ( is_stack_id && is_input_id ){
+							printf("Posielam do RZ\n");
+							parser -> token = token_in.terminal;
+							return 0;
+						}
+						
+						if ( is_right_parenthesis && is_input_id ){
+							printf("Posielam do RZ\n");
+							parser -> token = token_in.terminal;
+							return 0;
+						}
+					  return 0; 
+					  break;//Dealloc the stack
 		}
 	i++;
 	printf("Type of token:%d\n",token_in.terminal->type);
