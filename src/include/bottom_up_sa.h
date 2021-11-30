@@ -15,6 +15,7 @@
 #include "scanner.h"
 
 #define ERR '0'
+#define END '1'
 /**
  *	@brief Function return index to the precedence table,
  *		   according to the type of the terminal
@@ -25,4 +26,11 @@ int get_index(int token);
 
 int analyze_bottom_up(FILE *f);
 
+/**
+ *	@brief Function reduces terminal on the top of the stack,
+ *		   according to given rules
+ *	@param stack Stack filled with terminals and non-terminals
+ *	@return 1 if reduction was successful, elsewhere 0
+ */
+int reduce_terminal(PA_stack *stack);
 #endif /** BOTOM_UP_PARSER */

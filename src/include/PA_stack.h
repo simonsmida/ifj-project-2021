@@ -29,11 +29,15 @@ typedef struct nonterminal{
 /** Stack item structure */
 typedef struct pa_item{
 	//Terminal
-	//TODO Probalby add ptr to token -> functions return ptr to tokens
+	//Item_type = 1
 	token_t* terminal;
 	//Nonterminal
 	//TODO Probalby add ptr to non_terminal_t, for comparing with NULL
+	//Item_type = 0
 	non_terminal_t non_terminal;
+	//Handles for reduction '<','>'
+	//Item_type = 2
+	char handle;
 	//Symtabptr
 	symtable_t * symtable;
 	//Specifies, whether the item is terminal or nonterminal

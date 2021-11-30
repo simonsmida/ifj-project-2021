@@ -35,6 +35,65 @@ char precedence_table[19][19] =
 /*	,  */{ '<' ,'<', '<' , '<'  ,'<','<', '<','<','<', '<', '<', '<', '<','<','=', '<','<','=', ERR},
 /*	$  */{ '<' ,'<', '<' , '<'  ,'<','<', '<','<','<', '<', '<', '<', '<','<',ERR, '<','<',ERR, ERR}};
 
+/**
+ *	@brief Function reduces terminal on the top of the stack,
+ *		   according to given rules
+ *	@param stack Stack filled with terminals and non-terminals
+ *	@return 1 if reduction was successful, elsewhere 0
+ */
+int reduce_terminal(PA_stack *stack){
+	/** Reduce terminal */
+	PA_item_t items[4];
+	PA_item_t top_item;
+	int operands_count = 0;
+	/*PA_stack_top(stack,&top_item);
+	PA_stack_pop(stack);
+	while(top_item.item_type != 2){
+		PA_stack_top(stack,&items[operands_count]);
+		PA_stack_pop(stack);
+		operands_count++;
+		PA_stack_top(stack,&top_item);
+	}*/
+	while(1){
+		PA_stack_top(stack, &top_item);
+		if(top_item.item_type == 2){
+			PA_stack_pop(stack);
+			break;
+		}
+		else{
+			items[operands_count] = top_item;
+			operands_count++;
+			PA_stack_pop(stack);
+		}
+	}
+
+	//Reduce terminal E -> id 
+	if(operands_count == 1){
+		//1.Check item type
+		//2.Reduce
+		destroy_token(items[operands_count-1].terminal);
+		PA_item_t reduced_terminal;
+		reduced_terminal.non_terminal.expr_type = EXPR;
+		printf("Zredukoval som ID\n");
+		PA_stack_push(stack,reduced_terminal,0);
+		PA_stack_top(stack,&top_item);
+		printf("Vrchol zasobnika: %d\n\n", top_item.item_type);
+	}
+	else if(operands_count == 3){
+		//USE E->E+E
+		PA_item_t reduced_terminal;
+		if( (items[0].item_type == 0) &&
+			(items[1].item_type == 1) &&
+			(items[2].item_type == 0) ){
+		
+			printf("Zredukoval som vyraz\n");
+			reduced_terminal.non_terminal.expr_type = EXPR;
+			PA_stack_push(stack,reduced_terminal,0);
+		}
+	}
+	return 1;
+}
+
 int analyze_bottom_up(FILE *f){
 	/** 1. Create stack */
 	//Static allocation
@@ -43,69 +102,152 @@ int analyze_bottom_up(FILE *f){
 	PA_stack_init(&stack);
 	/** 3. Push $ sign on the stack */
 	/** 3.1 Generate $ token */
-	PA_item_t item,top_terminal,token_in;
+	PA_item_t item,top_terminal, token_in, handle;
 	item.terminal = generate_empty_token();
 	/** 3.2 Push $ on the top of the stack */
 	PA_stack_push(&stack, item, 1);
-	PA_stack_top_terminal(&stack,&top_terminal);
-	//printf("Terminal type: %d\n\n",top_terminal.terminal->type);
-#if 0	
-	for(int i = 0; i < 4; i++){
+
+#if 0
+
+	for (int i = 0; i < 4;i++)
+	{	
 		token_in.terminal = get_next_token(f);
-		PA_stack_push(&stack, token_in, 1);
-		//PA_stack_top_terminal(&stack,&top_terminal);
+		printf("Type of token:%d\n",token_in.terminal->type);
+		destroy_token(token_in.terminal);
 	}
-	for(int i = 0; i < 5; i++){
-		PA_stack_top_terminal(&stack,&top_terminal);
-		printf("Terminal type: %d\n",top_terminal.terminal->type);
-		if (top_terminal.terminal->attribute->string != NULL){
-			printf("Terminal name: %s\n",top_terminal.terminal->attribute->string);
-		}else{printf("Terminal name: Nema :(\n");}
-		PA_stack_pop(&stack);
+		printf("TOKEN EOF %d\n",TOKEN_EOF);
+	//Free empty token $
+	PA_stack_top(&stack, &item);
+	PA_stack_pop(&stack);
+	if( item.item_type == 1 ){
+		destroy_token(item.terminal);
 	}
 #endif 
-
 #if 1
-	int i = 0;
+	int i=0;
+	int accepted = 0;
+	int reduction = 0;
+	do{
+		printf("Run %d\n",i);
+		/** 4. Get terminal from the top of the stack and from the input */
+		//Stack top
+		PA_stack_top_terminal(&stack,&top_terminal);
+		//Token in
+		if(!reduction){
+			token_in.terminal = get_next_token(f);
+			reduction = 0;
+		}
+		printf("Type of token:%d\n",token_in.terminal->type);
+		/**5. Look the operator priority in the precedence table */
+		switch(precedence_table[get_index(top_terminal.terminal->type)][get_index(token_in.terminal->type)]){
+			case '<':
+				/** 5.1 Push the initial char of the handle */
+				printf("Tlacim na zasobnik\n\n");
+				PA_stack_top(&stack,&item);
+				handle.handle = '<';
+				if( item.item_type == 1){
+					PA_stack_push(&stack,handle,2);
+					PA_stack_push(&stack,token_in,1);
+				}else if (item.item_type == 0){
+					PA_stack_pop(&stack);
+					PA_stack_push(&stack,handle,2);
+					PA_stack_push(&stack,item,0);
+					PA_stack_push(&stack,token_in,1);
+				}
+			reduction = 0;
+				break;
+			case '=': 
+				printf("Rovnaka priorita, pushni terminal na zasobnik.\n\n");
+				PA_stack_push(&stack,token_in,1);
+			reduction = 0;
+				break;
+			case '>': 
+				//Pri redukcii chceme testovat podmienku
+				//Ale nechceme nacitat dalsi tokeny, pretoze predchadzajuci nebol spracovany
+				//Nechcem testovat ci je dno zasobniku prazdne lebo sa tam vyskytuje neterminal
+				printf("Redukujem\n\n");
+				reduce_terminal(&stack);
+				reduction = 1;
+				PA_stack_top_terminal(&stack,&top_terminal);
+				if((top_terminal.terminal->type == TOKEN_EOF) && (token_in.terminal->type == TOKEN_EOF)){
+					accepted = 1;
+				}
+				break;
+			case ERR: printf("Chyba\n\n");return 1;break;//Dealloc the stack
+			case END: printf("Accepted\n\n");//accepted = 1;
+					  break;//Dealloc the stack
+		}
+	i++;
+	printf("Type of token:%d\n",token_in.terminal->type);
+	PA_stack_top(&stack,&item);
+	printf("Vrchol zasobnika: %d\n", item.item_type);
+	printf("---------------------------------------------\n");
+	}while(((top_terminal.terminal->type != TOKEN_EOF) || (token_in.terminal->type != TOKEN_EOF)) && (!accepted));
+	
+	/** Check if the PA was successful */
+	if( top_terminal.terminal->type != TOKEN_EOF ){
+		printf("Chyba! stack is not empty \n");//Dealloc the stack
+	}
+	printf("handle %c\n",handle.handle);
+	if((top_terminal.terminal->type == TOKEN_EOF) && (token_in.terminal->type == TOKEN_EOF)){
+		printf("USPECH, PLATNY VYRAZ\n");
+	}
+#endif 
+#if 0
 	int buffer_token = 0;
 	do{
 		printf("%d. run\n",i);
 		/** 4. Get terminal from the top of the stack and from the input */
-		PA_stack_top_terminal(&stack,&top_terminal);
 		//Stack top
+		PA_stack_top_terminal(&stack,&top_terminal);
+		
+		
+		/////////////////////////////////////////////////////////////////////////
 		printf("%d. Vrchol zasobnika:\n----------------\n",i);
 		printf("Terminal type: %d\n",top_terminal.terminal->type);
 		if (top_terminal.terminal->attribute->string != NULL){
 			printf("Terminal name: %s\n",top_terminal.terminal->attribute->string);
 		}else{printf("Terminal name: Nema :(\n");}
+		/////////////////////////////////////////////////////////////////////////
 		
 		//Token in
 		if(!buffer_token){
 			token_in.terminal = get_next_token(f);
 			buffer_token = 0;
 		}
+		
+		/////////////////////////////////////////////////////////////////////////
 		printf("--------------------\n%d. Vstupny terminal:\n",i);
 		printf("Terminal type: %d\n",token_in.terminal->type);
 		if (token_in.terminal->attribute->string != NULL){
 			printf("Terminal name: %s\n",token_in.terminal->attribute->string);
 		}else{printf("Terminal name: Nema :(\n");}
+		/////////////////////////////////////////////////////////////////////////
+		
+		
+		
 		/**5. Look the operator priority in the precedence table */
 		switch(precedence_table[get_index(top_terminal.terminal->type)][get_index(token_in.terminal->type)]){
-			case '<': printf("Tlacim na zasobnik\n\n");PA_stack_push(&stack,token_in,1);break;
+			case '<':
+				printf("Tlacim na zasobnik\n\n");
+				
+				
+				PA_stack_push(&stack,token_in,1);
+				break;
 			case '=': 
-				  printf("Rovnaka priorita\n\n");
-				  PA_stack_push(&stack,token_in,1);
-				  break;
+				printf("Rovnaka priorita\n\n");
+				
+				PA_stack_push(&stack,token_in,1);
+				break;
 			case '>': 
-				  printf("Redukujem\n\n");
-				  buffer_token = 1;
-				  PA_stack_top_terminal(&stack,&top_terminal);
-				  //Pozriet sa do pravidiel -> vysledok zredukovany neterminal
-				  PA_stack_pop(&stack);
-				  top_terminal.non_terminal.expr_type = EXPR;
-			  	  PA_stack_push(&stack,top_terminal,0);
-				  printf("Redukujem\n\n");
-				  break;
+				//Pri redukcii chceme testovat podmienku
+				//Ale nechceme nacitat dalsi tokeny, pretoze predchadzajuci nebol spracovany
+				//Nechcem testovat ci je dno zasobniku prazdne lebo sa tam vyskytuje neterminal
+				printf("Redukujem\n\n");
+				
+				
+				buffer_token = 1;
+				break;
 			case ERR: printf("Chyba\n\n");break;
 		}
 		i++;
@@ -113,12 +255,11 @@ int analyze_bottom_up(FILE *f){
 			continue;
 		}
 		PA_stack_top_terminal(&stack,&top_terminal);
-	}while((token_in.terminal->type != TOKEN_EOF) && (top_terminal.terminal->type != TOKEN_EOF));
-#endif
-   	if(token_in.terminal != NULL){
-		destroy_token(token_in.terminal);
+	}while((token_in.terminal->type != TOKEN_EOF )&& (top_terminal.terminal->type != TOKEN_EOF));
+	if( top_terminal.terminal->type != TOKEN_EOF ){
+		printf("Chyba! stack is not empty \n");
 	}
-	PA_stack_destroy(&stack);
+#endif
 	return 1; 	
 }
 

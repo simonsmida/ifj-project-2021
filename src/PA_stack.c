@@ -65,13 +65,18 @@ int PA_stack_full(const PA_stack *stack){
  */
 void PA_stack_top(const PA_stack *stack, PA_item_t* item){
 	if( !PA_stack_empty(stack) ){
+#if 0
 		/** 1. If there is terminal on the top of the stack create a deep copy */
 		if ( stack -> items[stack -> top_index].item_type ){
 			token_t *copy;
 			copy = copy_token(stack -> items[stack -> top_index].terminal);
 			(*item).terminal = copy;
 		}
+#endif
+		/** In the case of unitialized values, diferentiate which item is used and assign only that item */
+		(*item).terminal = stack -> items[stack -> top_index].terminal;
 		(*item).non_terminal = stack -> items[stack -> top_index].non_terminal;
+		(*item).handle = stack -> items[stack -> top_index].handle;
 		(*item).item_type = stack -> items[stack -> top_index].item_type;
 	}
 }
@@ -83,7 +88,7 @@ void PA_stack_top(const PA_stack *stack, PA_item_t* item){
  * @param stack Pointer to stack structure
  * @param item  Pointer to item structure
  *
- * @return If the terminal was found on stack returns zero, else 1
+ * @return If the terminal was found on stack returns 1, else 0
  */
 int PA_stack_top_terminal(const PA_stack *stack, PA_item_t* item){
 	if ( !PA_stack_empty(stack) ){
@@ -91,14 +96,26 @@ int PA_stack_top_terminal(const PA_stack *stack, PA_item_t* item){
 		int index = stack -> top_index;
 		/** 2. Start searching the nearest terminal */
 		while(index > -1){
-			if ( stack -> items[index].item_type ){
-				*item = stack -> items[index];
-				return 0;
+			if ( stack -> items[index].item_type == 1 ){
+#if 0
+				/** 3. Dealloc the structure which will be overwrited */
+				PA_item_destroy(*item);
+				/** 4. We are finding the nearest terminal so we have to the deep copy */
+				token_t *copy;
+				copy = copy_token(stack -> items[stack -> top_index].terminal);
+				(*item).terminal = copy;
+				(*item).non_terminal = stack -> items[stack -> top_index].non_terminal;
+				(*item).item_type = stack -> items[stack -> top_index].item_type;
+#endif
+				(*item).terminal = stack -> items[index].terminal;
+				(*item).non_terminal = stack -> items[index].non_terminal;
+				(*item).item_type = stack -> items[index].item_type;
+				return 1;
 			}
 			index--;
 		}
 	}
-	return 1;
+	return 0;
 }
 
 /** 
@@ -119,7 +136,7 @@ void PA_stack_destroy(PA_stack *stack){
  * @param item  Pointer to the item which will be deallocated
  */
 void PA_item_destroy(PA_item_t item){
-	if ( item.item_type ){
+	if ( item.terminal != NULL ){
 		destroy_token(item.terminal);
 	}
 }
@@ -131,9 +148,9 @@ void PA_item_destroy(PA_item_t item){
  */
 void PA_stack_pop(PA_stack *stack){
 	if( !PA_stack_empty(stack) ){
-		if(stack -> items[stack->top_index].item_type){
+		/*if( stack -> items[stack->top_index].item_type == 1 ){
 			destroy_token(stack -> items[stack -> top_index].terminal);
-		}
+		}*/
 		stack -> top_index--;
 	}
 }
@@ -149,12 +166,14 @@ void PA_stack_push(PA_stack *stack, PA_item_t item,int type){
 	/** 1. For assigning the structure create a deep copy*/
 	if ( !PA_stack_full(stack) ){
 		stack -> top_index++;
-		if(type){
+		/*if(type == 1){
 			token_t *copy;
 			copy = copy_token(item.terminal);
 			stack -> items[stack -> top_index].terminal = copy;
-		}
+		}*/
+		stack -> items[stack -> top_index].terminal = item.terminal;
 		stack -> items[stack -> top_index].non_terminal = item.non_terminal;
+		stack -> items[stack -> top_index].handle = item.handle;
 		stack -> items[stack -> top_index].item_type = type;
 	}
 }
