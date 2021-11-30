@@ -11,6 +11,33 @@ int main(){
 	char* filename = "regex.txt";
 	FILE *f = fopen(filename,"r");
 	analyze_bottom_up(f);
+#if 0
+	PA_item_t item;
+	item.terminal = get_next_token(f);
+	//item.item_type = 1;
+	
+	PA_stack stack;
+	PA_stack_init(&stack);
+	
+	printf("Terminal type: %d\n",item.terminal->type);
+	if (item.terminal->attribute->string != NULL){
+		printf("Terminal name: %s\n",item.terminal->attribute->string);
+	}else{printf("Terminal name: Nema :(\n");}
+
+	PA_stack_push(&stack,item,1);
+	
+	PA_item_destroy(item);
+	
+	printf("Vypisujem zo zasobnika\n");
+	PA_stack_top(&stack, &item);
+	PA_stack_destroy(&stack);
+	printf("Terminal type: %d\n",item.terminal->type);
+	if (item.terminal->attribute->string != NULL){
+		printf("Terminal name: %s\n",item.terminal->attribute->string);
+	}else{printf("Terminal name: Nema :(\n");}
+	
+	PA_item_destroy(item);
+#endif
 #if 0	
 		PA_stack zasobnicek;
 		PA_stack_init(&zasobnicek);

@@ -66,32 +66,195 @@ int reduce_terminal(PA_stack *stack){
 			PA_stack_pop(stack);
 		}
 	}
-
-	//Reduce terminal E -> id 
+	printf("Operands count: %d\n ",operands_count);
+	/*Reduce terminal 
+	  E -> id
+	  E -> int
+	  E -> num
+	  E -> str
+	 */
 	if(operands_count == 1){
 		//1.Check item type
 		//2.Reduce
-		destroy_token(items[operands_count-1].terminal);
+		if((items[0].item_type == 1) && (items[0].terminal->type == TOKEN_ID ||
+										 items[0].terminal->type == TOKEN_INT_LIT ||
+										 items[0].terminal->type == TOKEN_NUM_LIT ||
+										 items[0].terminal->type == TOKEN_STR_LIT)){
+			destroy_token(items[operands_count-1].terminal);
+			PA_item_t reduced_terminal;
+			reduced_terminal.non_terminal.expr_type = EXPR;
+			printf("Zredukoval som ID\n");
+			PA_stack_push(stack,reduced_terminal,0);
+			PA_stack_top(stack,&top_item);
+			printf("Vrchol zasobnika: %d\n\n", top_item.item_type);
+			return 1;
+		}
+	}
+	else if(operands_count == 2){
 		PA_item_t reduced_terminal;
-		reduced_terminal.non_terminal.expr_type = EXPR;
-		printf("Zredukoval som ID\n");
-		PA_stack_push(stack,reduced_terminal,0);
-		PA_stack_top(stack,&top_item);
-		printf("Vrchol zasobnika: %d\n\n", top_item.item_type);
+		printf("Token type: %d\n", items[1].terminal->type);
+		if(	((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_STRLEN)) &&
+			(items[0].item_type == 0) ){
+		
+			printf("Zredukoval binarny operator\n");
+			reduced_terminal.non_terminal.expr_type = EXPR;
+			PA_stack_push(stack,reduced_terminal,0);
+			return 1;
+		}
 	}
 	else if(operands_count == 3){
 		//USE E->E+E
 		PA_item_t reduced_terminal;
 		if( (items[0].item_type == 0) &&
-			(items[1].item_type == 1) &&
+			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_PLUS)) &&
 			(items[2].item_type == 0) ){
 		
+			printf("Token type: %d\n", items[1].terminal->type);
 			printf("Zredukoval som vyraz\n");
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
+			destroy_token(items[1].terminal);
+			return 1;
+		}
+		//USE E->E-E
+		else if( (items[0].item_type == 0) &&
+			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_MINUS)) &&
+			(items[2].item_type == 0) ){
+			printf("Token type: %d\n", items[1].terminal->type);
+			printf("Zredukoval som vyraz\n");
+			reduced_terminal.non_terminal.expr_type = EXPR;
+			PA_stack_push(stack,reduced_terminal,0);
+			destroy_token(items[1].terminal);
+			return 1;
+		}
+		//USE E->E*E
+		else if( (items[0].item_type == 0) &&
+			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_MUL)) &&
+			(items[2].item_type == 0) ){
+		
+			printf("Token type: %d\n", items[1].terminal->type);
+			printf("Zredukoval som vyraz\n");
+			reduced_terminal.non_terminal.expr_type = EXPR;
+			PA_stack_push(stack,reduced_terminal,0);
+			destroy_token(items[1].terminal);
+			return 1;
+		}
+		//USE E->E/E
+		else if( (items[0].item_type == 0) &&
+			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_DIV)) &&
+			(items[2].item_type == 0) ){
+			printf("Token type: %d\n", items[1].terminal->type);
+			printf("Zredukoval som vyraz\n");
+			reduced_terminal.non_terminal.expr_type = EXPR;
+			PA_stack_push(stack,reduced_terminal,0);
+			destroy_token(items[1].terminal);
+			return 1;
+		}
+		//USE E->E//E
+		else if( (items[0].item_type == 0) &&
+			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_INT_DIV)) &&
+			(items[2].item_type == 0) ){
+			printf("Token type: %d\n", items[1].terminal->type);
+			printf("Zredukoval som vyraz\n");
+			reduced_terminal.non_terminal.expr_type = EXPR;
+			PA_stack_push(stack,reduced_terminal,0);
+			destroy_token(items[1].terminal);
+			return 1;
+		}
+		//USE E->E..E
+		else if( (items[0].item_type == 0) &&
+			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_CONCAT)) &&
+			(items[2].item_type == 0) ){
+			printf("Token type: %d\n", items[1].terminal->type);
+			printf("Zredukoval som vyraz\n");
+			reduced_terminal.non_terminal.expr_type = EXPR;
+			PA_stack_push(stack,reduced_terminal,0);
+			destroy_token(items[1].terminal);
+			return 1;
+		}
+		//USE E->E < E
+		else if( (items[0].item_type == 0) &&
+			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_LT)) &&
+			(items[2].item_type == 0) ){
+			printf("Token type: %d\n", items[1].terminal->type);
+			printf("Zredukoval som vyraz\n");
+			reduced_terminal.non_terminal.expr_type = EXPR;
+			PA_stack_push(stack,reduced_terminal,0);
+			destroy_token(items[1].terminal);
+			return 1;
+		}
+		//USE E->E > E
+		else if( (items[0].item_type == 0) &&
+			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_GT)) &&
+			(items[2].item_type == 0) ){
+			printf("Token type: %d\n", items[1].terminal->type);
+			printf("Zredukoval som vyraz\n");
+			reduced_terminal.non_terminal.expr_type = EXPR;
+			PA_stack_push(stack,reduced_terminal,0);
+			destroy_token(items[1].terminal);
+			return 1;
+		}
+		//USE E->E <= E
+		else if( (items[0].item_type == 0) &&
+			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_LE)) &&
+			(items[2].item_type == 0) ){
+			printf("Token type: %d\n", items[1].terminal->type);
+			printf("Zredukoval som vyraz\n");
+			reduced_terminal.non_terminal.expr_type = EXPR;
+			PA_stack_push(stack,reduced_terminal,0);
+			destroy_token(items[1].terminal);
+			return 1;
+		}
+		//USE E->E >= E
+		else if( (items[0].item_type == 0) &&
+			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_GE)) &&
+			(items[2].item_type == 0) ){
+			printf("Token type: %d\n", items[1].terminal->type);
+			printf("Zredukoval som vyraz\n");
+			reduced_terminal.non_terminal.expr_type = EXPR;
+			PA_stack_push(stack,reduced_terminal,0);
+			destroy_token(items[1].terminal);
+			return 1;
+		}
+		//USE E->E == E
+		else if( (items[0].item_type == 0) &&
+			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_EQ)) &&
+			(items[2].item_type == 0) ){
+			printf("Token type: %d\n", items[1].terminal->type);
+			printf("Zredukoval som vyraz\n");
+			reduced_terminal.non_terminal.expr_type = EXPR;
+			PA_stack_push(stack,reduced_terminal,0);
+			destroy_token(items[1].terminal);
+			return 1;
+		}
+		
+		//USE E->E ~= E
+		else if( (items[0].item_type == 0) &&
+			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_NOT_EQ)) &&
+			(items[2].item_type == 0) ){
+			printf("Token type: %d\n", items[1].terminal->type);
+			printf("Zredukoval som vyraz\n");
+			reduced_terminal.non_terminal.expr_type = EXPR;
+			PA_stack_push(stack,reduced_terminal,0);
+			destroy_token(items[1].terminal);
+			return 1;
+		}
+		
+		//USE E -> )E(
+		else if(((items[0].item_type == 1) && (items[0].terminal->type == TOKEN_R_PAR)) &&
+				 (items[1].item_type == 0) && 
+				((items[2].item_type == 1) && (items[2].terminal->type == TOKEN_L_PAR))){
+			//printf("Token type: %d\n", items[1].terminal->type);
+		
+			printf("Zredukoval som zatvorky\n");
+			reduced_terminal.non_terminal.expr_type = EXPR;
+			PA_stack_push(stack,reduced_terminal,0);
+			destroy_token(items[0].terminal);
+			destroy_token(items[2].terminal);
+			return 1;
 		}
 	}
-	return 1;
+	return 0;
 }
 
 int analyze_bottom_up(FILE *f){
@@ -166,11 +329,15 @@ int analyze_bottom_up(FILE *f){
 				//Ale nechceme nacitat dalsi tokeny, pretoze predchadzajuci nebol spracovany
 				//Nechcem testovat ci je dno zasobniku prazdne lebo sa tam vyskytuje neterminal
 				printf("Redukujem\n\n");
-				reduce_terminal(&stack);
+				if(!reduce_terminal(&stack)){
+					printf("Chyba jak kokot\n");
+					return 1;
+				}
+				
 				reduction = 1;
 				PA_stack_top_terminal(&stack,&top_terminal);
 				if((top_terminal.terminal->type == TOKEN_EOF) && (token_in.terminal->type == TOKEN_EOF)){
-					accepted = 1;
+						accepted = 1;
 				}
 				break;
 			case ERR: printf("Chyba\n\n");return 1;break;//Dealloc the stack
@@ -188,78 +355,12 @@ int analyze_bottom_up(FILE *f){
 	if( top_terminal.terminal->type != TOKEN_EOF ){
 		printf("Chyba! stack is not empty \n");//Dealloc the stack
 	}
-	printf("handle %c\n",handle.handle);
 	if((top_terminal.terminal->type == TOKEN_EOF) && (token_in.terminal->type == TOKEN_EOF)){
 		printf("USPECH, PLATNY VYRAZ\n");
+		destroy_token(top_terminal.terminal);
+		destroy_token(token_in.terminal);
 	}
 #endif 
-#if 0
-	int buffer_token = 0;
-	do{
-		printf("%d. run\n",i);
-		/** 4. Get terminal from the top of the stack and from the input */
-		//Stack top
-		PA_stack_top_terminal(&stack,&top_terminal);
-		
-		
-		/////////////////////////////////////////////////////////////////////////
-		printf("%d. Vrchol zasobnika:\n----------------\n",i);
-		printf("Terminal type: %d\n",top_terminal.terminal->type);
-		if (top_terminal.terminal->attribute->string != NULL){
-			printf("Terminal name: %s\n",top_terminal.terminal->attribute->string);
-		}else{printf("Terminal name: Nema :(\n");}
-		/////////////////////////////////////////////////////////////////////////
-		
-		//Token in
-		if(!buffer_token){
-			token_in.terminal = get_next_token(f);
-			buffer_token = 0;
-		}
-		
-		/////////////////////////////////////////////////////////////////////////
-		printf("--------------------\n%d. Vstupny terminal:\n",i);
-		printf("Terminal type: %d\n",token_in.terminal->type);
-		if (token_in.terminal->attribute->string != NULL){
-			printf("Terminal name: %s\n",token_in.terminal->attribute->string);
-		}else{printf("Terminal name: Nema :(\n");}
-		/////////////////////////////////////////////////////////////////////////
-		
-		
-		
-		/**5. Look the operator priority in the precedence table */
-		switch(precedence_table[get_index(top_terminal.terminal->type)][get_index(token_in.terminal->type)]){
-			case '<':
-				printf("Tlacim na zasobnik\n\n");
-				
-				
-				PA_stack_push(&stack,token_in,1);
-				break;
-			case '=': 
-				printf("Rovnaka priorita\n\n");
-				
-				PA_stack_push(&stack,token_in,1);
-				break;
-			case '>': 
-				//Pri redukcii chceme testovat podmienku
-				//Ale nechceme nacitat dalsi tokeny, pretoze predchadzajuci nebol spracovany
-				//Nechcem testovat ci je dno zasobniku prazdne lebo sa tam vyskytuje neterminal
-				printf("Redukujem\n\n");
-				
-				
-				buffer_token = 1;
-				break;
-			case ERR: printf("Chyba\n\n");break;
-		}
-		i++;
-		if(buffer_token){
-			continue;
-		}
-		PA_stack_top_terminal(&stack,&top_terminal);
-	}while((token_in.terminal->type != TOKEN_EOF )&& (top_terminal.terminal->type != TOKEN_EOF));
-	if( top_terminal.terminal->type != TOKEN_EOF ){
-		printf("Chyba! stack is not empty \n");
-	}
-#endif
 	return 1; 	
 }
 
@@ -281,6 +382,9 @@ int get_index(int token){
 		case TOKEN_L_PAR	: return 13;
 		case TOKEN_R_PAR	: return 14;
 		case TOKEN_ID		: return 15;
+		case TOKEN_INT_LIT	: return 15;
+		case TOKEN_NUM_LIT	: return 15;
+		case TOKEN_STR_LIT	: return 15;
 		//TODO Add funcion control, check the symtable
 		//case TOKEN_ID		: return 16;
 		case TOKEN_COLON	: return 17;

@@ -656,21 +656,20 @@ token_t *copy_token(token_t* src){
 	
 	/** 2. Initialize */
 	copy->type = src->type;
-	copy->attribute->keyword_type = src->attribute->keyword_type;
 	copy->attribute->integer = src->attribute->integer;
 	copy->attribute->number  = src->attribute->number;
+	copy->attribute->keyword_type = src->attribute->keyword_type;
 	
 	/** 3. If the string attribute is not empty alloc and init it */
 	if(src->attribute->string != NULL){
-		int str_len = strlen(src->attribute->string);
-		copy->attribute->string = malloc(str_len + 1);
+		copy->attribute->string = (char*)malloc(strlen(src->attribute->string) + 1);
 		if (copy->attribute->string == NULL){
 			fprintf(stderr, "Intern malloc problem\n");
 			return NULL;
 		}
-		copy->attribute->string[str_len] = '\0';
+		copy->attribute->string[strlen(src->attribute->string)] = '\0';
+		strcpy(copy->attribute->string, src->attribute->string);
 	}
-	strcpy(copy->attribute->string, src->attribute->string);
 	
 	return copy;
 }
