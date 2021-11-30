@@ -708,6 +708,260 @@ void TEST_goodOP(void)
     fclose(srcfile);
 }
 
+void TEST_badOP(void)
+{
+    /* test file
+
+        bad.op bad~op2
+
+    */
+
+    token_t *token;
+    FILE *srcfile = fopen("tests/test_data/codeSnippets/bad/snipBadOP1.txt", "r");
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);
+    TEST_ASSERT_EQUAL_STRING("bad",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT(token->type == TOKEN_ERROR);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);
+    TEST_ASSERT_EQUAL_STRING("p",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);
+    TEST_ASSERT_EQUAL_STRING("bad",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT(token->type == TOKEN_ERROR);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);
+    TEST_ASSERT_EQUAL_STRING("p2",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT(token->type == TOKEN_EOF);
+    destroy_token(token);
+
+    fclose(srcfile);
+}
+
+void TEST_Expr(void)
+{
+    /* test file
+
+        a*b c/d aa-bb cc+dd #lul 5//2 x..y a==b a<b a<=b a>b a>=b a~=b 
+
+    */
+
+    token_t *token;
+    FILE *srcfile = fopen("tests/test_data/codeSnippets/good/snipExpr1.txt", "r");
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);
+    TEST_ASSERT_EQUAL_STRING("a",token->attribute->string);
+    destroy_token(token);
+    
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_MUL,token->type);
+    destroy_token(token);
+    //TEST_ASSERT_EQUAL_STRING("*",token->attribute->string);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);
+    TEST_ASSERT_EQUAL_STRING("b",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);
+    TEST_ASSERT_EQUAL_STRING("c",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_DIV,token->type);
+    //TEST_ASSERT_EQUAL_STRING("/",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);
+    TEST_ASSERT_EQUAL_STRING("d",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);
+    TEST_ASSERT_EQUAL_STRING("aa",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_MINUS,token->type);
+    //TEST_ASSERT_EQUAL_STRING("-",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);
+    TEST_ASSERT_EQUAL_STRING("bb",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);
+    TEST_ASSERT_EQUAL_STRING("cc",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_PLUS,token->type);
+    //TEST_ASSERT_EQUAL_STRING("+",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);
+    TEST_ASSERT_EQUAL_STRING("dd",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_STRLEN,token->type);
+    //TEST_ASSERT_EQUAL_STRING("#",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);
+    TEST_ASSERT_EQUAL_STRING("lul",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_INT_LIT,token->type);
+    TEST_ASSERT_EQUAL_INT32(5,token->attribute->integer);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_INT_DIV,token->type);
+    //TEST_ASSERT_EQUAL_STRING("//",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_INT_LIT,token->type);
+    TEST_ASSERT_EQUAL_INT32(2,token->attribute->integer);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);
+    TEST_ASSERT_EQUAL_STRING("x",token->attribute->string);
+    destroy_token(token);
+    
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_CONCAT,token->type);
+    //TEST_ASSERT_EQUAL_STRING("..",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);
+    TEST_ASSERT_EQUAL_STRING("y",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);
+    TEST_ASSERT_EQUAL_STRING("a",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_EQ,token->type);
+    //TEST_ASSERT_EQUAL_STRING("==",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);
+    TEST_ASSERT_EQUAL_STRING("b",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);
+    TEST_ASSERT_EQUAL_STRING("a",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_LT,token->type);
+    TEST_ASSERT_EQUAL_STRING("<",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);
+    TEST_ASSERT_EQUAL_STRING("b",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);
+    TEST_ASSERT_EQUAL_STRING("a",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_LE,token->type);
+    //TEST_ASSERT_EQUAL_STRING("<=",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);
+    TEST_ASSERT_EQUAL_STRING("b",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);
+    TEST_ASSERT_EQUAL_STRING("a",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_GT,token->type);
+    //TEST_ASSERT_EQUAL_STRING(">",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);
+    TEST_ASSERT_EQUAL_STRING("b",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);
+    TEST_ASSERT_EQUAL_STRING("a",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_GE,token->type);
+    //TEST_ASSERT_EQUAL_STRING(">=",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);
+    TEST_ASSERT_EQUAL_STRING("b",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);
+    TEST_ASSERT_EQUAL_STRING("a",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_NOT_EQ,token->type);
+    //TEST_ASSERT_EQUAL_STRING("~=",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);
+    TEST_ASSERT_EQUAL_STRING("b",token->attribute->string);
+    destroy_token(token);
+
+    token = get_next_token(srcfile);
+    TEST_ASSERT(token->type == TOKEN_EOF);
+    destroy_token(token);
+
+    fclose(srcfile);
+}
+
 void TEST_Error(void){
     token_t *token;
     FILE *srcfile = fopen("tests/test_data/codeSnippets/bad/snipError.txt", "r");
@@ -822,6 +1076,8 @@ int main(void)
     RUN_TEST(TEST_goodKeywords);
     RUN_TEST(TEST_badKeywords);
     RUN_TEST(TEST_goodOP);
+    RUN_TEST(TEST_badOP);
+    RUN_TEST(TEST_Expr);
     RUN_TEST(TEST_Error);
     printf("\n");
     printf("TEST_checkFactIter MESSAGES:\n");
