@@ -1,1 +1,1 @@
-bad.op
+bad.op bad~op2
