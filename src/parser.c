@@ -68,7 +68,9 @@ int parser_parse(FILE *src)
 
     // Parsing finished
     parser_destroy(parser);
-    fclose(src); // TODO: MODIFIED not commited
+    if (src != stdin) {
+        fclose(src); 
+    }
     return result;
 }
 
