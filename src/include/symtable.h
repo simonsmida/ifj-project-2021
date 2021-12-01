@@ -10,12 +10,11 @@
 #define SYMTABLE_H
 
 #define CAPACITY 13001 // random prime
+#define SYMSTACK_SIZE 50
 
 #define ERROR_MSG_SYMTABLE \
 		error_message("Symtable", ERR_INTERNAL ,"Failed calloc\n")
 	
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h> // uint32_t
@@ -60,6 +59,11 @@ typedef struct symtable {
     unsigned int items_size; // number of items in htab list
     symtable_item_t *items[]; // linked list of items
 } symtable_t;
+
+typedef struct symtable_stack {
+	symtable_t *symstack[SYMSTACK_SIZE];
+	int top_index;
+}symtable_stack_t;
 
 
 /**
@@ -173,6 +177,14 @@ symtable_item_t *symtable_insert(symtable_t *s, const char *key);
  * @return Pointer to the item with item->key key if it exits, otherwise NULL 
  */ 
 symtable_item_t *symtable_search(symtable_t *s, const char *key);
+
+symtable_t *symtable_stack_top(symtable_stack_t *stack);
+void symtable_stack_pop(symtable_stack_t *stack);
+void symtable_stack_push(symtable_stack_t *stack, symtable_t *s);
+void symtable_stack_init(symtable_stack_t *stack);
+void symtable_stack_destroy(symtable_stack_t *stack);
+bool stack_empty(symtable_stack_t *stack);
+
 
 // TODO Funkcia definovana aj deklarovana?
 

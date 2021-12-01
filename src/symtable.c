@@ -92,8 +92,9 @@ void symtable_destroy(symtable_t *s)
 			if (tmp->const_var != NULL){
 				free(tmp->const_var);
 			}
-
-			free(tmp->key);
+			if (tmp->key != NULL){
+				free(tmp->key);
+			}
 			next = tmp->next;
 			free(tmp);	
 			tmp = next;		
@@ -243,5 +244,69 @@ void symtable_insert_new_function_ret_type(symtable_t *s ,data_type_t data, cons
 	item->function->num_ret_types++;
 	item->function->ret_types = ret_types;
 	}
+	return;
+}
+
+void symtable_stack_init(symtable_stack_t *stack){
+	if ( stack != NULL ){
+		stack->top_index = -1;
+		for (int i = 0; i < SYMSTACK_SIZE; i++){
+			stack->symstack[i] = NULL;
+		}
+	}
+
+	return;
+}
+
+symtable_t* symtable_stack_top( symtable_stack_t *stack ){
+	if (stack != NULL){
+		if ( !stack_empty(stack) ){
+			return stack->symstack[stack->top_index];
+		}
+	}
+
+	return NULL;
+}
+
+bool stack_empty(symtable_stack_t *stack){
+	if (stack != NULL){
+		if ( stack->top_index < 0 ){
+			return true;
+		}
+	}
+	return false;
+}
+
+void symtable_stack_push(symtable_stack_t *stack, symtable_t *s){
+	if (stack != NULL && s != NULL){
+		stack->top_index++;
+		stack->symstack[stack->top_index] = s;
+	}
+
+	return;
+
+}
+
+void symtable_stack_pop(symtable_stack_t *stack){
+	if (stack != NULL){
+		//symtable_destroy(stack->symstack[stack->top_index]);
+		if (!stack_empty(stack)){
+			stack->top_index--;
+		}
+	}
+
+	return;
+}
+
+void symtable_stack_destroy(symtable_stack_t *stack){
+	if (stack != NULL){
+		for (int i = 0; i < SYMSTACK_SIZE; i++){
+			if (stack->symstack[i] != NULL){
+				symtable_destroy(stack->symstack[i]);
+				stack->symstack[i] = NULL;
+			}
+		}
+	}
+
 	return;
 }
