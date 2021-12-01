@@ -23,7 +23,7 @@ int else_nt(parser_t *parser);
 int var_def(parser_t *parser);
 int arg(parser_t *parser);
 int arg_n(parser_t *parser);
-int val(parser_t *parser);
+int term(parser_t *parser);
 int dtype(parser_t *parser);
 int stat(parser_t *parser);
 int id_n(parser_t *parser);
