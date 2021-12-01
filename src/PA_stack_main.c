@@ -12,10 +12,16 @@ int main(){
 	FILE *f = fopen(filename,"r");
 	parser_t parser;
 	parser.token = NULL;
-	int success = analyze_bottom_up(f,&parser);
+	parser.src = f;
+	parser.global_symtable = symtable_init(CAPACITY);
+	symtable_insert(parser.global_symtable, "func");
+	symtable_create_and_insert_function(parser.global_symtable, "func");
+	int success = analyze_bottom_up(&parser);
 	if(parser.token != NULL && !success){
 		destroy_token(parser.token);
 	}
+	symtable_destroy(parser.global_symtable);
+	//destroy_token(parser.token);
 #if 0
 	PA_item_t item;
 	item.terminal = get_next_token(f);

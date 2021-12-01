@@ -17,8 +17,7 @@
 #include "error.h"
 
 #define ERR '0'
-#define SUCCESS 1
-
+#define END '1'
 
 /**
  *	@brief Function returns index to the precedence table,
@@ -29,15 +28,17 @@
 int get_index(int token);
 
 /**
- *	@brief Function returns if the given token
- *		   is a keyword which terminates the 
- *		   operator precedence parser
+ *	@brief Function returns 1 if the given token
+ *		   is not supported in precedence operator
+ *		   parser, so it will terminate the 
+ *		   operator precedence parser and gives 
+ *		   gives the control back to the recursive descent
  *	@param token For identifying token type
  *	@return 1 if token is a keyword, else 0
  */
-int is_input_keyword(token_t* token);
+int switch_context(token_t* token);
 
-int analyze_bottom_up(FILE *f,parser_t *parser);
+int analyze_bottom_up(parser_t *parser);
 
 /**
  *	@brief Function reduces terminal on the top of the stack,

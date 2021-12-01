@@ -9,7 +9,10 @@
  */
 
 #include <stdio.h>
+#include "include/scanner.h"
 #include "include/bottom_up_sa.h"
+#include "include/error.h"
+
 
 char precedence_table[19][19] = 
 {
@@ -29,8 +32,8 @@ char precedence_table[19][19] =
 /*	== */{ '<' ,'<', '<' , '<'  ,'<','<', '<','>','>', '>', '>', '>', '>','<','>', '<','<','>', '>'},
 /*	~= */{ '<' ,'<', '<' , '<'  ,'<','<', '<','>','>', '>', '>', '>', '>','<','>', '<','<','>', '>'},
 /*	(  */{ '<' ,'<', '<' , '<'  ,'<','<', '<','<','<', '<', '<', '<', '<','<','=', '<','<','=', ERR},
-/*	)  */{ ERR ,'>', '>' , '>'  ,'>','>', '>','>','>', '>', '>', '>', '>',ERR,'>', ERR,ERR,'>', '>'},
-/*	id */{ ERR ,'>', '>' , '>'  ,'>','>', '>','>','>', '>', '>', '>', '>',ERR,'>', ERR,ERR,'>', '>'},
+/*	)  */{ ERR ,'>', '>' , '>'  ,'>','>', '>','>','>', '>', '>', '>', '>',ERR,'>', END,ERR,'>', '>'},
+/*	id */{ ERR ,'>', '>' , '>'  ,'>','>', '>','>','>', '>', '>', '>', '>',ERR,'>', END,ERR,'>', '>'},
 /*	f  */{ ERR ,ERR, ERR , ERR  ,ERR,ERR, ERR,ERR,ERR, ERR, ERR, ERR, ERR,'=',ERR, ERR,ERR,ERR, ERR},
 /*	,  */{ '<' ,'<', '<' , '<'  ,'<','<', '<','<','<', '<', '<', '<', '<','<','=', '<','<','=', ERR},
 /*	$  */{ '<' ,'<', '<' , '<'  ,'<','<', '<','<','<', '<', '<', '<', '<','<',ERR, '<','<',ERR, ERR}};
@@ -76,10 +79,8 @@ int reduce_terminal(PA_stack *stack){
 			destroy_token(items[operands_count-1].terminal);
 			PA_item_t reduced_terminal;
 			reduced_terminal.non_terminal.expr_type = EXPR;
-			//printf("Zredukoval som ID\n");
 			PA_stack_push(stack,reduced_terminal,0);
 			PA_stack_top(stack,&top_item);
-			//printf("Vrchol zasobnika: %d\n\n", top_item.item_type);
 			return 1;
 		}
 	}
@@ -110,7 +111,6 @@ int reduce_terminal(PA_stack *stack){
 		if( (items[0].item_type == 0) &&
 			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_PLUS)) &&
 			(items[2].item_type == 0) ){
-		
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[1].terminal);
@@ -245,32 +245,50 @@ int reduce_terminal(PA_stack *stack){
 	return 0;
 }
 
-int analyze_bottom_up(FILE *f, parser_t *parser){
+int analyze_bottom_up(parser_t *parser){
+	//Dealloc the read token from recursive descent
+	destroy_token(parser->token);
+	
 	/** 1. Create stack */
 	//Static allocation
 	PA_stack stack;
+	
 	/** 2. Init the stack and parser token */
 	PA_stack_init(&stack);
 	parser -> token = NULL;
+	
 	/** 3. Push $ sign on the stack */
 	/** 3.1 Generate $ token */
 	PA_item_t item,top_terminal, token_in, handle;
 	item.terminal = generate_empty_token();
+	
 	/** 3.2 Push $ on the top of the stack */
 	PA_stack_push(&stack, item, 1);
 
 
-	int reduction = 0;
+	int reduction = 0; //Variable determines, whether to get next token
 	do{
 		/** 4. Get terminal from the top of the stack and from the input */
 		//Stack top
 		PA_stack_top_terminal(&stack,&top_terminal);
+		
 		//Token in
 		if(!reduction){
-			token_in.terminal = get_next_token(f);
-			/** If the generated token is a keyword, transfrom it as $,
-			 	and return read token and  control to RZ parser */	
-			if(is_input_keyword(token_in.terminal)){
+			token_in.terminal = get_next_token(parser -> src);
+			/** If the generated token is a function id, return read token
+			  	and control to recursive descent parser */
+			if(token_in.terminal->type == TOKEN_ID){
+				symtable_item_t *id = symtable_search(parser->global_symtable, token_in.terminal->attribute->string);
+				if ((id != NULL) && (id -> function != NULL) ){
+					parser -> token = token_in.terminal;
+					/** Dealloc the stack */
+					PA_stack_destroy(&stack);
+					return EXIT_OK;
+				}
+			}
+			/** If the generated token has not supported type, transfrom it as $,
+			 	and return read token and control to recursive descent parser */	
+			else if(switch_context(token_in.terminal)){
 				parser->token = copy_token(token_in.terminal);
 				token_in.terminal -> type = TOKEN_EOF;
 				reduction = 1;
@@ -282,7 +300,6 @@ int analyze_bottom_up(FILE *f, parser_t *parser){
 		/**5. Look the operator priority in the precedence table */
 		switch(precedence_table[get_index(top_terminal.terminal->type)][get_index(token_in.terminal->type)]){
 			case '<':
-				//printf("Tlacim na zasobnik\n\n");
 				PA_stack_top(&stack,&item);
 				handle.handle = '<';
 				if( item.item_type == 1){
@@ -305,83 +322,51 @@ int analyze_bottom_up(FILE *f, parser_t *parser){
 				reduction = 0;
 				break;
 			case '=': 
-				//printf("Rovnaka priorita, pushni terminal na zasobnik.\n\n");
+				/** Shift terminal on the top of the stack */
 				PA_stack_push(&stack,token_in,1);
 				reduction = 0;
 				break;
 			case '>': 
-				//Pri redukcii chceme testovat podmienku
-				//Ale nechceme nacitat dalsi tokeny, pretoze predchadzajuci nebol spracovany
-				//Nechcem testovat ci je dno zasobniku prazdne lebo sa tam vyskytuje neterminal
-				//printf("Redukujem\n\n");
+				/** While reducing the terminal, we don't want to get
+				 *	new terminal from the stream. Therefore we set the reduction variable
+				 *	to 1, to prevent the new token from reading from stdin */
 				if(!reduce_terminal(&stack)){
-					printf("Error: No rule for reduction\n");
+					//printf("redukujem\n");
+					parser -> token = token_in.terminal;
+					PA_stack_destroy(&stack);
 					return ERR_SYNTAX;
 				}
 				reduction = 1;
 				
 				PA_stack_top_terminal(&stack,&top_terminal);
 				break;
-			case ERR: printf("Chyba\n\n");
-						int is_stack_id = (top_terminal.terminal->type == TOKEN_ID ||
-						   top_terminal.terminal->type == TOKEN_INT_LIT ||
-						   top_terminal.terminal->type == TOKEN_STR_LIT ||
-						   top_terminal.terminal->type == TOKEN_NUM_LIT);
-						
-					  	int is_input_id = (token_in.terminal->type == TOKEN_ID ||
-						   token_in.terminal->type == TOKEN_INT_LIT ||
-						   token_in.terminal->type == TOKEN_STR_LIT ||
-						   token_in.terminal->type == TOKEN_NUM_LIT);
-						int is_right_parenthesis = (top_terminal.terminal->type == TOKEN_R_PAR);
-						
-						/*printf("is_stack_id: %d\n",is_stack_id);
-						printf("is_right_parenthesis: %d\n",is_right_parenthesis);
-						printf("is_input_id: %d\n",is_input_id);*/
-						
-						if ( is_stack_id && is_input_id ){
-							//printf("Posielam do RZ\n");
-							parser -> token = token_in.terminal;
-							//Dealloc stack
-							PA_stack_destroy(&stack);
-							return 0;
-						}
-						
-						if ( is_right_parenthesis && is_input_id ){
-							//printf("Posielam do RZ\n");
-							parser -> token = token_in.terminal;
-							//Dealloc stack
-							PA_stack_destroy(&stack);
-							return 0;
-						}
-					  return ERR_SYNTAX; 
-					  break;//Dealloc the stack
-		}
-/*	i++;
-	
-	printf("Type of token:%d\n",token_in.terminal->type);
-	PA_stack_top(&stack,&item);
-	printf("Vrchol zasobnika: %d\n", item.item_type);
-	printf("---------------------------------------------\n");*/
-	//}while(((top_terminal.terminal->type != TOKEN_EOF) || (token_in.terminal->type != TOKEN_EOF)) && (!accepted));
+			case ERR: 
+				/** Dealloc the stack */
+				parser -> token = token_in.terminal;
+				PA_stack_destroy(&stack);
+				return ERR_SYNTAX; 
+			case END:
+				parser -> token = token_in.terminal;
+				/** Dealloc the stack */
+				PA_stack_destroy(&stack);
+				return EXIT_OK;
+		} /** Dealloc the stack */
 	}while(((top_terminal.terminal->type != TOKEN_EOF) || (token_in.terminal->type != TOKEN_EOF)));
 	
 	/** Check if the PA was successful */
-	/*if(no_rule_error){
-		printf("Error! No reduction rule found \n");//Dealloc the stack
-		return 0;
-	}*/
-	if( top_terminal.terminal->type != TOKEN_EOF ){
-		printf("Error! stack is not empty \n");//Dealloc the stack
-		return 0;
-	}
 	if((top_terminal.terminal->type == TOKEN_EOF) && (token_in.terminal->type == TOKEN_EOF)){
-		printf("USPECH, PLATNY VYRAZ\n");
 		destroy_token(top_terminal.terminal);
 		destroy_token(token_in.terminal);
 	}
-	return SUCCESS; 	
+	return EXIT_OK; 	
 }
 
+/**
+ *	@brief Function returns index to the precedence table,
+ *		   according to the type of the terminal
+ *	@param token Terminal of given string
+ *	@return index to precedence table
+ */
 int get_index(int token){
 	switch(token){
 		case TOKEN_STRLEN	: return  0;
@@ -403,24 +388,52 @@ int get_index(int token){
 		case TOKEN_INT_LIT	: return 15;
 		case TOKEN_NUM_LIT	: return 15;
 		case TOKEN_STR_LIT	: return 15;
-		//TODO Add funcion control, check the symtable
-		//case TOKEN_ID		: return 16;
-		case TOKEN_COLON	: return 17;
 		case TOKEN_EOF		: return 18;
 	};
    return -1;	
 }
 
 /**
- *	@brief Function returns if the given token
- *		   is a keyword which terminates the 
- *		   operator precedence parser
+ *	@brief Function returns 1 if the given token
+ *		   is not supported in precedence operator
+ *		   parser, so it will terminate the 
+ *		   operator precedence parser and gives 
+ *		   gives the control back to the recursive descent
  *	@param token For identifying token type
  *	@return 1 if token is a keyword, else 0
  */
-int is_input_keyword(token_t* token){
-	if (token->type == TOKEN_KEYWORD){
-			return 1;
+int switch_context(token_t* token){
+	switch(token->type){
+		case TOKEN_L_PAR:
+		case TOKEN_R_PAR:
+
+		// Arithmetic operators
+		case TOKEN_PLUS:
+		case TOKEN_MINUS:
+		case TOKEN_MUL:
+		case TOKEN_DIV:
+
+		// Relational operators
+		case TOKEN_EQ:     
+		case TOKEN_NOT_EQ: 
+		case TOKEN_LT:     
+		case TOKEN_LE:     
+		case TOKEN_GT:     
+		case TOKEN_GE:     
+		case TOKEN_INT_DIV:
+
+		
+		// Other operators
+		case TOKEN_STRLEN: 
+		case TOKEN_CONCAT: 
+
+		// Identifier
+		case TOKEN_ID:
+		case TOKEN_STR_LIT:
+		case TOKEN_INT_LIT:
+		case TOKEN_NUM_LIT:
+		case TOKEN_EOF: return 0;
+		default: break;
 	}
-	return 0;
-}
+	return 1; 
+}             
