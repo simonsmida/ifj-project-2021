@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "include/scanner.h"
-#include "include/symtable.h"
+#include "scanner.h"
+#include "symtable.h"
 
 void generate_built_in_write(bool is_global, token_t *token);
 

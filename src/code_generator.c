@@ -1,6 +1,6 @@
 
 // TODO code_gen.h move to the include file
-#include "code_generator.h"
+#include "include/code_generator.h"
 
 void generate_built_in_write(bool is_global, token_t *token){
 	
@@ -204,7 +204,7 @@ void generate_function_call(const char *func_name){
 	return;
 }
 
-void generate_assign_value_to_var(const char *var_name, ){
+void generate_assign_value_to_var(const char *var_name ){
 
 	return;
 }
