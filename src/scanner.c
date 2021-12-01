@@ -443,6 +443,10 @@ token_t *get_next_token(FILE *file)
 
     } // while
     if (c == EOF) {
+		if ( state == INSIDE_BLOCK_COMMENT ){
+			ungetc(c, file);
+			return generate_token(buffer, state);
+		}
         if (buffer->current_index > 0 ) {
 			ungetc(c, file);
 			if (state == DOUBLE_E_SEQUENCE || state == DOUBLE_DOT_SEQUENCE || state == DOUBLE_E_PLUS_MINUS_SEQUENCE){
@@ -615,6 +619,10 @@ token_t *generate_token(string_t *buffer,  int type)
 			}
 			break;
 
+		case INSIDE_BLOCK_COMMENT:
+			token->type = TOKEN_START_BLOCK_COMMENT;
+			break;
+
 		case STATE_ERROR:
 			token->type = TOKEN_ERROR; 
 			break;
@@ -726,6 +734,8 @@ const char *token_type_to_str(int type)
         case TOKEN_LT:
         case TOKEN_LE: 
             return "operator";
+		case TOKEN_START_BLOCK_COMMENT:
+			return "Start block comment";
         default:
             break;
   } // switch()

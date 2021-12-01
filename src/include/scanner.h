@@ -61,6 +61,7 @@ typedef enum token_types {
     TOKEN_ERROR,
     TOKEN_EOF,
 	TOKEN_IFJ21, // TODO: prob. redundant
+	TOKEN_START_BLOCK_COMMENT,
 
     // Separators
     TOKEN_L_PAR,
