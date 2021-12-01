@@ -18,6 +18,7 @@
 
 #define ERR '0'
 #define END '1'
+#define EXIT_FUNC_ID 42
 
 /**
  *	@brief Function returns index to the precedence table,

@@ -283,7 +283,7 @@ int analyze_bottom_up(parser_t *parser){
 					parser -> token = token_in.terminal;
 					/** Dealloc the stack */
 					PA_stack_destroy(&stack);
-					return EXIT_OK;
+					return EXIT_FUNC_ID;
 				}
 			}
 			/** If the generated token has not supported type, transfrom it as $,
