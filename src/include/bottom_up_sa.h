@@ -14,16 +14,28 @@
 #include "PA_stack.h"
 #include "scanner.h"
 #include "parser.h"
+#include "error.h"
 
 #define ERR '0'
+#define SUCCESS 1
+
 
 /**
- *	@brief Function return index to the precedence table,
+ *	@brief Function returns index to the precedence table,
  *		   according to the type of the terminal
  *	@param token Terminal of given string
- *	@return 
+ *	@return index to precedence table
  */
 int get_index(int token);
+
+/**
+ *	@brief Function returns if the given token
+ *		   is a keyword which terminates the 
+ *		   operator precedence parser
+ *	@param token For identifying token type
+ *	@return 1 if token is a keyword, else 0
+ */
+int is_input_keyword(token_t* token);
 
 int analyze_bottom_up(FILE *f,parser_t *parser);
 
