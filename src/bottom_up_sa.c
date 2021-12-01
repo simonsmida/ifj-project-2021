@@ -439,10 +439,7 @@ int get_index(int token){
  */
 int is_input_keyword(token_t* token){
 	if (token->type == TOKEN_KEYWORD){
-		if( token->attribute->keyword_type == KEYWORD_DO   ||
-			token->attribute->keyword_type == KEYWORD_THEN ){
-				return 1;
-		}
+			return 1;
 	}
 	return 0;
 }
