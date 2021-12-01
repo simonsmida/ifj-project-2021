@@ -273,7 +273,7 @@ int analyze_bottom_up(FILE *f, parser_t *parser){
 	PA_stack_push(&stack, item, 1);
 
 	int i=0;
-	int accepted = 0;
+	//int no_rule_error = 0;
 	int reduction = 0;
 	do{
 		printf("Run %d\n",i);
@@ -283,8 +283,16 @@ int analyze_bottom_up(FILE *f, parser_t *parser){
 		//Token in
 		if(!reduction){
 			token_in.terminal = get_next_token(f);
-			//check_if_terminate()
-			reduction = 0;
+			/** If the generated token is a keyword, transfrom it as $,
+			 	and return read token and  control to RZ parser */	
+			if(is_input_keyword(token_in.terminal)){
+				printf("Som tu>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
+				parser->token = token_in.terminal;
+				token_in.terminal -> type = TOKEN_EOF;
+				reduction = 1;
+			}else{
+				reduction = 0;
+			}
 		}
 		printf("Type of token:%d\n",token_in.terminal->type);
 		/**5. Look the operator priority in the precedence table */
@@ -315,7 +323,7 @@ int analyze_bottom_up(FILE *f, parser_t *parser){
 			case '=': 
 				printf("Rovnaka priorita, pushni terminal na zasobnik.\n\n");
 				PA_stack_push(&stack,token_in,1);
-			reduction = 0;
+				reduction = 0;
 				break;
 			case '>': 
 				//Pri redukcii chceme testovat podmienku
@@ -324,14 +332,14 @@ int analyze_bottom_up(FILE *f, parser_t *parser){
 				printf("Redukujem\n\n");
 				if(!reduce_terminal(&stack)){
 					printf("Error: No rule for reduction\n");
-					return 0;
+					//no_rule_error = 1;
+					//reduction = 0;
+					return ERR_SYNTAX;
 				}
-				
-				reduction = 1;
+				//}else{
+					reduction = 1;
+				//}
 				PA_stack_top_terminal(&stack,&top_terminal);
-				if((top_terminal.terminal->type == TOKEN_EOF) && (token_in.terminal->type == TOKEN_EOF)){
-						accepted = 1;
-				}
 				break;
 			case ERR: printf("Chyba\n\n");
 						int is_stack_id = (top_terminal.terminal->type == TOKEN_ID ||
@@ -368,15 +376,21 @@ int analyze_bottom_up(FILE *f, parser_t *parser){
 					  break;//Dealloc the stack
 		}
 	i++;
+	
 	printf("Type of token:%d\n",token_in.terminal->type);
 	PA_stack_top(&stack,&item);
 	printf("Vrchol zasobnika: %d\n", item.item_type);
 	printf("---------------------------------------------\n");
-	}while(((top_terminal.terminal->type != TOKEN_EOF) || (token_in.terminal->type != TOKEN_EOF)) && (!accepted));
+	//}while(((top_terminal.terminal->type != TOKEN_EOF) || (token_in.terminal->type != TOKEN_EOF)) && (!accepted));
+	}while(((top_terminal.terminal->type != TOKEN_EOF) || (token_in.terminal->type != TOKEN_EOF)));
 	
 	/** Check if the PA was successful */
+	/*if(no_rule_error){
+		printf("Error! No reduction rule found \n");//Dealloc the stack
+		return 0;
+	}*/
 	if( top_terminal.terminal->type != TOKEN_EOF ){
-		printf("Chyba! stack is not empty \n");//Dealloc the stack
+		printf("Error! stack is not empty \n");//Dealloc the stack
 		return 0;
 	}
 	if((top_terminal.terminal->type == TOKEN_EOF) && (token_in.terminal->type == TOKEN_EOF)){
@@ -384,7 +398,7 @@ int analyze_bottom_up(FILE *f, parser_t *parser){
 		destroy_token(top_terminal.terminal);
 		destroy_token(token_in.terminal);
 	}
-	return 1; 	
+	return SUCCESS; 	
 }
 
 int get_index(int token){
@@ -414,4 +428,21 @@ int get_index(int token){
 		case TOKEN_EOF		: return 18;
 	};
    return -1;	
+}
+
+/**
+ *	@brief Function returns if the given token
+ *		   is a keyword which terminates the 
+ *		   operator precedence parser
+ *	@param token For identifying token type
+ *	@return 1 if token is a keyword, else 0
+ */
+int is_input_keyword(token_t* token){
+	if (token->type == TOKEN_KEYWORD){
+		if( token->attribute->keyword_type == KEYWORD_DO   ||
+			token->attribute->keyword_type == KEYWORD_THEN ){
+				return 1;
+		}
+	}
+	return 0;
 }
