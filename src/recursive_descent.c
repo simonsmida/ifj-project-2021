@@ -1159,15 +1159,25 @@ int var_def(parser_t *parser)
     } else if (parser->token->type == TOKEN_ASSIGN) {
 
         // RULE 40: <var_def> → '=' 'expr'
-        result = analyze_bottom_up(parser);
-        if (result == 0 || result == 1)
-            return EXIT_OK;
-        else 
-            return ERR_SYNTAX;
-        // TODO: switch context
-        //PARSER_EAT(); // TODO: ADDED ONLY FOR TESTING - no expr implemented yet
         
-        return EXIT_OK;
+        // Current token is '='
+        // *ATTENTION* - nondeterminism handling - func id vs var id
+        result = analyze_bottom_up(parser);
+        if (result == EXIT_FUNC_ID) {
+            // TODO: - add to symtable + check semantics
+            result = func_call(parser);
+            CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+            PARSER_EAT();
+            return EXIT_OK;
+
+        } else if (result == EXIT_OK) {
+        
+            result = expr_list(parser);
+            CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+            return EXIT_OK;
+        }
+        
+        return ERR_SYNTAX;
 
     } else if (parser->token->type == TOKEN_ID) {
         
