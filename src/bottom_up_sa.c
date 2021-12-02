@@ -36,7 +36,7 @@ char precedence_table[19][19] =
 /*	id */{ ERR ,'>', '>' , '>'  ,'>','>', '>','>','>', '>', '>', '>', '>',ERR,'>', END,ERR,'>', '>'},
 /*	f  */{ ERR ,ERR, ERR , ERR  ,ERR,ERR, ERR,ERR,ERR, ERR, ERR, ERR, ERR,'=',ERR, ERR,ERR,ERR, ERR},
 /*	,  */{ '<' ,'<', '<' , '<'  ,'<','<', '<','<','<', '<', '<', '<', '<','<','=', '<','<','=', ERR},
-/*	$  */{ '<' ,'<', '<' , '<'  ,'<','<', '<','<','<', '<', '<', '<', '<','<',ERR, '<','<',ERR, ERR}};
+/*	$  */{ '<' ,'<', '<' , '<'  ,'<','<', '<','<','<', '<', '<', '<', '<','<',ERR, '<','<',ERR, EPT}};
 
 /**
  *	@brief Function reduces terminal on the top of the stack,
@@ -345,6 +345,11 @@ int analyze_bottom_up(parser_t *parser){
 				parser -> token = token_in.terminal;
 				PA_stack_destroy(&stack);
 				return ERR_SYNTAX; 
+			case EPT:
+				/** Dealloc the stack */
+				parser -> token = token_in.terminal;
+				PA_stack_destroy(&stack);
+				return EXIT_EMPTY_EXPR; 
 			case END:
 				parser -> token = token_in.terminal;
 				/** Dealloc the stack */
@@ -421,7 +426,6 @@ int switch_context(token_t* token){
 		case TOKEN_GT:     
 		case TOKEN_GE:     
 		case TOKEN_INT_DIV:
-
 		
 		// Other operators
 		case TOKEN_STRLEN: 

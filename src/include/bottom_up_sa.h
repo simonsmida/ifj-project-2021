@@ -18,8 +18,10 @@
 
 #define ERR '0'
 #define END '1'
-#define EXIT_FUNC_ID 42
+#define EPT '2'
 
+#define EXIT_FUNC_ID     42
+#define EXIT_EMPTY_EXPR 404
 /**
  *	@brief Function returns index to the precedence table,
  *		   according to the type of the terminal
