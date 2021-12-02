@@ -347,7 +347,6 @@ int analyze_bottom_up(parser_t *parser){
 				return ERR_SYNTAX; 
 			case EPT:
 				/** Dealloc the stack */
-				parser -> token = token_in.terminal;
 				PA_stack_destroy(&stack);
 				return EXIT_EMPTY_EXPR; 
 			case END:
