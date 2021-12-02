@@ -4,6 +4,9 @@
 #include "include/scanner.h"
 #include "include/parser.h"
 
+#define SYMTAB_G parser->global_symtable
+#define FUNC_ITEM parser->curr_item->function
+
 #define STRING_TOKEN_T token_type_to_str(parser->token->type)
 #define STRING_KW_T kw_type_to_str(parser->token->attribute->keyword_type)
 
@@ -81,6 +84,22 @@
 
 #define IS_NIL(_token) \
     (((_token) == (TOKEN_KEYWORD)) && ((TOKEN_KW_TYPE) == (KEYWORD_NIL)))
+
+#define HANDLE_SYMTABLE_FUNCTION() do {                                                 \
+    /* Create symtable item for current ID if not present in  symtable */               \
+    if (!(parser->curr_item = symtable_search(SYMTAB_G, TOKEN_REPR))) {                 \
+                                                                                        \
+        /* Current function ID not found in global symtab */                            \
+        parser->curr_item = symtable_insert(SYMTAB_G, TOKEN_REPR);                      \
+        if (parser->curr_item == NULL) {                                                \
+            return ERR_INTERNAL;                                                        \
+        }                                                                               \
+        /* Insert function ID into the newly created item of global symtable */         \
+        if (!(FUNC_ITEM = symtable_create_and_insert_function(SYMTAB_G, TOKEN_REPR))) { \
+            return ERR_INTERNAL;                                                        \
+        }                                                                               \
+    } /* if item not found */                                                           \
+} while(0)
 
 /**
  * Starting nonterminal <prog>
@@ -228,27 +247,21 @@ int func_dec(parser_t *parser)
 
             if (TOKEN_KW_TYPE == KEYWORD_GLOBAL) {
 
-                // We are inside function declaration
-                parser->inside_func_dec = true;
-                parser->declared_function = false;
-
                 // RULE 7: <func_dec> → 'global' 'id' ':' 'function' '(' <param_fdec> ')' <ret_type_list>
             
                 PARSER_EAT(); /* 'id' */
                 CHECK_TOKEN_TYPE(TOKEN_ID);   
+               
+                HANDLE_SYMTABLE_FUNCTION();
                 
-                // Create symtable item for current ID
-                parser->curr_item = symtable_insert(parser->global_symtable, TOKEN_REPR);
-                if (parser->curr_item == NULL) {
-                    return ERR_INTERNAL;
+                /** SEMANTIC ACTION - function redeclaration **/
+                if (FUNC_ITEM->declared) { 
+                    /* Function redeclaration */
+                    error_message("Parser", ERR_SEMANTIC_DEF, "redeclaration of function '%s'", TOKEN_REPR);
+                    return ERR_SEMANTIC_DEF;
                 }
+                FUNC_ITEM->declared = true;
 
-                // Insert current function ID into the symtable
-                item_function_t *item;
-                if (!(item = symtable_create_and_insert_function(parser->global_symtable, TOKEN_REPR))) {
-                    error_message("Parser", ERR_SEMANTIC_DEF, "function '%s' not declared", TOKEN_REPR);
-                    return ERR_SEMANTIC_DEF; // TODO: check internal error
-                }
                  
                 PARSER_EAT(); /* ':' */
                 CHECK_TOKEN_TYPE(TOKEN_COLON);    
@@ -497,22 +510,17 @@ int func_head(parser_t *parser)
             PARSER_EAT();
             CHECK_TOKEN_TYPE(TOKEN_ID); // 'id'
             
-            // TODO: search for previous declaration or definition - if not
-            // successfull or declared -> proceed, if defined -> sem. error
+            HANDLE_SYMTABLE_FUNCTION();
 
-            // Create symtable item for current ID
-            parser->curr_item = symtable_insert(parser->global_symtable, TOKEN_REPR);
-            if (parser->curr_item == NULL) {
-                return ERR_INTERNAL;
+            /** SEMANTIC ACTION - function redefinition **/
+            if (FUNC_ITEM->defined) { 
+                /* Function redeclaration */
+                error_message("Parser", ERR_SEMANTIC_DEF, "redefinition of function '%s'", TOKEN_REPR);
+                return ERR_SEMANTIC_DEF;
             }
+            FUNC_ITEM->declared = true;
+            FUNC_ITEM->defined = true;
 
-            // Insert current function ID into the symtable
-            item_function_t *item;
-            if (!(item = symtable_create_and_insert_function(parser->global_symtable, TOKEN_REPR))) {
-                error_message("Parser", ERR_SEMANTIC_DEF, "function '%s' not declared", TOKEN_REPR);
-                return ERR_SEMANTIC_DEF; // TODO: check internal error
-            }
-            
             PARSER_EAT();
             CHECK_TOKEN_TYPE(TOKEN_L_PAR); // '('
             
