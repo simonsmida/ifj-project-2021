@@ -912,7 +912,7 @@ int stat(parser_t *parser)
                 // <var_def>
                 PARSER_EAT();
                 result = var_def(parser);
-                CHECK_RESULT_VALUE(EXIT_OK); 
+                CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
                 
                 return EXIT_OK;
             
@@ -1044,54 +1044,6 @@ int stat(parser_t *parser)
     error_message("Parser", ERR_SYNTAX, "unexpected token '%s' (%s)", TOKEN_REPR, STRING_TOKEN_T);    
     return ERR_SYNTAX;
 }
-
-
-/**
- * @brief Nonterminal <expr_nt>
- * @param parser pointer to the parser structure
- */
-int expr_nt(parser_t *parser)
-{
-    int result;
-    if (parser->token->type == TOKEN_KEYWORD) {
-        switch (TOKEN_KW_TYPE)
-        {
-            case KEYWORD_END:
-            case KEYWORD_LOCAL:
-            case KEYWORD_IF:
-            case KEYWORD_WHILE:
-            case KEYWORD_RETURN:
-            case KEYWORD_ELSE: 
-
-                // RULE 50: <expr> → ε
-                
-                return EXIT_OK;
-
-            default: break;
-        } // switch()
-
-    } else if (parser->token->type == TOKEN_ID) {
-                
-        // RULE 50: <expr> → ε
-        PARSER_EAT(); // important, to check if expr_list is not empty 
-        return EXIT_OK;
-
-    } else if (parser->token->type == TOKEN_COMMA) {
-        
-        // RULE 50: <expr> → ε
-        
-        return EXIT_OK;
-    }
-    
-    // RULE 49: <expr> → 'expr' ... func call not allowed here
-    // Context switch - error is reported via precedence analysis
-    if ((result = analyze_bottom_up(parser)) == ERR_SYNTAX) {
-        return ERR_SYNTAX;
-    }
-    
-    return EXIT_OK;
-}
-
 
 /**
  * @brief Nonterminal <else>
