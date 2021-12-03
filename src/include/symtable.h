@@ -36,6 +36,8 @@ typedef struct symbol_data {
 } symbol_data_t;
 
 typedef struct item_function {
+    bool defined;
+    bool declared;
 	int num_params;
 	int num_ret_types;
 	data_type_t *type_params;
@@ -141,6 +143,7 @@ void symtable_insert_new_function_param(symtable_t *s ,data_type_t data, const c
  * @param data The type of the new found function return type
  * @param key Hash to the table
  */
+//void symtable_insert_new_function_ret_type(symtable_t *s ,data_type_t data, symtable_item_t *item);
 void symtable_insert_new_function_ret_type(symtable_t *s ,data_type_t data, const char *key);
 
 
