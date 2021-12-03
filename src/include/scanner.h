@@ -210,4 +210,22 @@ void print_token(token_t *token);
 keyword_type_t determine_keyword(const char *string);
 
 void destroy_token(token_t *token);
+token_t *generate_token(string_t *buffer, int type);
+
+/**
+ * @brief Generates an empty token of TOKEN_EOF type, for
+ *                needs of operator precedence parser
+ *
+ * @return token structure
+ */
+token_t *generate_empty_token(void);
+
+/**
+ * @brief Deep copy of one token structure to another
+ *
+ * @param src Token which will be copied
+ *
+ * @return token structure
+ */
+token_t *copy_token(token_t* src);
 #endif // LEX_AN_H
