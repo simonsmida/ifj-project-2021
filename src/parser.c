@@ -33,7 +33,6 @@ parser_t *parser_init(FILE *src)
     
     parser->inside_func_def = false;
     parser->inside_func_dec = false;
-    parser->declared_function = false;
     parser->src = src;
     parser->curr_item = NULL;
     
