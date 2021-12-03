@@ -617,7 +617,8 @@ int param_fdef(parser_t *parser)
                 }
             } else if ((parser->curr_item != NULL) && !(FUNC_ITEM->declared)) {
                 // Insert param into symtable(s) only if not already defined
-                symtable_insert_new_function_param(SYMTAB_G, dtype_data(TOKEN_KW_TYPE), parser->curr_item);  
+                if (parser->curr_item == NULL) return ERR_INTERNAL; // TODO: FIX THIS
+                symtable_insert_new_function_param(SYMTAB_G, dtype_data(TOKEN_KW_TYPE), parser->curr_item->key);  
             }
 
             // <param_fdef_n>
@@ -696,7 +697,8 @@ int param_fdef_n(parser_t *parser)
 
             } else if ((parser->curr_item != NULL) && !(FUNC_ITEM->declared)) {
                 // Insert param into symtable(s) only if not already defined
-                symtable_insert_new_function_param(SYMTAB_G, dtype_data(TOKEN_KW_TYPE), parser->curr_item);  
+                if (parser->curr_item == NULL) return ERR_INTERNAL; // TODO: FIX THIS
+                symtable_insert_new_function_param(SYMTAB_G, dtype_data(TOKEN_KW_TYPE), parser->curr_item->key);  
             }
              
             param_index++;
@@ -746,7 +748,8 @@ int param_fdec(parser_t *parser)
                 CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
                 
                 // Insert into symtable(s)
-                symtable_insert_new_function_param(SYMTAB_G, dtype_data(TOKEN_KW_TYPE), parser->curr_item);  
+                if (parser->curr_item == NULL) return ERR_INTERNAL; // TODO: FIX THIS
+                symtable_insert_new_function_param(SYMTAB_G, dtype_data(TOKEN_KW_TYPE), parser->curr_item->key);  
 
                 // <param_fdec_n>
                 PARSER_EAT();
@@ -791,7 +794,8 @@ int param_fdec_n(parser_t *parser)
             CHECK_RESULT_VALUE_SILENT(EXIT_OK); // TODO: check me 
             
             // Insert into symtable(s)
-            symtable_insert_new_function_param(SYMTAB_G, dtype_data(TOKEN_KW_TYPE), parser->curr_item);  
+            if (parser->curr_item == NULL) return ERR_INTERNAL; // TODO: FIX THIS
+            symtable_insert_new_function_param(SYMTAB_G, dtype_data(TOKEN_KW_TYPE), parser->curr_item->key);  
             
             PARSER_EAT();
             return param_fdec_n(parser); // calls itself
@@ -837,7 +841,8 @@ int ret_type_list(parser_t *parser)
             }
         } else if ((parser->curr_item != NULL) && !(FUNC_ITEM->declared)) {
             // Insert param into symtable(s) only if not already defined
-            symtable_insert_new_function_ret_type(SYMTAB_G, dtype_data(TOKEN_KW_TYPE), parser->curr_item);  
+            if (parser->curr_item == NULL) return ERR_INTERNAL; // TODO: FIX THIS
+            symtable_insert_new_function_ret_type(SYMTAB_G, dtype_data(TOKEN_KW_TYPE), parser->curr_item->key);  
         }
         
         // <ret_type_list_n>
@@ -965,7 +970,8 @@ int ret_type_list_n(parser_t *parser)
 
         } else if ((parser->curr_item != NULL) && !(FUNC_ITEM->declared)) {
             // Insert param into symtable(s) only if not already defined
-            symtable_insert_new_function_ret_type(SYMTAB_G, dtype_data(TOKEN_KW_TYPE), parser->curr_item);  
+            if (parser->curr_item == NULL) return ERR_INTERNAL; // TODO: FIX THIS
+            symtable_insert_new_function_ret_type(SYMTAB_G, dtype_data(TOKEN_KW_TYPE), parser->curr_item->key);  
         }
          
         ret_type_index++;
