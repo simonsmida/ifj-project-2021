@@ -9,7 +9,7 @@
 
 
 
-int dtype_data(int keyword_type)
+int dtype_keyword(int keyword_type)
 {
     switch (keyword_type) 
     {
@@ -23,6 +23,26 @@ int dtype_data(int keyword_type)
             return DTYPE_NIL;
         default:
             break;
+    }
+    return DTYPE_UNKNOWN;
+}
+
+int dtype_token(parser_t *parser)
+{
+    switch (TOKEN_T) 
+    {
+        case TOKEN_STR_LIT:
+            return DTYPE_STRING;
+        case TOKEN_INT_LIT:
+            return DTYPE_INT;
+        case TOKEN_NUM_LIT:
+            return DTYPE_NUMBER;
+        default:
+            break;
+    } // switch()
+
+    if ((TOKEN_T == TOKEN_KEYWORD) && (TOKEN_KW_T == KEYWORD_NIL)) {
+        return DTYPE_NIL;
     }
     return DTYPE_UNKNOWN;
 }
@@ -352,8 +372,8 @@ int arg(parser_t *parser)
         // <term>
         result = term(parser);
         CHECK_RESULT_VALUE_SILENT(EXIT_OK);
-        
         parser->curr_arg_count += 1;
+        
         // <arg_n>
         PARSER_EAT(); 
         result = arg_n(parser);
@@ -430,7 +450,7 @@ int term(parser_t *parser)
     if (TOKEN_T == TOKEN_ID) {
     
         // RULE 12: <term> → 'id'
-        // TODO: local symtab
+        // TODO: local symtab - check arg type semantics
         
         parser->curr_arg_count += 1;
 
@@ -440,7 +460,11 @@ int term(parser_t *parser)
         
         // RULE 13: <term> → 'literal' ... 'literal' = str_lit|int_lit|num_lit
         // RULE 14: <term> → 'nil'
-        
+
+        if (FUNC_ITEM->type_params[parser->curr_arg_count] != dtype_token(parser)) {
+            error_message("Parser", ERR_SEMANTIC_PROG, "invalid argument type");
+            return ERR_SEMANTIC_PROG;
+        }
         parser->curr_arg_count += 1;
         
         return EXIT_OK;
@@ -542,14 +566,14 @@ int param_fdef(parser_t *parser)
             CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
             
             if ((parser->curr_item != NULL) && (FUNC_ITEM->declared && !(FUNC_ITEM->defined))) {
-                if (FUNC_ITEM->type_params[0] != dtype_data(TOKEN_KW_T)) {
+                if (FUNC_ITEM->type_params[0] != dtype_keyword(TOKEN_KW_T)) {
                     error_message("Parser", ERR_SEMANTIC_PROG, "function param type mismatch");
                     return ERR_SEMANTIC_PROG;
                 }
             } else if ((parser->curr_item != NULL) && !(FUNC_ITEM->declared)) {
                 // Insert param into symtable(s) only if not already defined
                 if (parser->curr_item == NULL) return ERR_INTERNAL; // TODO: FIX THIS
-                symtable_insert_new_function_param(SYMTAB_G, dtype_data(TOKEN_KW_T), parser->curr_item->key);  
+                symtable_insert_new_function_param(SYMTAB_G, dtype_keyword(TOKEN_KW_T), parser->curr_item->key);  
             }
 
             // <param_fdef_n>
@@ -621,7 +645,7 @@ int param_fdef_n(parser_t *parser)
                 }
                 
                 // Check current parameter's data type
-                if (FUNC_ITEM->type_params[param_index] != dtype_data(TOKEN_KW_T)) {
+                if (FUNC_ITEM->type_params[param_index] != dtype_keyword(TOKEN_KW_T)) {
                     error_message("Parser", ERR_SEMANTIC_PROG, "function param type mismatch");
                     return ERR_SEMANTIC_PROG;
                 }
@@ -629,7 +653,7 @@ int param_fdef_n(parser_t *parser)
             } else if ((parser->curr_item != NULL) && !(FUNC_ITEM->declared)) {
                 // Insert param into symtable(s) only if not already defined
                 if (parser->curr_item == NULL) return ERR_INTERNAL; // TODO: FIX THIS
-                symtable_insert_new_function_param(SYMTAB_G, dtype_data(TOKEN_KW_T), parser->curr_item->key);  
+                symtable_insert_new_function_param(SYMTAB_G, dtype_keyword(TOKEN_KW_T), parser->curr_item->key);  
             }
              
             param_index++;
@@ -680,7 +704,7 @@ int param_fdec(parser_t *parser)
                 
                 // Insert into symtable(s)
                 if (parser->curr_item == NULL) return ERR_INTERNAL; // TODO: FIX THIS
-                symtable_insert_new_function_param(SYMTAB_G, dtype_data(TOKEN_KW_T), parser->curr_item->key);  
+                symtable_insert_new_function_param(SYMTAB_G, dtype_keyword(TOKEN_KW_T), parser->curr_item->key);  
 
                 // <param_fdec_n>
                 PARSER_EAT();
@@ -726,7 +750,7 @@ int param_fdec_n(parser_t *parser)
             
             // Insert into symtable(s)
             if (parser->curr_item == NULL) return ERR_INTERNAL; // TODO: FIX THIS
-            symtable_insert_new_function_param(SYMTAB_G, dtype_data(TOKEN_KW_T), parser->curr_item->key);  
+            symtable_insert_new_function_param(SYMTAB_G, dtype_keyword(TOKEN_KW_T), parser->curr_item->key);  
             
             PARSER_EAT();
             return param_fdec_n(parser); // calls itself
@@ -766,14 +790,14 @@ int ret_type_list(parser_t *parser)
         
         // If function was previously declared check validity of return value types
         if ((parser->curr_item != NULL) && (FUNC_ITEM->declared && !(FUNC_ITEM->defined))) {
-            if (FUNC_ITEM->ret_types[0] != dtype_data(TOKEN_KW_T)) {
+            if (FUNC_ITEM->ret_types[0] != dtype_keyword(TOKEN_KW_T)) {
                 error_message("Parser", ERR_SEMANTIC_PROG, "function return type mismatch");
                 return ERR_SEMANTIC_PROG;
             }
         } else if ((parser->curr_item != NULL) && !(FUNC_ITEM->declared)) {
             // Insert param into symtable(s) only if not already defined
             if (parser->curr_item == NULL) return ERR_INTERNAL; // TODO: FIX THIS
-            symtable_insert_new_function_ret_type(SYMTAB_G, dtype_data(TOKEN_KW_T), parser->curr_item->key);  
+            symtable_insert_new_function_ret_type(SYMTAB_G, dtype_keyword(TOKEN_KW_T), parser->curr_item->key);  
         }
         
         // <ret_type_list_n>
@@ -894,7 +918,7 @@ int ret_type_list_n(parser_t *parser)
             }
             
             // Check current parameter's data type
-            if (FUNC_ITEM->ret_types[ret_type_index] != dtype_data(TOKEN_KW_T)) {
+            if (FUNC_ITEM->ret_types[ret_type_index] != dtype_keyword(TOKEN_KW_T)) {
                 error_message("Parser", ERR_SEMANTIC_PROG, "function return type mismatch");
                 return ERR_SEMANTIC_PROG;
             }
@@ -902,7 +926,7 @@ int ret_type_list_n(parser_t *parser)
         } else if ((parser->curr_item != NULL) && !(FUNC_ITEM->declared)) {
             // Insert param into symtable(s) only if not already defined
             if (parser->curr_item == NULL) return ERR_INTERNAL; // TODO: FIX THIS
-            symtable_insert_new_function_ret_type(SYMTAB_G, dtype_data(TOKEN_KW_T), parser->curr_item->key);  
+            symtable_insert_new_function_ret_type(SYMTAB_G, dtype_keyword(TOKEN_KW_T), parser->curr_item->key);  
         }
          
         ret_type_index++;
