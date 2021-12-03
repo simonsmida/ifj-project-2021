@@ -357,9 +357,17 @@ int func_call(parser_t *parser)
 
         // RULE 9: <func_call> → 'id' '(' <arg> ')'
         
-        // Check whether function was previously declared/defined
-        if (!(parser->curr_item = symtable_search(parser->global_symtable, TOKEN_REPR))) {
-            error_message("Parser", ERR_SEMANTIC_DEF, "function '%s' not declared", TOKEN_REPR);
+        /** SEMANTIC ACTION - check whether called function was prev. defined/declared **/
+        if ((parser->curr_item = symtable_search(SYMTAB_G, TOKEN_REPR)) != NULL) {
+            // Check declaration and definition
+            if (!(FUNC_ITEM->declared)) {
+                error_message("Parser", ERR_SEMANTIC_DEF, "called function '%s' "
+                "was not previously declared", TOKEN_REPR);
+                return ERR_SEMANTIC_DEF;
+            }
+        } else { // Function ID not found
+            error_message("Parser", ERR_SEMANTIC_DEF, "called function '%s' "
+            "was not previously declared nor defined", TOKEN_REPR);
             return ERR_SEMANTIC_DEF;
         }
         
@@ -518,6 +526,11 @@ int func_head(parser_t *parser)
                 error_message("Parser", ERR_SEMANTIC_DEF, "redefinition of function '%s'", TOKEN_REPR);
                 return ERR_SEMANTIC_DEF;
             }
+
+            if (FUNC_ITEM->declared) {
+                // check corresponding parameters and return types
+            }
+
             FUNC_ITEM->declared = true;
             FUNC_ITEM->defined = true;
 
@@ -560,6 +573,11 @@ int param_fdef(parser_t *parser)
         case TOKEN_ID:
 
             // RULE 10: <param_fdef> → 'id' ':' <dtype> <param_fdef_n>
+            
+            /** SEMANTIC ACTION - check invalid variable name **/
+            if (symtable_search(SYMTAB_G, TOKEN_REPR)) {
+                return ERR_SEMANTIC_DEF; // TODO: check this, chyba 3?
+            }
 
             // TODO: add param ID into the symtable
             
@@ -608,6 +626,11 @@ int param_fdef_n(parser_t *parser)
             
             PARSER_EAT();
             CHECK_TOKEN_TYPE(TOKEN_ID); // 'id'
+            
+            /** SEMANTIC ACTION - check invalid variable name **/
+            if (symtable_search(SYMTAB_G, TOKEN_REPR)) {
+                return ERR_SEMANTIC_DEF; // TODO: check this, chyba 3?
+            }
             
             // TODO: add param into the symtable
             
@@ -665,6 +688,7 @@ int param_fdec(parser_t *parser)
                 return EXIT_OK;
             }
             break; // TODO: beware, must end up in error
+
         case TOKEN_R_PAR:
             
             // RULE 22: <param_fdec> → ε
@@ -1044,9 +1068,26 @@ int stat(parser_t *parser)
             result = expr_list(parser);
             CHECK_RESULT_VALUE_SILENT(EXIT_OK);
             return EXIT_OK;
-        }
+        
+        } else if ((result == EXIT_ID_BEFORE) && (parser->token->type == TOKEN_L_PAR)) {
+            
+            // Potential calling of undefined/undeclared function 
+            
+            // <arg>
+            PARSER_EAT();
+            result = arg(parser);
+            CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+            
+            // we dont need to eat, ')' is current token
+            CHECK_TOKEN_TYPE(TOKEN_R_PAR); 
+            error_message("Parser", ERR_SEMANTIC_DEF, "called function "
+            "was not previously declared nor defined"); // TODO: ak chces id fcie, povedz PA
+            return ERR_SEMANTIC_DEF;
 
-        return ERR_SYNTAX;
+        } else {
+            error_message("Parser", ERR_SYNTAX, "expression parsing failed");
+            return ERR_SYNTAX; // missing or invalid  expression
+        }
     }
 
     error_message("Parser", ERR_SYNTAX, "unexpected token '%s' (%s)", TOKEN_REPR, STRING_TOKEN_T);    
@@ -1135,10 +1176,25 @@ int var_def(parser_t *parser)
             result = expr_list(parser);
             CHECK_RESULT_VALUE_SILENT(EXIT_OK);
             return EXIT_OK;
-        }
-        
-        return ERR_SYNTAX;
 
+        } else if ((result == EXIT_ID_BEFORE) && (parser->token->type == TOKEN_L_PAR)) {
+            // Potential calling of undefined/undeclared function 
+            
+            // <arg>
+            PARSER_EAT();
+            result = arg(parser);
+            CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+            
+            // we dont need to eat, ')' is current token
+            CHECK_TOKEN_TYPE(TOKEN_R_PAR); 
+            error_message("Parser", ERR_SEMANTIC_DEF, "called function "
+            "was not previously declared nor defined"); // TODO: ak chces id fcie, povedz PA
+            return ERR_SEMANTIC_DEF;
+
+        } else {
+            error_message("Parser", ERR_SYNTAX, "expression parsing failed");
+            return ERR_SYNTAX; // missing or invalid  expression
+        }
     } else if (parser->token->type == TOKEN_ID) {
         
         // RULE 41: <var_def> → ε
