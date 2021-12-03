@@ -260,8 +260,10 @@ int analyze_bottom_up(parser_t *parser){
 	/** 3. Push $ sign on the stack */
 	/** 3.1 Generate $ token */
 	PA_item_t item,top_terminal, token_in, handle;
+	token_in.terminal = NULL;
 	item.terminal = generate_empty_token();
-	
+    int prev_token_type = -1;
+
 	/** 3.2 Push $ on the top of the stack */
 	PA_stack_push(&stack, item, 1);
 
@@ -274,6 +276,10 @@ int analyze_bottom_up(parser_t *parser){
 		
 		//Token in
 		if(!reduction){
+            // Store type of previous token
+            if (token_in.terminal != NULL) {
+                prev_token_type = token_in.terminal->type;
+            }
 			token_in.terminal = get_next_token(parser -> src);
 			/** If the generated token is a function id, return read token
 			  	and control to recursive descent parser */
@@ -334,17 +340,17 @@ int analyze_bottom_up(parser_t *parser){
 					//printf("redukujem\n");
 					parser -> token = token_in.terminal;
 					PA_stack_destroy(&stack);
-					return ERR_SYNTAX;
+                    return (prev_token_type == TOKEN_ID) ? EXIT_ID_BEFORE : ERR_SYNTAX;
 				}
 				reduction = 1;
 				
 				PA_stack_top_terminal(&stack,&top_terminal);
 				break;
 			case ERR: 
-				/** Dealloc the stack */
-				parser -> token = token_in.terminal;
+				PA_stack_top(&stack,&item);
 				PA_stack_destroy(&stack);
-				return ERR_SYNTAX; 
+				parser -> token = token_in.terminal;
+                return (prev_token_type == TOKEN_ID) ? EXIT_ID_BEFORE : ERR_SYNTAX;
 			case EPT:
 				/** Dealloc the stack */
 				PA_stack_destroy(&stack);
