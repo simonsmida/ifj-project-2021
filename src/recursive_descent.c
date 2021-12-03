@@ -612,8 +612,7 @@ int param_fdef(parser_t *parser)
             
             if ((parser->curr_item != NULL) && (FUNC_ITEM->declared && !(FUNC_ITEM->defined))) {
                 if (FUNC_ITEM->type_params[0] != dtype_data(TOKEN_KW_TYPE)) {
-                    error_message("Parser", ERR_SEMANTIC_PROG, "function param type mismatch in its "
-                                                              "declaration and definition");
+                    error_message("Parser", ERR_SEMANTIC_PROG, "function param type mismatch");
                     return ERR_SEMANTIC_PROG;
                 }
             } else if ((parser->curr_item != NULL) && !(FUNC_ITEM->declared)) {
@@ -631,6 +630,12 @@ int param_fdef(parser_t *parser)
         case TOKEN_R_PAR:
             
             // RULE 11: <param_fdef> → ε
+            
+            /** SEMANTIC ACTION**/ 
+            if ((parser->curr_item != NULL) && (FUNC_ITEM->num_params != 0)) {
+                error_message("Parser", ERR_SEMANTIC_PROG, "function param count mismatch");
+                return ERR_SEMANTIC_PROG;
+            }
             
             return EXIT_OK;
 
@@ -685,8 +690,7 @@ int param_fdef_n(parser_t *parser)
                 
                 // Check current parameter's data type
                 if (FUNC_ITEM->type_params[param_index] != dtype_data(TOKEN_KW_TYPE)) {
-                    error_message("Parser", ERR_SEMANTIC_PROG, "function param type mismatch "
-                                                               "in its declaration and definition");
+                    error_message("Parser", ERR_SEMANTIC_PROG, "function param type mismatch");
                     return ERR_SEMANTIC_PROG;
                 }
 
@@ -827,7 +831,7 @@ int ret_type_list(parser_t *parser)
         
         // If function was previously declared check validity of return value types
         if ((parser->curr_item != NULL) && (FUNC_ITEM->declared && !(FUNC_ITEM->defined))) {
-            if (FUNC_ITEM->type_params[0] != dtype_data(TOKEN_KW_TYPE)) {
+            if (FUNC_ITEM->ret_types[0] != dtype_data(TOKEN_KW_TYPE)) {
                 error_message("Parser", ERR_SEMANTIC_PROG, "function return type mismatch");
                 return ERR_SEMANTIC_PROG;
             }
@@ -856,6 +860,12 @@ int ret_type_list(parser_t *parser)
             case KEYWORD_IF:
             
                 // RULE 26: <ret_type_list> → ε
+
+                /** SEMANTIC ACTION**/ 
+                if ((parser->curr_item != NULL) && (FUNC_ITEM->num_ret_types != 0)) {
+                    error_message("Parser", ERR_SEMANTIC_PROG, "function return type count mismatch");
+                    return ERR_SEMANTIC_PROG;
+                }
                 
                 // TODO: PARSER_EAT();
                 return EXIT_OK;
@@ -867,12 +877,24 @@ int ret_type_list(parser_t *parser)
         
         // RULE 26: <ret_type_list> → ε
         
+        /** SEMANTIC ACTION**/ 
+        if ((parser->curr_item != NULL) && (FUNC_ITEM->num_ret_types != 0)) {
+            error_message("Parser", ERR_SEMANTIC_PROG, "function return type count mismatch");
+            return ERR_SEMANTIC_PROG;
+        }
+        
         // TODO: add to symtable
         return EXIT_OK;
 
     } else if (parser->token->type == TOKEN_EOF) {
         
         // RULE 26: <ret_type_list> → ε
+        
+        /** SEMANTIC ACTION**/ 
+        if ((parser->curr_item != NULL) && (FUNC_ITEM->num_ret_types != 0)) {
+            error_message("Parser", ERR_SEMANTIC_PROG, "function return type count mismatch");
+            return ERR_SEMANTIC_PROG;
+        }
         
         return EXIT_OK;
     }
