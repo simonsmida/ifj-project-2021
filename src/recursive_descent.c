@@ -1,107 +1,13 @@
+#include <stdbool.h>
+#include <string.h>
+
 #include "include/recursive_descent.h"
 #include "include/bottom_up_sa.h"
 #include "include/error.h"
 #include "include/scanner.h"
 #include "include/parser.h"
 
-#define TOKEN_T parser->token->type
 
-#define SYMTAB_G parser->global_symtable
-#define FUNC_ITEM parser->curr_item->function
-
-#define STRING_TOKEN_T token_type_to_str(TOKEN_T)
-#define STRING_KW_T kw_type_to_str(parser->token->attribute->keyword_type)
-
-#define TOKEN_REPR parser->token->attribute->string
-#define TOKEN_KW_T parser->token->attribute->keyword_type 
-
-#define GET_TOKEN() do {                                                   \
-    destroy_token(parser->token);                                          \
-    parser->token = get_next_token(parser->src);                           \
-    if (parser->token == NULL) {                                           \
-        error_message("Fatal", ERR_INTERNAL, "INTERNAL INTERPRET ERROR!"); \
-        return ERR_INTERNAL;                                               \
-    }                                                                      \
-} while(0)
-
-// TODO: make me func
-// TODO: error message for specific nonterminal rule function
-#define CHECK_RESULT_VALUE(_value) do {                                         \
-    if (result != (_value)) {                                                   \
-        if (TOKEN_T == TOKEN_ERROR) {                                           \
-            error_message("Scanner", result, "unknown token '%s'", TOKEN_REPR); \
-        } else {                                                                \
-            error_message("Parser", result, "unexpected token '%s' (%s)",       \
-                    TOKEN_REPR, STRING_TOKEN_T);                                \
-        }                                                                       \
-        return result;                                                          \
-    }                                                                           \
-} while(0)
-
-#define CHECK_RESULT_VALUE_SILENT(_value) do { \
-    if (result != (_value)) {                  \
-        return result;                         \
-    }                                          \
-} while(0)
-
-#define CHECK_TOKEN_ERROR() do {                                             \
-    if (TOKEN_T == TOKEN_ERROR) {                                            \
-        error_message("Scanner", ERR_LEX, "unknown token '%s'", TOKEN_REPR); \
-        return ERR_LEX; /* scanner handles error message */                  \
-    }                                                                        \
-} while(0)
-
-#define CHECK_TOKEN_TYPE(_type) do {                                    \
-    if (TOKEN_T != (_type)) {                                           \
-        error_message("Parser", ERR_SYNTAX, "expected: '%s', is: '%s'", \
-                      token_type_to_str(_type), STRING_TOKEN_T);        \
-        return ERR_SYNTAX;                                              \
-    }                                                                   \
-} while(0)
-
-#define CHECK_KEYWORD(_type) do {                                               \
-    if (TOKEN_KW_T != (_type)) {                                             \
-        error_message("Parser", ERR_SYNTAX, "expected keyword: '%s', is: '%s'", \
-                      kw_type_to_str(_type), STRING_KW_T);                      \
-        return ERR_SYNTAX;                                                      \
-    }                                                                           \
-} while(0)
-
-
-#define PARSER_EAT() do { \
-    GET_TOKEN();          \
-    CHECK_TOKEN_ERROR();  \
-} while(0)
-
-#define IS_DTYPE(_keyword)           \
-    (_keyword) == KEYWORD_NIL     || \
-    (_keyword) == KEYWORD_NUMBER  || \
-    (_keyword) == KEYWORD_INTEGER || \
-    (_keyword) == KEYWORD_STRING     
-
-#define IS_LITERAL(_token)        \
-    (_token) == TOKEN_NUM_LIT  || \
-    (_token) == TOKEN_INT_LIT  || \
-    (_token) == TOKEN_STR_LIT    
-
-#define IS_NIL(_token) \
-    (((_token) == (TOKEN_KEYWORD)) && ((TOKEN_KW_T) == (KEYWORD_NIL)))
-
-#define HANDLE_SYMTABLE_FUNCTION() do {                                                 \
-    /* Create symtable item for current ID if not present in  symtable */               \
-    if (!(parser->curr_item = symtable_search(SYMTAB_G, TOKEN_REPR))) {                 \
-                                                                                        \
-        /* Current function ID not found in global symtab */                            \
-        parser->curr_item = symtable_insert(SYMTAB_G, TOKEN_REPR);                      \
-        if (parser->curr_item == NULL) {                                                \
-            return ERR_INTERNAL;                                                        \
-        }                                                                               \
-        /* Insert function ID into the newly created item of global symtable */         \
-        if (!(FUNC_ITEM = symtable_create_and_insert_function(SYMTAB_G, TOKEN_REPR))) { \
-            return ERR_INTERNAL;                                                        \
-        }                                                                               \
-    } /* if item not found */                                                           \
-} while(0)
 
 int dtype_data(int keyword_type)
 {
@@ -129,6 +35,12 @@ int prog(parser_t *parser)
 {
     int result;
     
+    // Define built-in functions
+    if ((result = define_every_builtin_function(parser)) != EXIT_OK) {
+        error_message("FATAL", ERR_INTERNAL, "failed to load built-in functions");
+        return result;
+    }
+
     // Rule 1: <prog> → <prolog> <seq> 'EOF'
     
     // <prolog>
@@ -404,9 +316,19 @@ int func_call(parser_t *parser)
         
         // we dont need to eat, ')' is current token
         CHECK_TOKEN_TYPE(TOKEN_R_PAR); 
+        
+        /** SEMANTIC ACTION - check function call argument count **/ 
+        if (FUNC_ITEM->num_params != parser->curr_arg_count) {
+            error_message("Parser", ERR_SEMANTIC_PROG, "invalid number of arguments");
+            return ERR_SEMANTIC_PROG;
+        }
+
+        // Reset current argument count
+        parser->curr_arg_count = 0;
+
         return EXIT_OK;
     }
-
+    
     error_message("Parser", ERR_SYNTAX, "unexpected token '%s' (%s)", TOKEN_REPR, STRING_TOKEN_T);
     return ERR_SYNTAX;
 }
@@ -424,11 +346,14 @@ int arg(parser_t *parser)
         // RULE 10: <arg> → <term> <arg_n>
         
         // TODO: LOCAL SYMTAB
+        // Check if this variable was previously defined
+        // Check if its name does not conflict with function
 
         // <term>
         result = term(parser);
         CHECK_RESULT_VALUE_SILENT(EXIT_OK);
-
+        
+        parser->curr_arg_count += 1;
         // <arg_n>
         PARSER_EAT(); 
         result = arg_n(parser);
@@ -454,7 +379,7 @@ int arg(parser_t *parser)
     } else if (TOKEN_T == TOKEN_R_PAR) {
     
         // RULE 11: <arg> → ε
-
+        
         return EXIT_OK;
     }
     
@@ -506,6 +431,8 @@ int term(parser_t *parser)
     
         // RULE 12: <term> → 'id'
         // TODO: local symtab
+        
+        parser->curr_arg_count += 1;
 
         return EXIT_OK;
 
@@ -513,6 +440,8 @@ int term(parser_t *parser)
         
         // RULE 13: <term> → 'literal' ... 'literal' = str_lit|int_lit|num_lit
         // RULE 14: <term> → 'nil'
+        
+        parser->curr_arg_count += 1;
         
         return EXIT_OK;
     }
