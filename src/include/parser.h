@@ -14,8 +14,8 @@ typedef struct parser {
     FILE *src;
     bool inside_func_def;
     bool inside_func_dec;
-    bool declared_function;
 } parser_t;
+
 
 /**
  * @brief Initialize parser structure
