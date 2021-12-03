@@ -1376,6 +1376,8 @@ int var_def(parser_t *parser)
  */
 int id_n(parser_t *parser)
 {
+    int result;
+
     switch (parser->token->type)
     {
         case TOKEN_COMMA:
@@ -1394,6 +1396,21 @@ int id_n(parser_t *parser)
             // RULE 43: <id_n> → ε
 
             return EXIT_OK;
+
+        case TOKEN_L_PAR: // TODO: adhoc - not in grammar
+            // Check if current statement is function call of undefined
+            // function or syntax error
+            
+            // <arg>
+            PARSER_EAT();
+            result = arg(parser);
+            CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+            
+            // we dont need to eat, ')' is current token
+            CHECK_TOKEN_TYPE(TOKEN_R_PAR); 
+            error_message("Parser", ERR_SEMANTIC_DEF, "called function "
+            "was not previously declared nor defined"); // TODO: ak chces id fcie, povedz PA
+            return ERR_SEMANTIC_DEF;
 
         default: break;
     } // switch()
