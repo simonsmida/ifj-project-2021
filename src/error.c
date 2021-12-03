@@ -32,6 +32,8 @@ char *textify(int err_code)
             return TEXTIFY(ERR_SEMANTIC_DEF);    
         case ERR_SEMANTIC_ASSIGN:
             return TEXTIFY(ERR_SEMANTIC_ASSIGN);        
+        case ERR_SEMANTIC_PROG:
+            return TEXTIFY(ERR_SEMANTIC_PROG);        
         case ERR_SEMANTIC_TC:
             return TEXTIFY(ERR_SEMANTIC_TC);    
         case ERR_SEMANTIC_OTHER:
