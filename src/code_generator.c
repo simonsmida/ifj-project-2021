@@ -75,14 +75,17 @@ void generate_built_in_functions(){
 }
 
 void generate_main(){
-	printf("$MAIN\n");
-
+	printf("LABEL $MAIN\n");
+	printf("CREATEFRAME\n");
+	printf("PUSHFRAME\n");
 	return;
 }
 
 void generate_end(){
 	printf("LABEL $END\n");
-	printf("EXIT int@0\n");
+	printf("CLEARS\n");
+	printf("POPFRAME\n");
+	printf("EXIT int@0\n\n");
 
 	return;
 }
@@ -160,13 +163,14 @@ void generate_built_in_chr(){
 	printf("LABEL CHR\n");
 	printf("POPS GF@temp2\n");
 	printf("INT2CHAR GF@temp1 GF@temp2\n");
-	printf("RETURN\n");
+	printf("RETURN\n\n");
 
 	return;
 }
 
 void generate_function_end(){
-	
+	printf("POPFRAME\n");
+	printf("RETURN\n\n");
 	return;
 }
 
@@ -247,7 +251,7 @@ void generate_return_from_function(){
 void generate_main_label(){
 	printf("LABEL $MAIN\n");
 	printf("CREATEFRAME\n");
-	printf("PUSHFRAME \n");
+	printf("PUSHFRAME \n\n");
 }
 
 void generate_function_param( char *param_id, data_type_t data_type ){
@@ -261,7 +265,7 @@ void generate_function_param( char *param_id, data_type_t data_type ){
 	return;
 }
 
-void generate_pass_param(token_t *token, int param_index){
+void generate_pass_param_to_operation(token_t *token, int param_index){
 	if (token != NULL){
 		switch ( token->type ){
 			case TOKEN_INT_LIT:
@@ -287,6 +291,46 @@ void generate_pass_param(token_t *token, int param_index){
 
 void generate_return_params(token_t *token, int param_index){
 
+}
+
+void generate_push_operand(token_t *token){
+	generate_pass_param_to_operation(token, 0);
+}
+
+void generate_stack_operation(token_t *token){
+	if (token != NULL){
+		switch(token->type){
+			case TOKEN_PLUS:
+				printf("ADDS\n");
+				break;
+			case TOKEN_MINUS:
+				printf("SUBS\n");
+				break;
+			case TOKEN_MUL:
+				printf("MULS\n");
+				break;
+			case TOKEN_DIV:
+				printf("DIVS\n");
+				break;
+			case TOKEN_INT_DIV:
+				printf("IDIVS\n");
+				break;
+		}
+	}
+}
+
+void generate_pop_stack_to_var(char *var_id){
+	printf("POPS LF@%s\n", var_id);
+
+	return;
+}
+
+void generate_start_of_program(){
+	printf("LABEL $MAIN\n");
+	printf("CREATEFRAME\n");
+	printf("PUSHFRAME\n\n");
+
+	return;
 }
 
 

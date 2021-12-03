@@ -39,3 +39,11 @@ void generate_assign_var_to_var(const char *var_to_be_assigned_to, const char *v
 void generate_function_param(); 
 
 void generate_pass_param(token_t *token, int param_index);
+
+void generate_pass_param_to_operation(token_t *token, int param_index);
+
+void generate_function_end ();
+
+void generate_start_of_program();
+
+void generate_pop_stack_to_var(char *var_id);
