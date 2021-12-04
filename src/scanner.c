@@ -620,7 +620,7 @@ token_t *generate_token(string_t *buffer,  int type)
 			break;
 
 		case INSIDE_BLOCK_COMMENT:
-			token->type = TOKEN_START_BLOCK_COMMENT;
+			token->type = TOKEN_ERROR;
 			break;
 
 		case STATE_ERROR:
@@ -863,4 +863,63 @@ void destroy_token(token_t *token){
 	}
 
 	return;
+}
+
+/**
+ * @brief Generates an empty token of TOKEN_EOF type, for
+ *                needs of operator precedence parser
+ *
+ * @return token structure
+ */
+token_t *generate_empty_token(void){
+        /** 1. Alloc token structure */
+    token_t *token = (token_t *) malloc(sizeof(token_t));
+    if (token == NULL) {
+        fprintf(stderr,"Intern malloc problem");
+        return NULL;
+    }
+        /** 2. Alloc token attribute structure */
+    token->attribute = calloc(1,sizeof(token_attribute_t));
+
+        if (token->attribute == NULL){
+                fprintf(stderr,"Intern malloc problem");
+        return NULL;
+        }
+        /** 3. Initializing attributes */
+        token->type = TOKEN_EOF;
+        token->attribute->integer = 0;
+        token->attribute->number = 0.0f;
+        token->attribute->string = NULL;
+        token->attribute->keyword_type = -1;
+        return token;
+}
+/**
+ * @brief Deep copy of one token structure to another
+ *
+ * @param src Token which will be copied
+ *
+ * @return token structure
+ */
+token_t *copy_token(token_t* src){
+        /** 1. Alloc token structure */
+        token_t *copy = generate_empty_token();
+
+        /** 2. Initialize */
+        copy->type = src->type;
+        copy->attribute->integer = src->attribute->integer;
+        copy->attribute->number  = src->attribute->number;
+        copy->attribute->keyword_type = src->attribute->keyword_type;
+
+        /** 3. If the string attribute is not empty alloc and init it */
+        if(src->attribute->string != NULL){
+                copy->attribute->string = (char*)malloc(strlen(src->attribute->string) + 1);
+                if (copy->attribute->string == NULL){
+                        fprintf(stderr, "Intern malloc problem\n");
+                        return NULL;
+                }
+                copy->attribute->string[strlen(src->attribute->string)] = '\0';
+                strcpy(copy->attribute->string, src->attribute->string);
+        }
+
+        return copy;
 }

@@ -30,12 +30,20 @@ typedef enum data_type {
     DTYPE_NIL,
 } data_type_t;
 
+typedef union data_type_value{
+	int integer;
+	float number;
+	char *string;
+}data_type_value_t;
+
 typedef struct symbol_data {
     data_type_t type;
     bool defined; // whether variable had been defined or not
 } symbol_data_t;
 
 typedef struct item_function {
+    bool defined;
+    bool declared;
 	int num_params;
 	int num_ret_types;
 	data_type_t *type_params;
@@ -44,6 +52,7 @@ typedef struct item_function {
 
 typedef struct item_const_var {
 	symbol_data_t data;
+	data_type_value_t value;
 	bool is_var;
 } const_var_t;
 
@@ -141,6 +150,7 @@ void symtable_insert_new_function_param(symtable_t *s ,data_type_t data, const c
  * @param data The type of the new found function return type
  * @param key Hash to the table
  */
+//void symtable_insert_new_function_ret_type(symtable_t *s ,data_type_t data, symtable_item_t *item);
 void symtable_insert_new_function_ret_type(symtable_t *s ,data_type_t data, const char *key);
 
 

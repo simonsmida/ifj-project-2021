@@ -1,6 +1,7 @@
 
 // TODO code_gen.h move to the include file
 #include "include/code_generator.h"
+#include<stdarg.h>
 
 void CODE(const char *fmt, ...) {
    va_list args;

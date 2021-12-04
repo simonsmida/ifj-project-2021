@@ -33,7 +33,7 @@ void generate_function_call(const char *func_name);
 
 
 
-//void generate_assign_value_to_var(const char *var_name, data_type_t data_type, data_type_value_t value );
+void generate_assign_value_to_var(const char *var_name, data_type_t data_type, data_type_value_t value );
 void generate_assign_var_to_var(const char *var_to_be_assigned_to, const char *var_to_be_assigned);
 
 void generate_function_param(); 
