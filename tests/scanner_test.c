@@ -772,8 +772,8 @@ void TEST_Expr(void)
     
     token = get_next_token(srcfile);
     TEST_ASSERT_EQUAL_INT32(TOKEN_MUL,token->type);
-    destroy_token(token);
     //TEST_ASSERT_EQUAL_STRING("*",token->attribute->string);
+    destroy_token(token);  
 
     token = get_next_token(srcfile);
     TEST_ASSERT_EQUAL_INT32(TOKEN_ID,token->type);

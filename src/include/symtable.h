@@ -22,8 +22,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-typedef struct symtable symtable_t;
-
 typedef enum data_type {
     DTYPE_UNKNOWN = 0,
     DTYPE_INT,
@@ -35,8 +33,8 @@ typedef enum data_type {
 typedef struct item_function {
     bool defined;
     bool declared;
-	int  num_params;
-	int  num_ret_types;
+	int num_params;
+	int num_ret_types;
 	data_type_t *type_params;
 	data_type_t *ret_types;
 	symtable_t 	*local_symtable;	//Scope within the function
@@ -52,15 +50,15 @@ typedef struct item_const_var {
 
 typedef struct symtable_item {
     char *key;
-    const_var_t 	*const_var;
-	item_function_t  *function;
+    const_var_t *const_var;
+    item_function_t *function;
     struct symtable_item *next;
 } symtable_item_t;
 
 typedef struct symtable {
-    unsigned int size;			// total number of items in htab
-    unsigned int items_size;	// number of items in htab list
-    symtable_item_t *items[];	// linked list of items
+    unsigned int size; // total number of items in htab
+    unsigned int items_size; // number of items in htab list
+    symtable_item_t *items[]; // linked list of items
 } symtable_t;
 
 

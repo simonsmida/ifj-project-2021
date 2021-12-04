@@ -6,7 +6,7 @@
 #include "include/error.h"
 #include "include/scanner.h"
 #include "include/parser.h"
-
+#include "include/code_generator.h"
 
 
 int dtype_keyword(int keyword_type)
@@ -110,8 +110,10 @@ int prolog(parser_t *parser)
                 error_message("Parser", ERR_SYNTAX, "expected: \"%s\", is: \"%s\"", "ifj21", TOKEN_REPR);
                 return ERR_SYNTAX;
             }
-             
+            
             PARSER_EAT();
+	    //generate_head();
+	    //generate_built_in_functions();
             return EXIT_OK;
 
         default: break;
@@ -1154,9 +1156,8 @@ int stat(parser_t *parser)
                 // <var_def>
                 PARSER_EAT();
                 result = var_def(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK);
-                // TODO: nemusi byt vzdy definovana po tomto! 
-                item->const_var->defined = true;
+		//generate_pop_stack_to_var(id_name);
+                CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
                 
                 return EXIT_OK;
             
