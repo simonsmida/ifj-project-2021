@@ -281,7 +281,7 @@ int analyze_bottom_up(parser_t *parser){
                 prev_token_type = token_in.terminal->type;
             }
 			
-			token_in.terminal = get_next_token(parser -> src);
+			token_in.terminal = get_next_token(stdin);
 			/** If the generated token is a function id, return read token
 			  	and control to recursive descent parser */
 			if(token_in.terminal->type == TOKEN_ID){
