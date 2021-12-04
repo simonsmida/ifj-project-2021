@@ -549,14 +549,26 @@ int param_fdef(parser_t *parser)
 
             // RULE 10: <param_fdef> → 'id' ':' <dtype> <param_fdef_n>
             
+            // TODO: required? 
             /** SEMANTIC ACTION - check invalid variable name **/
             if (symtable_search(SYMTAB_G, TOKEN_REPR)) {
                 error_message("Parser", ERR_SEMANTIC_DEF, "invalid variable name '%s'", TOKEN_REPR);
                 return ERR_SEMANTIC_DEF; // TODO: check this, chyba 3?
             }
-
-            // TODO: add param ID into the symtable
             
+            // Create new item in local symtable - check semantics (redeclaration)
+            symtable_item_t *item;
+            if ((item = symtable_search(SYMTAB_L_CURRENT, TOKEN_REPR)) != NULL) {
+                error_message("Parser", ERR_SEMANTIC_DEF, "invalid variable name '%s'", TOKEN_REPR);
+                return ERR_SEMANTIC_DEF; // TODO: check this, chyba 3?
+            }
+
+            // Insert current variable ID into newly created item in local symtable
+            if ((item = symtable_insert(SYMTAB_L_CURRENT, TOKEN_REPR)) == NULL) {
+                return ERR_INTERNAL;
+            }
+
+            // Continue parsing 
             PARSER_EAT(); /* : */
             CHECK_TOKEN_TYPE(TOKEN_COLON);
 
@@ -565,6 +577,7 @@ int param_fdef(parser_t *parser)
             result = dtype(parser);
             CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
             
+            /** SEMANTIC ACTION - check param type mismatch **/
             if ((parser->curr_item != NULL) && (FUNC_ITEM->declared && !(FUNC_ITEM->defined))) {
                 if (FUNC_ITEM->type_params[0] != dtype_keyword(TOKEN_KW_T)) {
                     error_message("Parser", ERR_SEMANTIC_PROG, "function param type mismatch");
@@ -575,6 +588,15 @@ int param_fdef(parser_t *parser)
                 if (parser->curr_item == NULL) return ERR_INTERNAL; // TODO: FIX THIS
                 symtable_insert_new_function_param(SYMTAB_G, dtype_keyword(TOKEN_KW_T), parser->curr_item->key);  
             }
+            
+            // Store useful data about current parameter - always variable, always defined
+            const_var_t *param;
+            if ((param = symtable_create_const_var(true, true, dtype_keyword(TOKEN_KW_T))) == NULL) {
+                return ERR_INTERNAL;
+            }
+
+            // Insert created const_var into created item of current local symtable
+            symtable_insert_const_var(SYMTAB_L_CURRENT, item->key, param);
 
             // <param_fdef_n>
             PARSER_EAT();
@@ -627,6 +649,18 @@ int param_fdef_n(parser_t *parser)
                 return ERR_SEMANTIC_DEF; // TODO: check this, chyba 3?
             }
             
+            // Create new item in local symtable - check semantics (redeclaration)
+            symtable_item_t *item;
+            if ((item = symtable_search(SYMTAB_L_CURRENT, TOKEN_REPR)) != NULL) {
+                error_message("Parser", ERR_SEMANTIC_DEF, "invalid variable name '%s'", TOKEN_REPR);
+                return ERR_SEMANTIC_DEF; // TODO: check this, chyba 3?
+            }
+
+            // Insert current variable ID into newly created item in local symtable
+            if ((item = symtable_insert(SYMTAB_L_CURRENT, TOKEN_REPR)) == NULL) {
+                return ERR_INTERNAL;
+            }
+            
             PARSER_EAT(); /* ':' */
             CHECK_TOKEN_TYPE(TOKEN_COLON);
 
@@ -655,6 +689,15 @@ int param_fdef_n(parser_t *parser)
                 if (parser->curr_item == NULL) return ERR_INTERNAL; // TODO: FIX THIS
                 symtable_insert_new_function_param(SYMTAB_G, dtype_keyword(TOKEN_KW_T), parser->curr_item->key);  
             }
+            
+            // Store useful data about current parameter - always variable, always defined
+            const_var_t *param;
+            if ((param = symtable_create_const_var(true, true, dtype_keyword(TOKEN_KW_T))) == NULL) {
+                return ERR_INTERNAL;
+            }
+
+            // Insert created const_var into created item of current local symtable
+            symtable_insert_const_var(SYMTAB_L_CURRENT, item->key, param);
              
             param_index++;
 

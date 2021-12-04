@@ -12,6 +12,7 @@ typedef struct parser {
     // semantic analysis
     token_t *token;
     FILE *src;
+    int curr_arg_count;
     bool inside_func_def;
     bool inside_func_dec;
 } parser_t;
