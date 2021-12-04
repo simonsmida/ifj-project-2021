@@ -5,9 +5,10 @@
 #include "scanner.h"
 
 typedef struct parser {
-    symtable_t *local_symtable;
     symtable_t *global_symtable;
     symtable_item_t *curr_item;
+    symtable_item_t *curr_func;
+    symtable_item_t *curr_rhs;
     // list of tokens?
     // semantic analysis
     token_t *token;
@@ -41,10 +42,12 @@ void parser_destroy(parser_t *parser);
 #define SYMTAB_G parser->global_symtable
 
 // TODO: beware of null!
-#define SYMTAB_L_CURRENT parser->curr_item->function->local_symtable
-#define CURRENT_KEY parser->curr_item->key
+#define SYMTAB_L parser->curr_func->function->local_symtable
+#define CURR_F_KEY parser->curr_func->key
 
+#define CURR_FUNC parser->curr_func->function
 #define FUNC_ITEM parser->curr_item->function
+#define C_VAR_ITEM parser->curr_item->const_var
 
 #define STRING_TOKEN_T token_type_to_str(TOKEN_T)
 #define STRING_KW_T kw_type_to_str(parser->token->attribute->keyword_type)
@@ -142,12 +145,23 @@ void parser_destroy(parser_t *parser);
 } while(0)
 #endif
 
-#define HANDLE_SYMTABLE_FUNCTION() do {                                                         \
+#define HANDLE_SYMTABLE_FUNC_DEC() do {                                                         \
     /* Create symtable item for current ID if not present in symtable */                        \
     if (!(parser->curr_item = symtable_search(SYMTAB_G, TOKEN_REPR))) {                         \
         /* Current function ID not found in global symtab */                                    \
         /* Insert function ID into the newly created item of global symtable */                 \
         if (!(parser->curr_item = symtable_create_and_insert_function(SYMTAB_G, TOKEN_REPR))) { \
+            return ERR_INTERNAL;                                                                \
+        }                                                                                       \
+    } /* if item not found */                                                                   \
+} while(0)
+
+#define HANDLE_SYMTABLE_FUNC_DEF() do {                                                         \
+    /* Create symtable item for current ID if not present in symtable */                        \
+    if (!(parser->curr_func = symtable_search(SYMTAB_G, TOKEN_REPR))) {                         \
+        /* Current function ID not found in global symtab */                                    \
+        /* Insert function ID into the newly created item of global symtable */                 \
+        if (!(parser->curr_func = symtable_create_and_insert_function(SYMTAB_G, TOKEN_REPR))) { \
             return ERR_INTERNAL;                                                                \
         }                                                                                       \
     } /* if item not found */                                                                   \

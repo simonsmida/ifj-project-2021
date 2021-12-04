@@ -31,7 +31,10 @@ parser_t *parser_init(FILE *src)
     parser->inside_func_def = false;
     parser->inside_func_dec = false;
     parser->src = src;
+
+    parser->curr_func = NULL;
     parser->curr_item = NULL;
+    parser->curr_rhs = NULL;
     
     return parser;
 }
@@ -78,6 +81,9 @@ int parser_parse(FILE *src)
 void parser_destroy(parser_t *parser)
 {
     destroy_token(parser->token);
+    parser->curr_func = NULL;
+    parser->curr_item = NULL;
+    parser->curr_rhs = NULL;
     // Destroying global symtab handles destruction of locals
     symtable_destroy(SYMTAB_G);
     free(parser);
