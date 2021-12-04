@@ -3,6 +3,7 @@
 #include "include/error.h"
 #include "include/scanner.h"
 #include "include/parser.h"
+#include "include/code_generator.h"
 
 #define SYMTAB_G parser->global_symtable
 #define FUNC_ITEM parser->curr_item->function
@@ -176,6 +177,8 @@ int prolog(parser_t *parser)
             }
             
             PARSER_EAT();
+			generate_head();
+			generate_built_in_functions();
             return EXIT_OK;
 
         default: break;
@@ -269,8 +272,8 @@ int func_dec(parser_t *parser)
             
                 PARSER_EAT(); /* 'id' */
                 CHECK_TOKEN_TYPE(TOKEN_ID);   
-               
                 HANDLE_SYMTABLE_FUNCTION();
+				
                 
                 /** SEMANTIC ACTION - function redeclaration **/
                 if (FUNC_ITEM->declared) { 
@@ -357,6 +360,7 @@ int func_def(parser_t *parser)
         // No need too eat - current token is 'end'
         CHECK_TOKEN_TYPE(TOKEN_KEYWORD); 
         CHECK_KEYWORD(KEYWORD_END);  // 'end'
+		generate_function_end();
         
         return EXIT_OK; 
     }
@@ -377,7 +381,7 @@ int func_call(parser_t *parser)
     if (parser->token->type == TOKEN_ID) {
 
         // RULE 9: <func_call> → 'id' '(' <arg> ')'
-        
+        char function_id[100];
         /** SEMANTIC ACTION - check whether called function was prev. defined/declared **/
         if ((parser->curr_item = symtable_search(SYMTAB_G, TOKEN_REPR)) != NULL) {
             // Check declaration and definition
@@ -391,7 +395,7 @@ int func_call(parser_t *parser)
             "was not previously declared nor defined", TOKEN_REPR);
             return ERR_SEMANTIC_DEF;
         }
-        
+        strcpy(function_id, parser->token->attribute->string);
         PARSER_EAT(); /* '(' */
         CHECK_TOKEN_TYPE(TOKEN_L_PAR); 
         
@@ -402,6 +406,7 @@ int func_call(parser_t *parser)
         
         // we dont need to eat, ')' is current token
         CHECK_TOKEN_TYPE(TOKEN_R_PAR); 
+		generate_function_call(function_id);
         return EXIT_OK;
     }
 
@@ -501,14 +506,14 @@ int arg_n(parser_t *parser)
 int term(parser_t *parser)
 {
     if (parser->token->type == TOKEN_ID) {
-    
+		generate_pass_param_to_operation(parser->token , parser->token->type);
         // RULE 12: <term> → 'id'
         // TODO: local symtab
 
         return EXIT_OK;
 
     } else if (IS_LITERAL(parser->token->type) || IS_NIL(parser->token->type)) {
-        
+        generate_pass_param_to_operation(parser->token, 0);
         // RULE 13: <term> → 'literal' ... 'literal' = str_lit|int_lit|num_lit
         // RULE 14: <term> → 'nil'
         
@@ -538,6 +543,7 @@ int func_head(parser_t *parser)
             
             PARSER_EAT();
             CHECK_TOKEN_TYPE(TOKEN_ID); // 'id'
+			generate_function_label(parser->token->attribute->string);
             
             HANDLE_SYMTABLE_FUNCTION();
 
@@ -601,6 +607,7 @@ int param_fdef(parser_t *parser)
             }
 
             // TODO: add param ID into the symtable
+			generate_var_declaration(parser->token->attribute->string, parser->token->type);
             
             PARSER_EAT(); /* : */
             CHECK_TOKEN_TYPE(TOKEN_COLON);
@@ -665,6 +672,8 @@ int param_fdef_n(parser_t *parser)
             
             PARSER_EAT();
             CHECK_TOKEN_TYPE(TOKEN_ID); // 'id'
+
+			generate_var_declaration(parser->token->attribute->string, parser->token->type);
             
             /** SEMANTIC ACTION - check invalid variable name **/
             if (symtable_search(SYMTAB_G, TOKEN_REPR)) {
@@ -1073,7 +1082,7 @@ int stat_list(parser_t *parser)
 int stat(parser_t *parser)
 {
     int result;
-
+	char id_name[100];
     if (parser->token->type == TOKEN_KEYWORD) {
         switch (TOKEN_KW_TYPE) 
         {
@@ -1083,7 +1092,9 @@ int stat(parser_t *parser)
 
                 PARSER_EAT();
                 CHECK_TOKEN_TYPE(TOKEN_ID); // 'id'
+				strcpy(id_name, parser->token->attribute->string);
                 // TODO symtable
+				generate_var_declaration(id_name, parser->token->type);
                 
                 /** SEMANTIC ACTION - check invalid variable name **/
                 if (symtable_search(SYMTAB_G, TOKEN_REPR)) {
@@ -1102,6 +1113,7 @@ int stat(parser_t *parser)
                 // <var_def>
                 PARSER_EAT();
                 result = var_def(parser);
+				generate_pop_stack_to_var(id_name);
                 CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
                 
                 return EXIT_OK;

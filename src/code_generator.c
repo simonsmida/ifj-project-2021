@@ -184,7 +184,7 @@ void generate_function_label(const char *func_name){
 
 void generate_var_declaration(const char *var_name, data_type_t data_type){
 	printf("DEFVAR LF@%s\n", var_name);
-	printf("MOVE LF@%s ", var_name);
+	printf("MOVE LF@%s\n", var_name);
 
 	switch( data_type ){
 		case DTYPE_INT:
@@ -333,4 +333,10 @@ void generate_start_of_program(){
 	return;
 }
 
+
+void generate_pass_value(token_t *token){
+	if (token != NULL){
+		
+	}
+}
 
