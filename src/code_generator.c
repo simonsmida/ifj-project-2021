@@ -1,6 +1,6 @@
 
 // TODO code_gen.h move to the include file
-#include "code_generator.h"
+#include "include/code_generator.h"
 
 void generate_built_in_write(bool is_global, token_t *token){
 	
@@ -75,14 +75,17 @@ void generate_built_in_functions(){
 }
 
 void generate_main(){
-	printf("$MAIN\n");
-
+	printf("LABEL $MAIN\n");
+	printf("CREATEFRAME\n");
+	printf("PUSHFRAME\n");
 	return;
 }
 
 void generate_end(){
 	printf("LABEL $END\n");
-	printf("EXIT int@0\n");
+	printf("CLEARS\n");
+	printf("POPFRAME\n");
+	printf("EXIT int@0\n\n");
 
 	return;
 }
@@ -160,11 +163,16 @@ void generate_built_in_chr(){
 	printf("LABEL CHR\n");
 	printf("POPS GF@temp2\n");
 	printf("INT2CHAR GF@temp1 GF@temp2\n");
-	printf("RETURN\n");
+	printf("RETURN\n\n");
 
 	return;
 }
 
+void generate_function_end(){
+	printf("POPFRAME\n");
+	printf("RETURN\n\n");
+	return;
+}
 
 void generate_function_label(const char *func_name){
 	printf("LABEL %s\n", func_name);
@@ -179,16 +187,16 @@ void generate_var_declaration(const char *var_name, data_type_t data_type){
 	printf("MOVE LF@%s ", var_name);
 
 	switch( data_type ){
-		DTYPE_INT:
+		case DTYPE_INT:
 			printf("int@0\n");
 			break;
-		DTYPE_NIL:
+		case DTYPE_NIL:
 			printf("nil@nil\n");
 			break;
-		DTYPE_STRING:
+		case  DTYPE_STRING:
 			printf("string@\n");
 			break;
-		DTYPE_NUMBER:
+		case DTYPE_NUMBER:
 			printf("float@0.0\n");
 			break;
 		default:
@@ -204,7 +212,125 @@ void generate_function_call(const char *func_name){
 	return;
 }
 
-void generate_assign_value_to_var(const char *var_name, ){
+void generate_assign_value_to_var(const char *var_name, data_type_t data_type, data_type_value_t value ){
+
+	printf("MOVE LF@%s ", var_name);
+	
+	switch( data_type ){
+		case DTYPE_INT:
+			printf("int@%d\n", value.integer);
+			break;
+		case DTYPE_NUMBER:
+			printf("float@%f\n", value.number);
+			break;
+		case DTYPE_STRING:
+			printf("string@%s\n", value.string);
+			break;
+		case DTYPE_NIL:
+			printf("nil@nil\n");
+			break;
+		default:
+			break;
+	}
 
 	return;
 }
+
+void generate_assign_var_to_var(const char *var_to_be_assigned_to, const char *var_to_be_assigned){
+	printf("MOVE LF@%s LF@%s \n", var_to_be_assigned_to, var_to_be_assigned);
+	return;
+}
+
+void generate_return_from_function(){
+	printf("POPFRAME\n");
+	printf("RETURN\n\n");
+
+	return;
+}
+
+void generate_main_label(){
+	printf("LABEL $MAIN\n");
+	printf("CREATEFRAME\n");
+	printf("PUSHFRAME \n\n");
+}
+
+void generate_function_param( char *param_id, data_type_t data_type ){
+
+	printf("DEFVAR LF@%s\n", param_id);
+	
+	printf("\n");
+	
+	
+
+	return;
+}
+
+void generate_pass_param_to_operation(token_t *token, int param_index){
+	if (token != NULL){
+		switch ( token->type ){
+			case TOKEN_INT_LIT:
+				printf("PUSHS int@%d\n", token->attribute->integer);
+				break;
+			case TOKEN_NUM_LIT  :
+				printf("PUSHS number@%f\n", token->attribute->number);
+				break;
+			case TOKEN_STR_LIT:
+				printf("PUSHS string@%s\n", token->attribute->string);
+				break;
+			case TOKEN_ID:
+				printf("PUSHS LF@%s\n", token->attribute->string);
+				break;
+		
+			default:
+				break;
+		}
+	}
+
+	return;
+}
+
+void generate_return_params(token_t *token, int param_index){
+
+}
+
+void generate_push_operand(token_t *token){
+	generate_pass_param_to_operation(token, 0);
+}
+
+void generate_stack_operation(token_t *token){
+	if (token != NULL){
+		switch(token->type){
+			case TOKEN_PLUS:
+				printf("ADDS\n");
+				break;
+			case TOKEN_MINUS:
+				printf("SUBS\n");
+				break;
+			case TOKEN_MUL:
+				printf("MULS\n");
+				break;
+			case TOKEN_DIV:
+				printf("DIVS\n");
+				break;
+			case TOKEN_INT_DIV:
+				printf("IDIVS\n");
+				break;
+		}
+	}
+}
+
+void generate_pop_stack_to_var(char *var_id){
+	printf("POPS LF@%s\n", var_id);
+
+	return;
+}
+
+void generate_start_of_program(){
+	printf("LABEL $MAIN\n");
+	printf("CREATEFRAME\n");
+	printf("PUSHFRAME\n\n");
+
+	return;
+}
+
+

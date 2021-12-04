@@ -30,6 +30,12 @@ typedef enum data_type {
     DTYPE_NIL,
 } data_type_t;
 
+typedef union data_type_value{
+	int integer;
+	float number;
+	char *string;
+}data_type_value_t;
+
 typedef struct symbol_data {
     data_type_t type;
     bool defined; // whether variable had been defined or not
@@ -46,6 +52,7 @@ typedef struct item_function {
 
 typedef struct item_const_var {
 	symbol_data_t data;
+	data_type_value_t value;
 	bool is_var;
 } const_var_t;
 
