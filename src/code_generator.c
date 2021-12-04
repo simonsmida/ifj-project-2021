@@ -193,8 +193,8 @@ void generate_function_label(const char *func_name){
 }
 
 void generate_var_declaration(const char *var_name, data_type_t data_type){
-	CODE("DEFVAR LF@%s", var_name);
-	CODE("MOVE LF@%s ", var_name);
+	printf("DEFVAR LF@%s\n", var_name);
+	printf("MOVE LF@%s\n", var_name);
 
 	switch( data_type ){
 		case DTYPE_INT:
