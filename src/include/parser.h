@@ -13,6 +13,7 @@ typedef struct parser {
     token_t *token;
     FILE *src;
     int curr_arg_count;
+    int curr_scope;
     bool inside_func_def;
     bool inside_func_dec;
 } parser_t;
@@ -40,7 +41,8 @@ void parser_destroy(parser_t *parser);
 #define SYMTAB_G parser->global_symtable
 
 // TODO: beware of null!
-#define SYMTAB_L_CURRENT parser->curr_item->local_symtable
+#define SYMTAB_L_CURRENT parser->curr_item->function->local_symtable
+#define CURRENT_KEY parser->curr_item->key
 
 #define FUNC_ITEM parser->curr_item->function
 
@@ -122,6 +124,7 @@ void parser_destroy(parser_t *parser);
 #define IS_NIL(_token) \
     (((_token) == (TOKEN_KEYWORD)) && ((TOKEN_KW_T) == (KEYWORD_NIL)))
 
+#if 0
 #define HANDLE_SYMTABLE_FUNCTION() do {                                                 \
     /* Create symtable item for current ID if not present in  symtable */               \
     if (!(parser->curr_item = symtable_search(SYMTAB_G, TOKEN_REPR))) {                 \
@@ -136,6 +139,18 @@ void parser_destroy(parser_t *parser);
             return ERR_INTERNAL;                                                        \
         }                                                                               \
     } /* if item not found */                                                           \
+} while(0)
+#endif
+
+#define HANDLE_SYMTABLE_FUNCTION() do {                                                         \
+    /* Create symtable item for current ID if not present in symtable */                        \
+    if (!(parser->curr_item = symtable_search(SYMTAB_G, TOKEN_REPR))) {                         \
+        /* Current function ID not found in global symtab */                                    \
+        /* Insert function ID into the newly created item of global symtable */                 \
+        if (!(parser->curr_item = symtable_create_and_insert_function(SYMTAB_G, TOKEN_REPR))) { \
+            return ERR_INTERNAL;                                                                \
+        }                                                                                       \
+    } /* if item not found */                                                                   \
 } while(0)
 
 /**

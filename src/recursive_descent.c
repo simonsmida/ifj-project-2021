@@ -388,6 +388,7 @@ int arg(parser_t *parser)
         // <term>
         result = term(parser);
         CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+        parser->curr_arg_count += 1;
 
         // <arg_n>
         PARSER_EAT(); 
@@ -424,6 +425,7 @@ int arg_n(parser_t *parser)
         PARSER_EAT(); 
         result = term(parser);
         CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+        parser->curr_arg_count += 1;
         
         // <arg_n> calls itself
         PARSER_EAT();
@@ -440,6 +442,24 @@ int arg_n(parser_t *parser)
     return ERR_SYNTAX;
 }
 
+char *dothejob(int x)
+{
+    switch (x) {
+        case DTYPE_UNKNOWN:
+            return "DTYPE_UNKNOWN";
+        case DTYPE_INT:
+            return "DTYPE_INT";
+        case DTYPE_NUMBER:
+            return "DTYPE_NUMBER";
+        case DTYPE_STRING:
+            return "DTYPE_STRING";
+        case DTYPE_NIL:
+            return "DTYPE_NIL";
+        default:
+            break;
+    }
+    return "error";
+}
 
 /**
  * @brief Nonterminal <term>
@@ -452,20 +472,17 @@ int term(parser_t *parser)
         // RULE 12: <term> → 'id'
         // TODO: local symtab - check arg type semantics
         
-        parser->curr_arg_count += 1;
-
         return EXIT_OK;
 
     } else if (IS_LITERAL(TOKEN_T) || IS_NIL(TOKEN_T)) {
         
         // RULE 13: <term> → 'literal' ... 'literal' = str_lit|int_lit|num_lit
         // RULE 14: <term> → 'nil'
-
         if (FUNC_ITEM->type_params[parser->curr_arg_count] != dtype_token(parser)) {
+            printf("key: %d\n", parser->curr_item->function->num_params);
             error_message("Parser", ERR_SEMANTIC_PROG, "invalid argument type");
             return ERR_SEMANTIC_PROG;
         }
-        parser->curr_arg_count += 1;
         
         return EXIT_OK;
     }
@@ -558,16 +575,16 @@ int param_fdef(parser_t *parser)
             
             // Create new item in local symtable - check semantics (redeclaration)
             symtable_item_t *item;
-            if ((item = symtable_search(SYMTAB_L_CURRENT, TOKEN_REPR)) != NULL) {
+            if ((item = symtable_search(SYMTAB_L_CURRENT, TOKEN_REPR)) != NULL) { // item already exists
                 error_message("Parser", ERR_SEMANTIC_DEF, "invalid variable name '%s'", TOKEN_REPR);
                 return ERR_SEMANTIC_DEF; // TODO: check this, chyba 3?
             }
 
             // Insert current variable ID into newly created item in local symtable
-            if ((item = symtable_insert(SYMTAB_L_CURRENT, TOKEN_REPR)) == NULL) {
+            if ((item = symtable_insert_const_var(SYMTAB_L_CURRENT, TOKEN_REPR)) == NULL) {
                 return ERR_INTERNAL;
             }
-
+            
             // Continue parsing 
             PARSER_EAT(); /* : */
             CHECK_TOKEN_TYPE(TOKEN_COLON);
@@ -589,14 +606,12 @@ int param_fdef(parser_t *parser)
                 symtable_insert_new_function_param(SYMTAB_G, dtype_keyword(TOKEN_KW_T), parser->curr_item->key);  
             }
             
-            // Store useful data about current parameter - always variable, always defined
-            const_var_t *param;
-            if ((param = symtable_create_const_var(true, true, dtype_keyword(TOKEN_KW_T))) == NULL) {
-                return ERR_INTERNAL;
-            }
-
-            // Insert created const_var into created item of current local symtable
-            symtable_insert_const_var(SYMTAB_L_CURRENT, item->key, param);
+            // Store useful data about current parameter
+            item->const_var->is_var = true;
+            item->const_var->declared = true;
+            item->const_var->defined = true;
+            item->const_var->scope = -1;
+            item->const_var->type = dtype_keyword(TOKEN_KW_T);
 
             // <param_fdef_n>
             PARSER_EAT();
@@ -657,7 +672,7 @@ int param_fdef_n(parser_t *parser)
             }
 
             // Insert current variable ID into newly created item in local symtable
-            if ((item = symtable_insert(SYMTAB_L_CURRENT, TOKEN_REPR)) == NULL) {
+            if ((item = symtable_insert_const_var(SYMTAB_L_CURRENT, TOKEN_REPR)) == NULL) {
                 return ERR_INTERNAL;
             }
             
@@ -690,15 +705,13 @@ int param_fdef_n(parser_t *parser)
                 symtable_insert_new_function_param(SYMTAB_G, dtype_keyword(TOKEN_KW_T), parser->curr_item->key);  
             }
             
-            // Store useful data about current parameter - always variable, always defined
-            const_var_t *param;
-            if ((param = symtable_create_const_var(true, true, dtype_keyword(TOKEN_KW_T))) == NULL) {
-                return ERR_INTERNAL;
-            }
-
-            // Insert created const_var into created item of current local symtable
-            symtable_insert_const_var(SYMTAB_L_CURRENT, item->key, param);
-             
+            // Store useful data about current parameter
+            item->const_var->is_var = true;
+            item->const_var->declared = true;
+            item->const_var->defined = true;
+            item->const_var->scope = -1;
+            item->const_var->type = dtype_keyword(TOKEN_KW_T);
+            // Keey track of new parameters
             param_index++;
 
             PARSER_EAT();

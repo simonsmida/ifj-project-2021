@@ -26,6 +26,7 @@ parser_t *parser_init(FILE *src)
         return NULL;
     }  
     
+    parser->curr_scope = -1; 
     parser->curr_arg_count = 0;
     parser->inside_func_def = false;
     parser->inside_func_dec = false;
