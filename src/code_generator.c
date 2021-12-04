@@ -1,6 +1,16 @@
 
 // TODO code_gen.h move to the include file
 #include "include/code_generator.h"
+#include<stdarg.h>
+
+void CODE(const char *fmt, ...) {
+   va_list args;
+   
+   va_start(args, fmt);
+   vprintf(fmt, args);
+   va_end(args);
+   printf("\n");
+}
 
 void generate_built_in_write(bool is_global, token_t *token){
 	
@@ -11,54 +21,54 @@ void generate_built_in_write(bool is_global, token_t *token){
 			return;
 		}
 		else if (is_global){
-			printf("WRITE GF@%s\n", token->attribute->string);
+			CODE("WRITE GF@%s", token->attribute->string);
 		}
 		else {
-			printf("WRITE LF@%s\n", token->attribute->string);
+			CODE("WRITE LF@%s", token->attribute->string);
 		}
 	}
 	else if (token->type == TOKEN_STR_LIT){
-		printf("WRITE string@%s\n", token->attribute->string);
+		CODE("WRITE string@%s", token->attribute->string);
 	}
 	else if (token->type == TOKEN_INT_LIT){
-		printf("WRITE int@%d\n", token->attribute->integer);
+		CODE("WRITE int@%d", token->attribute->integer);
 	}
 	else if (token->type == TOKEN_NUM_LIT){
-		printf("WRITE num@%a\n", token->attribute->number);
+		CODE("WRITE float@%a", token->attribute->number);
 	}
 
 	return;
 }
 
 void generate_head(){
-	printf(".IFJcode21\n");
-	printf("DEFVAR GF@temp1\n");
-	printf("DEFVAR GF@temp2\n");
-	printf("DEFVAR GF@temp3\n\n");
-	printf("\nJUMP $MAIN\n");
+	CODE(".IFJcode21");
+	CODE("DEFVAR GF@temp1");
+	CODE("DEFVAR GF@temp2");
+	CODE("DEFVAR GF@temp3\n");
+	CODE("\nJUMP $MAIN");
 	return;
 }
 
 void generate_built_in_reads(){
-	printf("LABEL READS\n");
-	printf("READ GF@temp1 string\n");
-	printf("RETURN\n\n");
+	CODE("LABEL READS");
+	CODE("READ GF@temp1 string");
+	CODE("RETURN\n");
 
 	return;
 }
 
 void generate_built_in_readi(){
-	printf("LABEL READI\n");
-	printf("READ GF@temp1 int\n");
-	printf("RETURN\n\n");
+	CODE("LABEL READI");
+	CODE("READ GF@temp1 int");
+	CODE("RETURN\n");
 
 	return;
 }
 
 void generate_built_in_readn(){
-	printf("LABEL READN\n");
-	printf("READ GF@temp1 float\n");
-	printf("RETURN\n\n");
+	CODE("LABEL READN");
+	CODE("READ GF@temp1 float");
+	CODE("RETURN\n");
 
 	return;
 }
@@ -75,72 +85,72 @@ void generate_built_in_functions(){
 }
 
 void generate_main(){
-	printf("LABEL $MAIN\n");
-	printf("CREATEFRAME\n");
-	printf("PUSHFRAME\n");
+	CODE("LABEL $MAIN");
+	CODE("CREATEFRAME");
+	CODE("PUSHFRAME");
 	return;
 }
 
 void generate_end(){
-	printf("LABEL $END\n");
-	printf("CLEARS\n");
-	printf("POPFRAME\n");
-	printf("EXIT int@0\n\n");
+	CODE("LABEL $END");
+	CODE("CLEARS");
+	CODE("POPFRAME");
+	CODE("EXIT int@0\n");
 
 	return;
 }
 
 void generate_built_in_substr(){
 	// substr ( string, int_start, int_stop   )
-	printf("LABEL SUBSTR\n");
-	printf("CREATEFRAME\n");
-	printf("PUSHFRAME\n");
-	printf("DEFVAR LF@temp_char\n");
-	printf("DEFVAR LF@ret_string\n");
-	printf("MOVE LF@ret_string string@\n");
-	printf("DEFVAR LF@str_len\n");
-	printf("DEFVAR LF@bool_var\n");
-	printf("MOVE LF@bool_var bool@true\n");
-	printf("POPS GF@temp3\n"); // This is the stop byte
-	printf("POPS GF@temp2\n"); // This is start byte
-	printf("POPS GF@temp1\n"); // This is the string
-	printf("SUB GF@temp2 GF@temp2 int@1\n");
-	printf("SUB GF@temp3 GF@temp3 int@1\n");
-	printf("STRLEN LF@str_len GF@temp1\n");
+	CODE("LABEL SUBSTR");
+	CODE("CREATEFRAME");
+	CODE("PUSHFRAME");
+	CODE("DEFVAR LF@temp_char");
+	CODE("DEFVAR LF@ret_string");
+	CODE("MOVE LF@ret_string string@");
+	CODE("DEFVAR LF@str_len");
+	CODE("DEFVAR LF@bool_var");
+	CODE("MOVE LF@bool_var bool@true");
+	CODE("POPS GF@temp3"); // This is the stop byte
+	CODE("POPS GF@temp2"); // This is start byte
+	CODE("POPS GF@temp1"); // This is the string
+	CODE("SUB GF@temp2 GF@temp2 int@1");
+	CODE("SUB GF@temp3 GF@temp3 int@1");
+	CODE("STRLEN LF@str_len GF@temp1");
 	// Check if j > strlen
-	printf("CLEARS\n");
+	CODE("CLEARS");
 
-	printf("GT LF@bool_var LF@str_len GF@temp3\n");
-	printf("JUMPIFEQ RETURN_EMPTY LF@bool_var bool@false\n\n");
+	CODE("GT LF@bool_var LF@str_len GF@temp3");
+	CODE("JUMPIFEQ RETURN_EMPTY LF@bool_var bool@false\n");
 
-	printf("GT LF@bool_var GF@temp2 GF@temp3\n");
+	CODE("GT LF@bool_var GF@temp2 GF@temp3");
 
-	printf("JUMPIFEQ RETURN_EMPTY LF@bool_var bool@true\n\n");
-	printf("JUMP REPEAT_OK\n\n");
+	CODE("JUMPIFEQ RETURN_EMPTY LF@bool_var bool@true\n");
+	CODE("JUMP REPEAT_OK\n");
 
 
 
-	printf("LABEL REPEAT_OK\n");
-	printf("GETCHAR LF@temp_char GF@temp1 GF@temp2\n");
-	printf("CONCAT LF@ret_string LF@ret_string LF@temp_char\n");
-	printf("ADD GF@temp2 GF@temp2 int@1\n");
+	CODE("LABEL REPEAT_OK");
+	CODE("GETCHAR LF@temp_char GF@temp1 GF@temp2");
+	CODE("CONCAT LF@ret_string LF@ret_string LF@temp_char");
+	CODE("ADD GF@temp2 GF@temp2 int@1");
 
-	printf("GT LF@bool_var GF@temp2 GF@temp3\n");
+	CODE("GT LF@bool_var GF@temp2 GF@temp3");
 
-	printf("JUMPIFEQ END_OK LF@bool_var bool@true\n");
-	printf("JUMP REPEAT_OK\n\n");
+	CODE("JUMPIFEQ END_OK LF@bool_var bool@true");
+	CODE("JUMP REPEAT_OK\n");
 
-	printf("LABEL END_OK\n");
-	printf("CLEARS\n");
-	printf("MOVE GF@temp1 LF@ret_string\n");
-	printf("POPFRAME\n");
-	printf("RETURN\n\n"); // idk
+	CODE("LABEL END_OK");
+	CODE("CLEARS");
+	CODE("MOVE GF@temp1 LF@ret_string");
+	CODE("POPFRAME");
+	CODE("RETURN\n"); // idk
 
-	printf("LABEL RETURN_EMPTY\n");
-	printf("CLEARS\n");
-	printf("POPFRAME\n");
-	printf("MOVE GF@temp1 string@\n");
-	printf("RETURN\n\n"); // idk
+	CODE("LABEL RETURN_EMPTY");
+	CODE("CLEARS");
+	CODE("POPFRAME");
+	CODE("MOVE GF@temp1 string@");
+	CODE("RETURN\n"); // idk
 
 }
 
@@ -148,36 +158,36 @@ void generate_built_in_ord(){
 	// ord ( string, int ) : int
 	// Vrati ordinalnu hodnotu ASCII znaku stringu na pozicii int
 	//  TODO Dat sem straze
-	printf("LABEL ORD\n");
-	printf("POPS GF@temp2\n"); // Toto bude ten int
-	printf("POPS GF@temp1\n"); // Toto bude string
-	printf("SUB GF@temp2 GF@temp2 int@1\n");
-	printf("STRI2INT GF@temp3 GF@temp1 GF@temp2\n");
-	printf("RETURN \n\n");
+	CODE("LABEL ORD");
+	CODE("POPS GF@temp2"); // Toto bude ten int
+	CODE("POPS GF@temp1"); // Toto bude string
+	CODE("SUB GF@temp2 GF@temp2 int@1");
+	CODE("STRI2INT GF@temp3 GF@temp1 GF@temp2");
+	CODE("RETURN\n");
 	
 	return;
 }
 
 void generate_built_in_chr(){
 	// chr ( int ) : string
-	printf("LABEL CHR\n");
-	printf("POPS GF@temp2\n");
-	printf("INT2CHAR GF@temp1 GF@temp2\n");
-	printf("RETURN\n\n");
+	CODE("LABEL CHR");
+	CODE("POPS GF@temp2");
+	CODE("INT2CHAR GF@temp1 GF@temp2");
+	CODE("RETURN\n");
 
 	return;
 }
 
 void generate_function_end(){
-	printf("POPFRAME\n");
-	printf("RETURN\n\n");
+	CODE("POPFRAME");
+	CODE("RETURN\n");
 	return;
 }
 
 void generate_function_label(const char *func_name){
-	printf("LABEL %s\n", func_name);
-	printf("CREATEFRAME \n");
-	printf("PUSHFRAME \n");
+	CODE("LABEL %s", func_name);
+	CODE("CREATEFRAME ");
+	CODE("PUSHFRAME ");
 
 	return;
 }
@@ -188,16 +198,16 @@ void generate_var_declaration(const char *var_name, data_type_t data_type){
 
 	switch( data_type ){
 		case DTYPE_INT:
-			printf("int@0\n");
+			CODE("int@0");
 			break;
 		case DTYPE_NIL:
-			printf("nil@nil\n");
+			CODE("nil@nil");
 			break;
 		case  DTYPE_STRING:
-			printf("string@\n");
+			CODE("string@");
 			break;
 		case DTYPE_NUMBER:
-			printf("float@0.0\n");
+			CODE("float@0x0p-1 ");
 			break;
 		default:
 			break;
@@ -207,61 +217,59 @@ void generate_var_declaration(const char *var_name, data_type_t data_type){
 }
 
 void generate_function_call(const char *func_name){
-	printf("CALL %s\n", func_name);
+	CODE("CALL %s", func_name);
 
 	return;
 }
 
-void generate_assign_value_to_var(const char *var_name, data_type_t data_type, data_type_value_t value ){
+// void generate_assign_value_to_var(const char *var_name, data_type_t data_type, data_type_value_t value ){
 
-	printf("MOVE LF@%s ", var_name);
+// 	CODE("MOVE LF@%s ", var_name);
 	
-	switch( data_type ){
-		case DTYPE_INT:
-			printf("int@%d\n", value.integer);
-			break;
-		case DTYPE_NUMBER:
-			printf("float@%f\n", value.number);
-			break;
-		case DTYPE_STRING:
-			printf("string@%s\n", value.string);
-			break;
-		case DTYPE_NIL:
-			printf("nil@nil\n");
-			break;
-		default:
-			break;
-	}
+// 	switch( data_type ){
+// 		case DTYPE_INT:
+// 			CODE("int@%d", value.integer);
+// 			break;
+// 		case DTYPE_NUMBER:
+// 			CODE("float@%f", value.number);
+// 			break;
+// 		case DTYPE_STRING:
+// 			CODE("string@%s", value.string);
+// 			break;
+// 		case DTYPE_NIL:
+// 			CODE("nil@nil");
+// 			break;
+// 		default:
+// 			break;
+// 	}
 
-	return;
-}
+// 	return;
+// }
 
 void generate_assign_var_to_var(const char *var_to_be_assigned_to, const char *var_to_be_assigned){
-	printf("MOVE LF@%s LF@%s \n", var_to_be_assigned_to, var_to_be_assigned);
+	CODE("MOVE LF@%s LF@%s ", var_to_be_assigned_to, var_to_be_assigned);
 	return;
 }
 
 void generate_return_from_function(){
-	printf("POPFRAME\n");
-	printf("RETURN\n\n");
+	CODE("POPFRAME");
+	CODE("RETURN\n");
 
 	return;
 }
 
 void generate_main_label(){
-	printf("LABEL $MAIN\n");
-	printf("CREATEFRAME\n");
-	printf("PUSHFRAME \n\n");
+	CODE("LABEL $MAIN");
+	CODE("CREATEFRAME");
+	CODE("PUSHFRAME \n");
 }
 
 void generate_function_param( char *param_id, data_type_t data_type ){
 
-	printf("DEFVAR LF@%s\n", param_id);
+	CODE("DEFVAR LF@%s", param_id);
 	
-	printf("\n");
+	CODE("");
 	
-	
-
 	return;
 }
 
@@ -269,18 +277,17 @@ void generate_pass_param_to_operation(token_t *token, int param_index){
 	if (token != NULL){
 		switch ( token->type ){
 			case TOKEN_INT_LIT:
-				printf("PUSHS int@%d\n", token->attribute->integer);
+				CODE("PUSHS int@%d", token->attribute->integer);
 				break;
 			case TOKEN_NUM_LIT  :
-				printf("PUSHS number@%f\n", token->attribute->number);
+				CODE("PUSHS number@%f", token->attribute->number);
 				break;
 			case TOKEN_STR_LIT:
-				printf("PUSHS string@%s\n", token->attribute->string);
+				CODE("PUSHS string@%s", token->attribute->string);
 				break;
 			case TOKEN_ID:
-				printf("PUSHS LF@%s\n", token->attribute->string);
+				CODE("PUSHS LF@%s", token->attribute->string);
 				break;
-		
 			default:
 				break;
 		}
@@ -297,46 +304,169 @@ void generate_push_operand(token_t *token){
 	generate_pass_param_to_operation(token, 0);
 }
 
+void check_nil(){
+
+	static int i = 0;
+	CODE("DEFVAR GF@tmp4");
+	CODE("POPS GF@tmp1");
+	CODE("POPS GF@tmp2");
+
+	CODE("TYPE GF@tmp3 GF@tmp1");
+	CODE("EQ GF@tmp3 GF@tmp3 string@nil");
+
+	CODE("TYPE GF@tmp3 GF@tmp2");
+	CODE("EQ GF@tmp4 GF@tmp3 string@nil");
+
+	CODE("OR GF@tmp3 GF@tmp3 GF@tmp4");
+
+	CODE("JUMPIFEQ $nnil$%d GF@tmp3 bool@false", i);
+
+	CODE("EXIT int@8");
+
+	CODE("LABEL $nnil$%d", i);			//POZOR MUSI BYT UNIKATNE
+	CODE("PUSHS GF@tmp2");
+	CODE("PUSHS GF@tmp1");
+	i++;	
+}
+
+void generate_strlen(){
+	static int i = 0;
+	CODE("POPS GF@tmp1");
+	CODE("TYPE GF@tmp3 GF@tmp1");
+	CODE("EQ GF@tmp3 GF@tmp3 string@nil");
+	CODE("JUMPIFEQ $nnilStrlen$%d GF@tmp3 bool@false", i);
+	CODE("EXIT int@8");
+	CODE("LABEL $nnilStrlen$%d", i);
+	CODE("STRLEN GF@tmp2 GF@tmp1");
+	CODE("PUSHS GF@tmp2");
+	i++;
+}
+
+void generate_div(){
+	static int i = 0;
+	CODE("POPS GF@tmp1");
+	CODE("EQ GF@tmp3 GF@tmp1 float@0x0.0p+0");
+	CODE("JUMPIFEQ $notZeroDiv$%d GF@tmp3 bool@false", i); //POZOR!!! NAVESTI NOTZERO MUSI BYT UNIKATNE
+	CODE("EXIT int@9");
+	CODE("LABEL $notZeroDiv$%d", i);
+	CODE("PUSHS GF@tmp1");
+	CODE("DIVS");
+	i++;
+}
+
+void generate_idiv(){
+	static int i = 0;
+	CODE("POPS GF@tmp1");
+	CODE("EQ GF@tmp3 GF@tmp1 int@0");
+	CODE("JUMPIFEQ $notZeroIdiv$%d GF@tmp3 bool@false", i); //POZOR!!! NAVESTI NOTZERO MUSI BYT UNIKATNE
+	CODE("EXIT int@9");
+	CODE("LABEL $notZeroIdiv$%d", i);
+	CODE("PUSHS GF@tmp1");
+	CODE("IDIVS");
+	i++;
+}
+
 void generate_stack_operation(token_t *token){
+	if(token->type != TOKEN_STRLEN || token->type != TOKEN_EQ || token->type != TOKEN_NOT_EQ)
+		check_nil();
+
 	if (token != NULL){
 		switch(token->type){
 			case TOKEN_PLUS:
-				printf("ADDS\n");
+				CODE("ADDS");
 				break;
 			case TOKEN_MINUS:
-				printf("SUBS\n");
+				CODE("SUBS");
 				break;
 			case TOKEN_MUL:
-				printf("MULS\n");
+				CODE("MULS");
 				break;
 			case TOKEN_DIV:
-				printf("DIVS\n");
+				generate_div();
 				break;
 			case TOKEN_INT_DIV:
-				printf("IDIVS\n");
+				generate_idiv();
+				break;
+			case TOKEN_LT:
+				CODE("LTS");
+				break;
+			case TOKEN_LE:
+				CODE("POPS GF@tmp1");
+				CODE("POPS GF@tmp2");
+				CODE("PUSHS GF@tmp2");
+				CODE("PUSHS GF@tmp1");
+				CODE("EQS");
+				CODE("PUSHS GF@tmp2");
+				CODE("PUSHS GF@tmp1");
+				CODE("LTS");
+				CODE("ORS");
+				break;
+			case TOKEN_EQ:
+				CODE("EQS");
+				break;
+			case TOKEN_GE:
+				CODE("POPS GF@tmp1");
+				CODE("POPS GF@tmp2");
+				CODE("PUSHS GF@tmp2");
+				CODE("PUSHS GF@tmp1");
+				CODE("EQS");
+				CODE("PUSHS GF@tmp2");
+				CODE("PUSHS GF@tmp1");
+				CODE("GTS");
+				CODE("ORS");
+				break;
+			case TOKEN_GT:
+				CODE("GTS");
+				break;
+			case TOKEN_NOT_EQ:
+				CODE("EQS");
+				CODE("NOTS");
+				break;
+			case TOKEN_CONCAT:
+				CODE("POPS GF@tmp1");
+				CODE("POPS GF@tmp2");
+				CODE("CONCAT GF@tmp3 GF@tmp2 GF@tmp1");
+				CODE("PUSHS GF@tmp3");
+				break;
+			case TOKEN_STRLEN:
+				generate_strlen();
+				break;
+			default:
 				break;
 		}
 	}
+	destroy_token(token);
+}
+
+void generate_type_conversion(int op){//konverzia bude vzdy len z int na number???
+
+	//a + b ... a is the first operand, b is the second operand
+	//converting a 
+	check_nil();
+	if(op == 1){													
+		CODE("POPS GF@tmp2");	// 	 stack 
+		CODE("POPS GF@tmp1");	//   +----------+
+		CODE("PUSHS GF@tmp1");	//   |    b     | 
+		CODE("INT2FLOATS");		//   +----------+
+		CODE("PUSHS GF@tmp2");	//   |    a     |
+								//   +----------+ 
+	}
+	else{						//converting b
+		CODE("INT2FLOATS");
+	}	
 }
 
 void generate_pop_stack_to_var(char *var_id){
-	printf("POPS LF@%s\n", var_id);
+	CODE("POPS LF@%s", var_id);
 
 	return;
 }
 
 void generate_start_of_program(){
-	printf("LABEL $MAIN\n");
-	printf("CREATEFRAME\n");
-	printf("PUSHFRAME\n\n");
+	CODE("LABEL $MAIN");
+	CODE("CREATEFRAME");
+	CODE("PUSHFRAME\n");
 
 	return;
-}
-
-
-void generate_pass_value(token_t *token){
-	if (token != NULL){
-		
-	}
 }
 
