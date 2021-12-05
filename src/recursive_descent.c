@@ -409,7 +409,7 @@ int arg(parser_t *parser)
         */
         if ((item = most_recent_vardef(SYMTAB_L, TOKEN_REPR, parser->curr_block_depth, true)) == NULL) {
             //printf("block depth -> %d\n\n", parser->curr_block_depth);
-            error_message("Parser", ERR_SEMANTIC_DEF, "variable '%s' is undefined", TOKEN_REPR);
+            error_message("Parser", ERR_SEMANTIC_DEF, "variable '%s' is not defined here", TOKEN_REPR);
             return ERR_SEMANTIC_DEF;    
         }
         ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1009,9 +1009,12 @@ int ret_type_list_n(parser_t *parser)
             case KEYWORD_WHILE:
                 
                 // RULE 28: <ret_type_list_n> → ε
+
+                /*
                 if (parser->curr_func != NULL && !parser->curr_func->function->defined) {
                     printf("curr ret types: %d, curr rt index: %d\n\n", CURR_FUNC->num_ret_types, ret_type_index);
-                } 
+                } */
+
                 //////////////////////////////////////////////////////////////////////////////////////////////
                 /** SEMANTIC ACTION - check if function declaration has more params **/
                 if ((parser->curr_func != NULL) && CURR_FUNC->num_ret_types > ret_type_index) {
@@ -1216,16 +1219,16 @@ int stat(parser_t *parser)
                 result = dtype(parser);
                 CHECK_RESULT_VALUE(EXIT_OK); 
                
-                printf("function id: %s\n", parser->curr_func->key); 
-                printf("Curr id: %s\n", item->key);
-                printf("Curr block: id [%d], depth: %d\n\n", parser->curr_block_id,
-                                                             parser->curr_block_depth);
+                //printf("function id: %s\n", parser->curr_func->key); 
+                //printf("Curr id: %s\n", item->key);
+                //printf("Curr block: id [%d], depth: %d\n\n", parser->curr_block_id, parser->curr_block_depth);
                 // TODO: print also item block info
 
                 // Store useful data about current parameter
                 item->const_var->is_var = true;
                 item->const_var->declared = true; //TODO: definition
                 item->const_var->type = dtype_keyword(TOKEN_KW_T);
+                parser->curr_item = item; // TODO: do this in assignment case also
                 
                 // <var_def>
                 PARSER_EAT();
@@ -1353,15 +1356,16 @@ int stat(parser_t *parser)
         }
         
         //////////////////////////////////////////////////////////////////////////////////////////////
-        // Current id is variable - its an assignment
+        /** SEMANTIC ACTION **/
+        // Current id is variable or undeclared function - its an assignment
         // Check whether it was at least declared
         symtable_item_t *item_dec; 
         if (!(item_dec = most_recent_vardef(SYMTAB_L, TOKEN_REPR, parser->curr_block_depth, false))) {
-            error_message("Parser", ERR_SEMANTIC_DEF, "undeclared variable '%s'", TOKEN_REPR);
+            error_message("Parser", ERR_SEMANTIC_DEF, "undeclared variable/function '%s'", TOKEN_REPR);
             return ERR_SEMANTIC_DEF;
         } 
         //////////////////////////////////////////////////////////////////////////////////////////////
-
+        
         // <id_n> 
         PARSER_EAT();
         result = id_n(parser);
@@ -1373,13 +1377,15 @@ int stat(parser_t *parser)
         // *ATTENTION* - nondeterminism handling - func id vs var id
         result = analyze_bottom_up(parser);
         switch (result) 
-        {
+        { // TODO: Define const var
             case EXIT_OK:
+                item_dec->const_var->defined = true;
                 result = expr_list(parser);
                 CHECK_RESULT_VALUE_SILENT(EXIT_OK);
                 return EXIT_OK;
 
             case EXIT_FUNC_ID:
+                item_dec->const_var->defined = true;
                 // Semantic check handled by func_call()
                 result = func_call(parser);
                 CHECK_RESULT_VALUE_SILENT(EXIT_OK);
@@ -1495,9 +1501,11 @@ int var_def(parser_t *parser)
             case EXIT_OK:
                 result = expr_list(parser);
                 CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+                parser->curr_item->const_var->defined = true;
                 return EXIT_OK;
 
             case EXIT_FUNC_ID:
+                parser->curr_item->const_var->defined = true;
                 // Semantic check handled by func_call()
                 result = func_call(parser);
                 CHECK_RESULT_VALUE_SILENT(EXIT_OK);
