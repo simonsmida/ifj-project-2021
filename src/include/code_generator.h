@@ -45,3 +45,5 @@ void generate_createframe();
 void generate_var_declaration_function(const char *var_name, int num_of_param);
 
 void generate_pass_param_to_operation(token_t *token);
+
+void generate_createframe();

@@ -338,6 +338,12 @@ void generate_return_params(token_t *token, int param_index){
 
 }
 
+void generate_createframe(){
+	printf("CREATEFRAME\n");
+
+	return;
+}
+
 void generate_push_operand(token_t *token){
 	generate_pass_param_to_operation(token);
 }
