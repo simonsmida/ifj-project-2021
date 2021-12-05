@@ -70,11 +70,11 @@ int prog(parser_t *parser)
     
     // <prolog>
     result = prolog(parser); 
-    CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+    CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
 
     // <seq>
     result = seq(parser);
-    CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+    CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
 
     // Check End Of File
     CHECK_TOKEN_TYPE(TOKEN_EOF);
@@ -157,7 +157,7 @@ int seq(parser_t *parser)
 
                 // <func_dec>
                 result = func_dec(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
                 
                 // <seq> calls itself
                 return seq(parser); 
@@ -168,7 +168,7 @@ int seq(parser_t *parser)
                 
                 // <func_def>
                 result = func_def(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
                 
                 // <seq> calls itself
                 PARSER_EAT();
@@ -180,7 +180,7 @@ int seq(parser_t *parser)
             
             // Nondeterminism not present - if not func_call, its syntax error
             result = func_call(parser);
-            CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+            CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
 
             // <seq> calls itself
             PARSER_EAT();
@@ -246,7 +246,7 @@ int func_dec(parser_t *parser)
                 // <param_fdec>
                 PARSER_EAT();
                 result = param_fdec(parser); 
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
                 
                 // Already eaten - just check validity 
                 CHECK_TOKEN_TYPE(TOKEN_R_PAR); /* ')' */
@@ -254,7 +254,7 @@ int func_dec(parser_t *parser)
                 // <ret_type_list>
                 PARSER_EAT();
                 result = ret_type_list(parser); 
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
                 
                 // If everything went well function is now declared
                 FUNC_ITEM->declared = true;
@@ -300,7 +300,7 @@ int func_def(parser_t *parser)
         
         // <func_head> - block_depth = -1
         result = func_head(parser);
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
 
         // Function body starts here 
         parser->curr_block_depth += 1; // increase block depth
@@ -310,7 +310,7 @@ int func_def(parser_t *parser)
 
         // <stat_list>
         result = stat_list(parser);
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
         
         // No need to eat - current token is 'end'
         CHECK_TOKEN_TYPE(TOKEN_KEYWORD); 
@@ -364,7 +364,7 @@ int func_call(parser_t *parser)
         // <arg>
         PARSER_EAT();
         result = arg(parser);
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
         
         // we dont need to eat, ')' is current token
         CHECK_TOKEN_TYPE(TOKEN_R_PAR); 
@@ -428,12 +428,12 @@ int arg(parser_t *parser)
         
         // <term>
         result = term(parser);
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
         
         // <arg_n>
         PARSER_EAT(); 
         result = arg_n(parser);
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
         
         return EXIT_OK;
 
@@ -441,12 +441,12 @@ int arg(parser_t *parser)
         
         // <term>
         result = term(parser);
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
 
         // <arg_n>
         PARSER_EAT(); 
         result = arg_n(parser);
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
         
         return EXIT_OK;
 
@@ -476,7 +476,7 @@ int arg_n(parser_t *parser)
         // <term>
         PARSER_EAT(); 
         result = term(parser);
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
 
         
         // <arg_n> calls itself
@@ -603,7 +603,7 @@ int func_head(parser_t *parser)
             // <param_fdef>
             PARSER_EAT();
             result = param_fdef(parser); 
-            CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+            CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
 
             // TODO: PARSER_EAT();
             CHECK_TOKEN_TYPE(TOKEN_R_PAR); // ')'
@@ -611,7 +611,7 @@ int func_head(parser_t *parser)
             // <ret_type_list>
             PARSER_EAT();
             result = ret_type_list(parser); 
-            CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+            CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
              
             // If everyting went well, function is now declared and defined
             CURR_FUNC->declared = true;
@@ -669,7 +669,7 @@ int param_fdef(parser_t *parser)
             // <dtype>
             PARSER_EAT();
             result = dtype(parser);
-            CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+            CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
             
             ////////////////////////////////////////////////////////////////////////////////////////////// 
             /** SEMANTIC ACTION - check param type mismatch **/
@@ -703,7 +703,7 @@ int param_fdef(parser_t *parser)
             // <param_fdef_n>
             PARSER_EAT();
             result = param_fdef_n(parser);
-            CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+            CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
             
             return EXIT_OK;
 
@@ -770,7 +770,7 @@ int param_fdef_n(parser_t *parser)
             // <dtype>
             PARSER_EAT();
             result = dtype(parser);
-            CHECK_RESULT_VALUE(EXIT_OK); 
+            CHECK_RESULT_VALUE(result, EXIT_OK); 
             
             ////////////////////////////////////////////////////////////////////////////////////////////// 
             /** SEMANTIC ACTION - check function's param validity **/
@@ -847,7 +847,7 @@ int param_fdec(parser_t *parser)
 
                 // <dtype>
                 result = dtype(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
                 
                 // Insert into symtable(s)
                 if (parser->curr_item == NULL) return ERR_INTERNAL; // TODO: FIX THIS
@@ -856,7 +856,7 @@ int param_fdec(parser_t *parser)
                 // <param_fdec_n>
                 PARSER_EAT();
                 result = param_fdec_n(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
                 
                 return EXIT_OK;
             }
@@ -890,7 +890,7 @@ int param_fdec_n(parser_t *parser)
             // <dtype>
             PARSER_EAT();
             result = dtype(parser);
-            CHECK_RESULT_VALUE_SILENT(EXIT_OK); // TODO: check me 
+            CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); // TODO: check me 
             
             // Insert into symtable(s)
             if (parser->curr_item == NULL) return ERR_INTERNAL; // TODO: FIX THIS
@@ -927,7 +927,7 @@ int ret_type_list(parser_t *parser)
         // <dtype>
         PARSER_EAT();
         result = dtype(parser);
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
         
         //////////////////////////////////////////////////////////////////////////////////////////////
         // If function was previously declared check validity of return value types
@@ -956,7 +956,7 @@ int ret_type_list(parser_t *parser)
         // <ret_type_list_n>
         PARSER_EAT();
         result = ret_type_list_n(parser);
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
         return EXIT_OK;
 
     } else if (TOKEN_T == TOKEN_KEYWORD) {
@@ -1059,7 +1059,7 @@ int ret_type_list_n(parser_t *parser)
         // <dtype>
         PARSER_EAT();
         result = dtype(parser);
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
        
         //////////////////////////////////////////////////////////////////////////////////////////////
         /** SEMANTIC ACTION - check function's return values validity **/
@@ -1156,7 +1156,7 @@ int stat_list(parser_t *parser)
                 
                 // <stat>
                 result = stat(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
                 
                 return stat_list(parser); // calls itself  
 
@@ -1173,7 +1173,7 @@ int stat_list(parser_t *parser)
     } else if (TOKEN_T == TOKEN_ID) { // RULE 30: <stat_list> → <stat> <stat_list>
         // <stat>
         result = stat(parser);
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
         return stat_list(parser); // calls itself  
     } 
     
@@ -1243,7 +1243,7 @@ int stat(parser_t *parser)
                 // <dtype>
                 PARSER_EAT();
                 result = dtype(parser);
-                CHECK_RESULT_VALUE(EXIT_OK); 
+                CHECK_RESULT_VALUE(result, EXIT_OK); 
                
                 //printf("function id: %s\n", parser->curr_func->key); 
                 //printf("Curr id: %s\n", item->key);
@@ -1263,7 +1263,7 @@ int stat(parser_t *parser)
 
 		        //generate_pop_stack_to_var(id_name);
 
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
                 
                 return EXIT_OK;
             
@@ -1271,7 +1271,7 @@ int stat(parser_t *parser)
                 
                 // Current token is 'if' - switch context
                 result = analyze_bottom_up(parser);
-                CHECK_RESULT_VALUE(EXIT_OK);
+                CHECK_RESULT_VALUE(result, EXIT_OK);
 
                 // 'then'
                 CHECK_TOKEN_TYPE(TOKEN_KEYWORD); 
@@ -1288,11 +1288,11 @@ int stat(parser_t *parser)
                 // <stat_list>
                 PARSER_EAT();
                 result = stat_list(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
                 
                 // <else> - do not eat, we need this token
                 result = else_nt(parser); 
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
                  
                 // Do not eat, 'end' is current token
                 CHECK_TOKEN_TYPE(TOKEN_KEYWORD);
@@ -1308,7 +1308,7 @@ int stat(parser_t *parser)
                 
                 // Current token is 'while' - switch context
                 result = analyze_bottom_up(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
                 /*
                 if ((result == EXIT_EMPTY_EXPR) || (result == ERR_SYNTAX)) {
                     error_message("Parser", ERR_SYNTAX, "expression parsing failed");
@@ -1330,7 +1330,7 @@ int stat(parser_t *parser)
                 // <stat_list>
                 PARSER_EAT(); 
                 result = stat_list(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
 
                 CHECK_TOKEN_TYPE(TOKEN_KEYWORD); // 'end'
                 CHECK_KEYWORD(KEYWORD_END);
@@ -1345,7 +1345,7 @@ int stat(parser_t *parser)
 
                 // Current token is  'return'
                 result = analyze_bottom_up(parser);
-                CHECK_RESULT_VALUE(EXIT_OK); 
+                CHECK_RESULT_VALUE(result, EXIT_OK); 
 
                 // Currently we either parsed expression, or the expression was
                 // empty, in both cases we continue further - unlike with if and while
@@ -1355,7 +1355,7 @@ int stat(parser_t *parser)
 
                 // <expr_list>
                 result = expr_list(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
                  
                 return EXIT_OK;
 
@@ -1375,7 +1375,7 @@ int stat(parser_t *parser)
             // Current ID is function id
             if ((item->function != NULL) && (item->function->declared)) {
                 result = func_call(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
                 PARSER_EAT();
                 return EXIT_OK;
             }
@@ -1395,7 +1395,7 @@ int stat(parser_t *parser)
         // <id_n> 
         PARSER_EAT();
         result = id_n(parser);
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
         
         /* '=' */
         CHECK_TOKEN_TYPE(TOKEN_ASSIGN);
@@ -1407,14 +1407,14 @@ int stat(parser_t *parser)
             case EXIT_OK:
                 item_dec->const_var->defined = true;
                 result = expr_list(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
                 return EXIT_OK;
 
             case EXIT_FUNC_ID:
                 //item_dec->const_var->defined = true; TODO: wtf
                 // Semantic check handled by func_call()
                 result = func_call(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
                 PARSER_EAT();
                 return EXIT_OK;
 
@@ -1425,7 +1425,7 @@ int stat(parser_t *parser)
                     // <arg>
                     PARSER_EAT();
                     result = arg(parser);
-                    CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+                    CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
                     
                     //////////////////////////////////////////////////////////////////////////////////////////////
                     // we dont need to eat, ')' is current token
@@ -1471,7 +1471,7 @@ int else_nt(parser_t *parser)
                 // <stat_list> 
                 PARSER_EAT();
                 result = stat_list(parser);
-                CHECK_RESULT_VALUE(EXIT_OK); 
+                CHECK_RESULT_VALUE(result, EXIT_OK); 
 
                 return EXIT_OK;
             
@@ -1526,7 +1526,7 @@ int var_def(parser_t *parser)
         {
             case EXIT_OK:
                 result = expr_list(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
                 parser->curr_item->const_var->defined = true;
                 return EXIT_OK;
 
@@ -1534,7 +1534,7 @@ int var_def(parser_t *parser)
                 parser->curr_item->const_var->defined = true;
                 // Semantic check handled by func_call()
                 result = func_call(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
                 PARSER_EAT();
                 return EXIT_OK;
 
@@ -1545,7 +1545,7 @@ int var_def(parser_t *parser)
                     // <arg>
                     PARSER_EAT();
                     result = arg(parser);
-                    CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+                    CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
                     
                     //////////////////////////////////////////////////////////////////////////////////////////////
                     // we dont need to eat, ')' is current token
@@ -1616,7 +1616,7 @@ int id_n(parser_t *parser)
             // <arg>
             PARSER_EAT();
             result = arg(parser);
-            CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+            CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
             
             //////////////////////////////////////////////////////////////////////////////////////////////
             // we dont need to eat, ')' is current token
@@ -1664,7 +1664,7 @@ int expr_list(parser_t *parser)
 
         // Current token is ','
         result = analyze_bottom_up(parser);
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
         
         return expr_list(parser);
     
