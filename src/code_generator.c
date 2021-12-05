@@ -185,6 +185,7 @@ void generate_function_end(){
 }
 
 void generate_function_label(const char *func_name){
+
 	CODE("LABEL %s", func_name);
 	CODE("CREATEFRAME ");
 	CODE("PUSHFRAME ");
@@ -194,7 +195,7 @@ void generate_function_label(const char *func_name){
 
 void generate_var_declaration(const char *var_name, data_type_t data_type){
 	printf("DEFVAR LF@%s\n", var_name);
-	printf("MOVE LF@%s\n", var_name);
+//	printf("MOVE LF@%s\n", var_name);
 
 	switch( data_type ){
 		case DTYPE_INT:
@@ -212,6 +213,13 @@ void generate_var_declaration(const char *var_name, data_type_t data_type){
 		default:
 			break;
 	} // switch
+
+	return;
+}
+
+void generate_var_declaration_function(const char *var_name, int num_of_param){
+	printf("DEFVAR LF@%s\n", var_name);
+	printf("MOVE LF@%s LF@%c%d\n", var_name, '%',  num_of_param);
 
 	return;
 }
@@ -273,21 +281,51 @@ void generate_function_param( char *param_id, data_type_t data_type ){
 	return;
 }
 
-void generate_pass_param_to_operation(token_t *token, int param_index){
+// TOTO POUZI
+void generate_pass_param_to_function(token_t *token, int param_index){
+	printf("DEFVAR TF@%c%d\n", '%', param_index);
+	printf("MOVE TF@%c%d ", '%', param_index);
 	if (token != NULL){
 		switch ( token->type ){
 			case TOKEN_INT_LIT:
-				CODE("PUSHS int@%d", token->attribute->integer);
+
+				printf("int@%d\n", token->attribute->integer);
 				break;
 			case TOKEN_NUM_LIT  :
-				CODE("PUSHS number@%f", token->attribute->number);
+				printf("number@%f\n", token->attribute->number);
 				break;
 			case TOKEN_STR_LIT:
-				CODE("PUSHS string@%s", token->attribute->string);
+				printf("string@%s\n", token->attribute->string);
 				break;
 			case TOKEN_ID:
-				CODE("PUSHS LF@%s", token->attribute->string);
+				printf("LF@%s\n", token->attribute->string);
 				break;
+		
+			default:
+				break;
+		}
+	}
+
+	return;
+}
+
+void generate_pass_param_to_operation(token_t *token){
+	printf("PUSHS ");
+	if (token != NULL){
+		switch ( token->type ){
+			case TOKEN_INT_LIT:
+				printf("int@%d\n", token->attribute->integer);
+				break;
+			case TOKEN_NUM_LIT  :
+				printf("number@%f\n", token->attribute->number);
+				break;
+			case TOKEN_STR_LIT:
+				printf("string@%s\n", token->attribute->string);
+				break;
+			case TOKEN_ID:
+				printf("LF@%s\n", token->attribute->string);
+				break;
+        
 			default:
 				break;
 		}
@@ -301,7 +339,7 @@ void generate_return_params(token_t *token, int param_index){
 }
 
 void generate_push_operand(token_t *token){
-	generate_pass_param_to_operation(token, 0);
+	generate_pass_param_to_operation(token);
 }
 
 void check_nil(){

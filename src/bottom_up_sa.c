@@ -12,6 +12,7 @@
 #include "include/scanner.h"
 #include "include/bottom_up_sa.h"
 #include "include/error.h"
+#include "include/code_generator.h"
 
 
 char precedence_table[19][19] = 
@@ -49,7 +50,6 @@ int reduce_terminal(PA_stack *stack){
 	PA_item_t items[4];
 	PA_item_t top_item;
 	int operands_count = 0;
-	
 	while(1){
 		PA_stack_top(stack, &top_item);
 		if(top_item.item_type == 2){
@@ -76,6 +76,8 @@ int reduce_terminal(PA_stack *stack){
 										 items[0].terminal->type == TOKEN_INT_LIT ||
 										 items[0].terminal->type == TOKEN_NUM_LIT ||
 										 items[0].terminal->type == TOKEN_STR_LIT)){
+
+			generate_pass_param_to_operation(items[0].terminal);
 			destroy_token(items[operands_count-1].terminal);
 			PA_item_t reduced_terminal;
 			reduced_terminal.non_terminal.expr_type = EXPR;
@@ -248,6 +250,7 @@ int reduce_terminal(PA_stack *stack){
 int analyze_bottom_up(parser_t *parser){
 	//Dealloc the read token from recursive descent
 	destroy_token(parser->token);
+
 	
 	/** 1. Create stack */
 	//Static allocation
