@@ -30,6 +30,19 @@ typedef enum data_type {
     DTYPE_NIL,
 } data_type_t;
 
+typedef union data_type_value{
+	int integer;
+	float number;
+	char *string;
+}data_type_value_t;
+
+typedef struct symbol_data {
+    data_type_t type;
+    bool defined; // whether variable had been defined or not
+} symbol_data_t;
+
+typedef struct symtable symtable_t;
+
 typedef struct item_function {
     bool defined;
     bool declared;
@@ -37,14 +50,15 @@ typedef struct item_function {
 	int num_ret_types;
 	data_type_t *type_params;
 	data_type_t *ret_types;
-	symtable_t 	*local_symtable;	//Scope within the function
+	symtable_t *local_symtable;	//Scope within the function
 } item_function_t;
 
 typedef struct item_const_var {
-	bool is_var;	// Indicates whether item is a variable or literal
-	bool declared;	// Indicates whether variable has been declared or not
-	bool defined;	// Indicates whether variable has been defined or not
-    int  scope;		// Scope of the variable
+	bool is_var;	  // Indicates whether item is a variable or literal
+	bool declared;	  // Indicates whether variable has been declared or not
+	bool defined;	  // Indicates whether variable has been defined or not
+    int  block_depth; // Code block depth of the variable
+    int  block_id;    // Code block of the variable
 	data_type_t type;
 } const_var_t;
 
@@ -162,6 +176,29 @@ symtable_item_t *symtable_insert(symtable_t *s, const char *key);
  */ 
 symtable_item_t *symtable_search(symtable_t *s, const char *key);
 
+/**
+ * @brief Determines whether current variable would be redeclared or not 
+ *        - judging by its name and block id
+ *
+ * @param s pointer to the hashtable structure
+ * @param key hashtable key
+ *
+ * @return true = redeclaration would happen, false = no redeclaration
+ */
+bool would_be_var_redeclared(symtable_t *x, const char *key);
+
+/**
+ * @brief Checks if item with given key had been declared or defined before in valid block 
+ *
+ * @param s pointer to hashtable structure
+ * @param key hashtable key
+ * @param declared only enables user to decide if variable has to be defined or not
+ *
+ * @return Pointer to the item which has variable closest from above to the
+ *         variable given by its key (ID)
+ */
+symtable_item_t *most_recent_vardef(symtable_t *s, const char *key, bool declared_only); 
+    
 // TODO Funkcia definovana aj deklarovana?
 
 #endif

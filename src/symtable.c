@@ -124,6 +124,62 @@ symtable_item_t *symtable_search(symtable_t *s, const char *key)
     return NULL;
 }
 
+// TODO: reset parser->curr_block_id
+bool would_be_var_redeclared(symtable_t *s, const char *key) 
+{
+    int index = symtable_hash_index(key);
+    symtable_item_t *item = s->items[index];
+
+	while (item != NULL){
+		if (!strcmp(item->key, key)) { // variable ID found
+            // If variable names and block ids are the same, redeclaration
+			if (current->const_var->block_id == collision->const_var->block_id) {
+                return current->const_var->declared;
+            }
+		}
+		item = item->next;
+	}
+    return false;
+}
+
+symtable_item_t *most_recent_vardef(symtable_t *s, const char *key, bool must_be_defined) 
+{
+    int index = symtable_hash_index(key);
+    symtable_item_t *item = s->items[index];
+
+    int i = 0;
+    int current_depth;
+    symtable_item_t *closest_item = NULL;
+    int closest_depth_above;
+
+	while (item != NULL){
+		if (!strcmp(item->key, key)) { // variable ID found
+            current_depth = item->const_var->block_depth; 
+            // Return variable with the same ID which is the closest from above
+            if (i == 0) { // First match
+			    if (current_depth <= collision->const_var->block_depth) {
+                    closest_depth_above = current_depth;
+                    closest_item = item;
+                }
+            } else { // Not first match
+			    if ((current_depth <= collision->const_var->block_depth) &&
+                    (current_depth > closest_depth_above)) {
+                    closest_depth_above = current_depth;
+                    closest_item = item;
+                } 
+            }
+            i++;
+		}
+		item = item->next;
+	} // while
+    
+    if (must_be_defined) { // needs to be also defined
+        return (closest_item->const_var->defined) ? closest_item : NULL;
+    } else { // declared is enough
+        return (closest_item->const_var->declared) ? closest_item : NULL; 
+    }
+}
+
 symtable_item_t *symtable_insert(symtable_t *s, const char *key)
 {
 	symtable_item_t *item;
