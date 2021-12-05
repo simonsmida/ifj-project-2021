@@ -421,7 +421,9 @@ int func_call(parser_t *parser)
  */
 int arg(parser_t *parser)
 {
+	
     int result;
+	generate_createframe();
     if (parser->token->type == TOKEN_ID) {
         
         // RULE 10: <arg> → <term> <arg_n>
@@ -429,7 +431,8 @@ int arg(parser_t *parser)
         // TODO: LOCAL SYMTAB
 
         // <term>
-        result = term(parser);
+		
+        result = term(parser, 1);
         CHECK_RESULT_VALUE_SILENT(EXIT_OK);
 
         // <arg_n>
@@ -444,7 +447,7 @@ int arg(parser_t *parser)
         // RULE 10: <arg> → <term> <arg_n>
         
         // <term>
-        result = term(parser);
+        result = term(parser, 1);
         CHECK_RESULT_VALUE_SILENT(EXIT_OK);
 
         // <arg_n>
@@ -473,14 +476,15 @@ int arg(parser_t *parser)
 int arg_n(parser_t *parser)
 {
     int result;
-
+	static int num_param = 2;
     if (parser->token->type == TOKEN_COMMA) {
     
         // RULE 15: <arg> → ',' <term> <arg_n>
     
         // <term>
         PARSER_EAT(); 
-        result = term(parser);
+        result = term(parser, num_param);
+		num_param++;
         CHECK_RESULT_VALUE_SILENT(EXIT_OK);
         
         // <arg_n> calls itself
@@ -488,7 +492,7 @@ int arg_n(parser_t *parser)
         return arg_n(parser);
 
     } else if (parser->token->type == TOKEN_R_PAR) {
-    
+		num_param = 2;
         // RULE 16: <arg> → ε
 
         return EXIT_OK;
@@ -503,17 +507,17 @@ int arg_n(parser_t *parser)
  * @brief Nonterminal <term>
  * @param parser pointer to the parser structure
  */
-int term(parser_t *parser)
+int term(parser_t *parser, int num_param)
 {
     if (parser->token->type == TOKEN_ID) {
-		generate_pass_param_to_operation(parser->token , parser->token->type);
+		generate_pass_param_to_function(parser->token , num_param);
         // RULE 12: <term> → 'id'
         // TODO: local symtab
 
         return EXIT_OK;
 
     } else if (IS_LITERAL(parser->token->type) || IS_NIL(parser->token->type)) {
-        generate_pass_param_to_operation(parser->token, 0);
+        generate_pass_param_to_function(parser->token, num_param);
         // RULE 13: <term> → 'literal' ... 'literal' = str_lit|int_lit|num_lit
         // RULE 14: <term> → 'nil'
         
@@ -593,6 +597,7 @@ int func_head(parser_t *parser)
 int param_fdef(parser_t *parser)
 {
     int result;
+	int i;
     
     switch (parser->token->type)
     {
@@ -607,7 +612,7 @@ int param_fdef(parser_t *parser)
             }
 
             // TODO: add param ID into the symtable
-			generate_var_declaration(parser->token->attribute->string, parser->token->type);
+			generate_var_declaration_function(parser->token->attribute->string, 1);
             
             PARSER_EAT(); /* : */
             CHECK_TOKEN_TYPE(TOKEN_COLON);
@@ -673,7 +678,8 @@ int param_fdef_n(parser_t *parser)
             PARSER_EAT();
             CHECK_TOKEN_TYPE(TOKEN_ID); // 'id'
 
-			generate_var_declaration(parser->token->attribute->string, parser->token->type);
+			generate_var_declaration_function(parser->token->attribute->string, param_index + 1);
+			param_index++;
             
             /** SEMANTIC ACTION - check invalid variable name **/
             if (symtable_search(SYMTAB_G, TOKEN_REPR)) {
@@ -710,7 +716,6 @@ int param_fdef_n(parser_t *parser)
                 symtable_insert_new_function_param(SYMTAB_G, dtype_data(TOKEN_KW_TYPE), parser->curr_item->key);  
             }
              
-            param_index++;
 
             PARSER_EAT();
             return param_fdef_n(parser); // calls itself
@@ -1112,8 +1117,8 @@ int stat(parser_t *parser)
 
                 // <var_def>
                 PARSER_EAT();
-                result = var_def(parser);
-				generate_pop_stack_to_var(id_name);
+                result = var_def(parser, id_name);
+				// generate_pop_stack_to_var(id_name);
                 CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
                 
                 return EXIT_OK;
@@ -1207,11 +1212,14 @@ int stat(parser_t *parser)
         // RULE 34: <stat> → 'id' <id_n> '=' 'expr' <expr_list>
         //          <stat> → 'id' <id_n> '=' 'id' '(' term_list ')'
         //          <stat> → 'id' '(' term_list ')' 
-         
+		strcpy(id_name, parser->token->attribute->string);
         if ((parser->curr_item = symtable_search(SYMTAB_G, TOKEN_REPR)) != NULL) {
             // Current ID is function id
+			
             if (FUNC_ITEM != NULL) {
                 result = func_call(parser);
+			 	generate_pop_stack_to_var(id_name);
+
                 CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
                 PARSER_EAT();
                 return EXIT_OK;
@@ -1222,6 +1230,7 @@ int stat(parser_t *parser)
         // TODO: symtab
 
         // <id_n> 
+		strcpy(id_name, parser->token->attribute->string);
         PARSER_EAT();
         result = id_n(parser);
         CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
@@ -1231,17 +1240,20 @@ int stat(parser_t *parser)
         
         // *ATTENTION* - nondeterminism handling - func id vs var id
         result = analyze_bottom_up(parser);
+		
         if (result == EXIT_FUNC_ID) {
             // TODO: - add to symtable + check semantics
             result = func_call(parser);
+			generate_pop_stack_to_var(id_name);
             CHECK_RESULT_VALUE_SILENT(EXIT_OK);
             PARSER_EAT();
             return EXIT_OK;
 
         } else if (result == EXIT_OK) {
-        
+			generate_pop_stack_to_var(id_name);
             result = expr_list(parser);
-            CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+           
+			CHECK_RESULT_VALUE_SILENT(EXIT_OK);
             return EXIT_OK;
         
         } else if ((result == EXIT_ID_BEFORE) && (parser->token->type == TOKEN_L_PAR)) {
@@ -1312,7 +1324,7 @@ int else_nt(parser_t *parser)
  * @brief Nonterminal <var_def>
  * @param parser pointer to the parser structure
  */
-int var_def(parser_t *parser)
+int var_def(parser_t *parser, char *id_name)
 {
     int result;
     if (parser->token->type == TOKEN_KEYWORD) {
@@ -1339,6 +1351,7 @@ int var_def(parser_t *parser)
         // Current token is '='
         // *ATTENTION* - nondeterminism handling - func id vs var id
         result = analyze_bottom_up(parser);
+		generate_pop_stack_to_var(id_name);
         if (result == EXIT_FUNC_ID) {
             // TODO: - add to symtable + check semantics
             result = func_call(parser);
@@ -1347,7 +1360,7 @@ int var_def(parser_t *parser)
             return EXIT_OK;
 
         } else if (result == EXIT_OK) {
-        
+			
             result = expr_list(parser);
             CHECK_RESULT_VALUE_SILENT(EXIT_OK);
             return EXIT_OK;
