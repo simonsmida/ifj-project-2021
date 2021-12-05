@@ -144,6 +144,26 @@ bool would_be_var_redeclared(symtable_t *s, const char *key, int block_id)
 
 symtable_item_t *most_recent_vardef(symtable_t *s, const char *key, int block_depth, bool must_be_defined) 
 {
+    // Find first key occurance in given symtable
+    symtable_item_t *item = symtable_search(s, key);
+    while (item != NULL) {
+        const_var_t *var = item->const_var;
+        if (must_be_defined) {
+            if (var != NULL && var->defined) {
+                return item;
+            }
+            item = item->next;
+        } else { 
+            // declaration is enough
+            if (var != NULL && var->declared) {
+                return item;
+            }
+            item = item->next;
+        } // if (must_be_defined)
+    } // while
+    // Nothing good found
+    return NULL;
+    /*
     int index = symtable_hash_index(key);
     symtable_item_t *item = s->items[index];
 
@@ -179,46 +199,41 @@ symtable_item_t *most_recent_vardef(symtable_t *s, const char *key, int block_de
     } else { // declared is enough
         return (closest_item->const_var->declared) ? closest_item : NULL; 
     }
+    */
 }
 
 symtable_item_t *symtable_insert(symtable_t *s, const char *key)
 {
-	symtable_item_t *item;
-	symtable_item_t *previous = NULL;
+    if (s == NULL || key == NULL) {
+        return NULL;
+    }
+
+	symtable_item_t *first_in_chain;
+	symtable_item_t *new;
     int index = symtable_hash_index(key);
     
-    if ((item = calloc(1, sizeof(symtable_item_t))) == NULL) {
+    if ((new = calloc(1, sizeof(symtable_item_t))) == NULL) {
         return NULL; // INTERNAL ERROR
     }
-    if ((item->key = calloc(1, strlen(key) + 1)) == NULL) {
-        free(item);
+
+    if ((new->key = calloc(1, strlen(key) + 1)) == NULL) {
+        free(new);
         return NULL;
     }
     
-    strcpy(item->key, key);
-    item->const_var = NULL;
-    item->function = NULL;
-    item->next = NULL;
-	
-    symtable_item_t *search;
-    if ((search = symtable_search(s, key)) != NULL) {
-        // Item found
-        while (search != NULL) {
-            previous = search;
-            search = search->next;
-        } 
-        if (previous != NULL) {
-            previous->next = item;
-        } else {
-            s->items[index] = item;
-        }
-    } else {
-        // Item not found - insert it at index
-        s->items[index] = item;
-    }
+    // First item of the chain
+    first_in_chain = s->items[index];
+
+    strcpy(new->key, key);
+    new->const_var = NULL;
+    new->function = NULL;
+    new->next = first_in_chain; // connect the chain
     
+    // Insert new item at the chain start 
+    s->items[index] = new;    
 	s->size++;
-	return item;
+	
+    return new;
 }
 
 
