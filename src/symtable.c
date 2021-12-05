@@ -86,15 +86,20 @@ void symtable_destroy(symtable_t *s)
 				if (tmp->function->type_params != NULL){
 					free(tmp->function->type_params);
 				}
+				if (tmp->function->local_symtable != NULL){
+					symtable_destroy(tmp->function->local_symtable);
+				}
 				free(tmp->function);
-			}
+			} // function
 
-			if (tmp->const_var != NULL){
-				free(tmp->const_var);
-			}
+            if (tmp->const_var != NULL){
+                free(tmp->const_var);
+            } // const_var
+
 			if (tmp->key != NULL){
 				free(tmp->key);
 			}
+
 			next = tmp->next;
 			free(tmp);	
 			tmp = next;		
@@ -103,45 +108,6 @@ void symtable_destroy(symtable_t *s)
     free(s);
     s = NULL;
 }
-
-symtable_item_t *symtable_insert(symtable_t *s, const char *key)
-{
-    int index = symtable_hash_index(key);
-	symtable_item_t *item;
-	symtable_item_t *previous = NULL;
-	item = symtable_search(s, key);
-	if (item == NULL){
-		item = s->items[index];
-		while (item != NULL){
-			previous = item;
-			item = item->next;
-		}
-		item = calloc(1, sizeof(symtable_item_t));
-		if (item == NULL){
-			//error_message("Symtable", ERR_INTERNAL, "Failed calloc");
-		}
-		item->key = calloc(1, strlen(key) + 1);
-		if (item->key == NULL){
-			//error_message("Symtable", ERR_INTERNAL, "Failed calloc");
-		}
-		strcpy( item->key, key );
-		item->const_var = NULL;
-		item->function = NULL;
-		item->next = NULL;
-
-		if (previous != NULL){
-			previous->next = item;
-		}
-		else {
-			s->items[index] = item;
-		}
-	}
-	
-	s->size++;
-
-	return item;
-}
-
 
 symtable_item_t *symtable_search(symtable_t *s, const char *key) 
 {
@@ -154,28 +120,122 @@ symtable_item_t *symtable_search(symtable_t *s, const char *key)
 		}
 		item = item->next;
 	}
-
+    // key not found
     return NULL;
 }
 
-item_function_t *symtable_create_and_insert_function(symtable_t *s, const char *key){
-    /*
-    symtable_item_t *item;
+// TODO: reset parser->curr_block_id
+bool would_be_var_redeclared(symtable_t *s, const char *key, int block_id) 
+{
+    int index = symtable_hash_index(key);
+    symtable_item_t *item = s->items[index];
+
+	while (item != NULL){
+		if (!strcmp(item->key, key)) { // variable ID found
+            // If variable names and block ids are the same, redeclaration
+			if (item->const_var->block_id == block_id) {
+                return item->const_var->declared;
+            }
+		}
+		item = item->next;
+	}
+    return false;
+}
+
+symtable_item_t *most_recent_vardef(symtable_t *s, const char *key, int block_depth, bool must_be_defined) 
+{
+    int index = symtable_hash_index(key);
+    symtable_item_t *item = s->items[index];
+
+    int i = 0;
+    int current_depth;
+    symtable_item_t *closest_item = NULL;
+    int closest_depth_above;
+
+	while (item != NULL){
+		if (!strcmp(item->key, key)) { // variable ID found
+            current_depth = item->const_var->block_depth; 
+            // Return variable with the same ID which is the closest from above
+            if (i == 0) { // First match
+			    if (current_depth <= block_depth) {
+                    closest_depth_above = current_depth;
+                    closest_item = item;
+                }
+            } else { // Not first match
+			    if ((current_depth <= block_depth) && (current_depth > closest_depth_above)) {
+                    closest_depth_above = current_depth;
+                    closest_item = item;
+                } 
+            }
+            i++;
+		}
+		item = item->next;
+	} // while
     
-    if ((item = symtable_insert(s, key)) == NULL) {
-        // Failed to insert new item
+    if (closest_item == NULL) return NULL;
+
+    if (must_be_defined) { // needs to be also defined
+        return (closest_item->const_var->defined) ? closest_item : NULL;
+    } else { // declared is enough
+        return (closest_item->const_var->declared) ? closest_item : NULL; 
+    }
+}
+
+symtable_item_t *symtable_insert(symtable_t *s, const char *key)
+{
+	symtable_item_t *item;
+	symtable_item_t *previous = NULL;
+    int index = symtable_hash_index(key);
+    
+    if ((item = calloc(1, sizeof(symtable_item_t))) == NULL) {
+        return NULL; // INTERNAL ERROR
+    }
+    if ((item->key = calloc(1, strlen(key) + 1)) == NULL) {
+        free(item);
         return NULL;
     }
-	*/
-    symtable_item_t *item;
-	if ((item = symtable_search(s, key)) == NULL){
-		fprintf(stderr, "There is no item with the key %s in symtab\n", key);
-		return NULL;
-	}
+    
+    strcpy(item->key, key);
+    item->const_var = NULL;
+    item->function = NULL;
+    item->next = NULL;
+	
+    symtable_item_t *search;
+    if ((search = symtable_search(s, key)) != NULL) {
+        // Item found
+        while (search != NULL) {
+            previous = search;
+            search = search->next;
+        } 
+        if (previous != NULL) {
+            previous->next = item;
+        } else {
+            s->items[index] = item;
+        }
+    } else {
+        // Item not found - insert it at index
+        s->items[index] = item;
+    }
+    
+	s->size++;
+	return item;
+}
 
+
+
+symtable_item_t *symtable_create_and_insert_function(symtable_t *s, const char *key)
+{
+	/** 1. Insert an empty item to the hashtable */
+    symtable_item_t *item = symtable_insert(s,key);
+	if (item == NULL){
+		//ERROR_MSG_SYMTABLE;
+		return NULL;
+	}	
 	item_function_t *function = calloc(1,sizeof(item_function_t));
 	if (function == NULL){
 		//ERROR_MSG_SYMTABLE;
+		free(item->key);
+		free(item);
 		return NULL;
 	}
 
@@ -185,44 +245,60 @@ item_function_t *symtable_create_and_insert_function(symtable_t *s, const char *
 	function->num_ret_types = 0;
 	function->ret_types = calloc(1, sizeof(data_type_t));
 	function->type_params = calloc(1, sizeof(data_type_t));
+	function->local_symtable = symtable_init(CAPACITY);
 
-	if (function->ret_types == NULL || function->type_params == NULL){
+	if (function->ret_types == NULL){
 		//ERROR_MSG_SYMTABLE;
+		free(item->key);
+		free(item);
+		free(function);
+		return NULL;
+	}
+	if (function->type_params == NULL){
+		//ERROR_MSG_SYMTABLE;
+		free(item->key);
+		free(item);
+		free(function);
+		free(function->ret_types);
 		return NULL;
 	}
 
+	if (function->local_symtable == NULL){
+		//ERROR_MSG_SYMTABLE;
+		free(item->key);
+		free(item);
+		free(function);
+		free(function->ret_types);
+		free(function->type_params);
+		return NULL;
+	}
+	
 	item->function = function;
-	return function;
+	return item;
 }
 
-const_var_t *symtable_create_const_var(bool is_var, bool is_defined, data_type_t type){
-	const_var_t *param;
-	param = calloc(1, sizeof(const_var_t));
-	if (param == NULL){
+symtable_item_t* symtable_insert_const_var(symtable_t *s, char *key){
+	symtable_item_t *item = symtable_insert(s,key);
+	if (item == NULL){
 		//ERROR_MSG_SYMTABLE;
 		return NULL;
+	}	
+	
+	const_var_t *insert_var;
+	insert_var = calloc(1, sizeof(const_var_t));
+	if (insert_var == NULL){
+		//ERROR_MSG_SYMTABLE;
+		free(item->key);
+		free(item);
+		return NULL;
 	}
-	param->is_var = is_var;
-	param->data.type = type;
-	param->data.defined = is_defined;
-	return param;
-}
-
-void symtable_insert_const_var(symtable_t *s, char *key, const_var_t *const_var){
-	symtable_item_t *item;
-	item = symtable_search(s,key);
-	if (item != NULL){
-		item->const_var = const_var;
-	}
-	else {
-		fprintf(stderr, "Cannot insert const_var. Item with key %s not found\n", key);
-	}
-
-	return;
+	item->const_var = insert_var;
+	
+	return item;
 }
 
 
-void symtable_insert_new_function_param(symtable_t *s ,data_type_t data, const char *key) 
+int symtable_insert_new_function_param(symtable_t *s ,data_type_t data, const char *key) 
 {
     symtable_item_t *item = symtable_search(s, key);
 	if ((item != NULL) && (item->function)){
@@ -230,6 +306,7 @@ void symtable_insert_new_function_param(symtable_t *s ,data_type_t data, const c
 		function = realloc(item->function->type_params, sizeof(data_type_t)*(item->function->num_params + 1) );
 		if (function == NULL){
 			//ERROR_MSG_SYMTABLE;
+			return ERR_INTERNAL;
 		}
 		function[item->function->num_params] = data;
 		(item->function->num_params)++;
@@ -239,10 +316,10 @@ void symtable_insert_new_function_param(symtable_t *s ,data_type_t data, const c
 		fprintf(stderr, "item doesnt exist in symtab\n");
 	}
 
-	return;
+	return EXIT_OK;
 }
 
-void symtable_insert_new_function_ret_type(symtable_t *s ,data_type_t data, const char *key)
+int symtable_insert_new_function_ret_type(symtable_t *s ,data_type_t data, const char *key)
 {
     symtable_item_t *item = symtable_search(s, key);
 	if ( item != NULL ){
@@ -250,74 +327,13 @@ void symtable_insert_new_function_ret_type(symtable_t *s ,data_type_t data, cons
 	ret_types = realloc(item->function->ret_types, sizeof(data_type_t) * (item->function->num_ret_types + 1));
 	if (ret_types == NULL){
 		//ERROR_MSG_SYMTABLE;
+		return ERR_INTERNAL;
 	}
 	ret_types[item->function->num_ret_types] = data;
 	item->function->num_ret_types++;
 	item->function->ret_types = ret_types;
 	}
-	return;
+	return EXIT_OK;
 }
 
-void symtable_stack_init(symtable_stack_t *stack){
-	if ( stack != NULL ){
-		stack->top_index = -1;
-		for (int i = 0; i < SYMSTACK_SIZE; i++){
-			stack->symstack[i] = NULL;
-		}
-	}
 
-	return;
-}
-
-symtable_t* symtable_stack_top( symtable_stack_t *stack ){
-	if (stack != NULL){
-		if ( !stack_empty(stack) ){
-			return stack->symstack[stack->top_index];
-		}
-	}
-
-	return NULL;
-}
-
-bool stack_empty(symtable_stack_t *stack){
-	if (stack != NULL){
-		if ( stack->top_index < 0 ){
-			return true;
-		}
-	}
-	return false;
-}
-
-void symtable_stack_push(symtable_stack_t *stack, symtable_t *s){
-	if (stack != NULL && s != NULL){
-		stack->top_index++;
-		stack->symstack[stack->top_index] = s;
-	}
-
-	return;
-
-}
-
-void symtable_stack_pop(symtable_stack_t *stack){
-	if (stack != NULL){
-		//symtable_destroy(stack->symstack[stack->top_index]);
-		if (!stack_empty(stack)){
-			stack->top_index--;
-		}
-	}
-
-	return;
-}
-
-void symtable_stack_destroy(symtable_stack_t *stack){
-	if (stack != NULL){
-		for (int i = 0; i < SYMSTACK_SIZE; i++){
-			if (stack->symstack[i] != NULL){
-				symtable_destroy(stack->symstack[i]);
-				stack->symstack[i] = NULL;
-			}
-		}
-	}
-
-	return;
-}
