@@ -1189,7 +1189,7 @@ int stat_list(parser_t *parser)
 int stat(parser_t *parser)
 {
     int result;
-
+	char id_name[100];
     if (TOKEN_T == TOKEN_KEYWORD) {
         switch (TOKEN_KW_T) 
         {
@@ -1232,9 +1232,9 @@ int stat(parser_t *parser)
 
                 item->const_var->block_depth = parser->curr_block_depth;
 
-                //char id_name[100];
-                //strcpy(id_name, TOKEN_REPR);
-                //generate_var_declaration(id_name, TOKEN_T);
+                
+                strcpy(id_name, TOKEN_REPR);
+                generate_var_declaration(id_name, TOKEN_T);
 
                 PARSER_EAT(); /* ':' */
                 CHECK_TOKEN_TYPE(TOKEN_COLON);
