@@ -77,7 +77,7 @@ int reduce_terminal(PA_stack *stack){
 										 items[0].terminal->type == TOKEN_NUM_LIT ||
 										 items[0].terminal->type == TOKEN_STR_LIT)){
 
-			generate_pass_param_to_operation(items[0].terminal);
+			generate_pass_param_to_operation(items[0].terminal, 0);
 			destroy_token(items[operands_count-1].terminal);
 			PA_item_t reduced_terminal;
 			reduced_terminal.non_terminal.expr_type = EXPR;
