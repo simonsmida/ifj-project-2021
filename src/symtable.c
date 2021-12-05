@@ -172,6 +172,8 @@ symtable_item_t *most_recent_vardef(symtable_t *s, const char *key, int block_de
 		item = item->next;
 	} // while
     
+    if (closest_item == NULL) return NULL;
+
     if (must_be_defined) { // needs to be also defined
         return (closest_item->const_var->defined) ? closest_item : NULL;
     } else { // declared is enough
