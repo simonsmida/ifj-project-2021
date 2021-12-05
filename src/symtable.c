@@ -125,7 +125,7 @@ symtable_item_t *symtable_search(symtable_t *s, const char *key)
 }
 
 // TODO: reset parser->curr_block_id
-bool would_be_var_redeclared(symtable_t *s, const char *key) 
+bool would_be_var_redeclared(symtable_t *s, const char *key, int block_id) 
 {
     int index = symtable_hash_index(key);
     symtable_item_t *item = s->items[index];
@@ -133,8 +133,8 @@ bool would_be_var_redeclared(symtable_t *s, const char *key)
 	while (item != NULL){
 		if (!strcmp(item->key, key)) { // variable ID found
             // If variable names and block ids are the same, redeclaration
-			if (current->const_var->block_id == collision->const_var->block_id) {
-                return current->const_var->declared;
+			if (item->const_var->block_id == block_id) {
+                return item->const_var->declared;
             }
 		}
 		item = item->next;
@@ -142,7 +142,7 @@ bool would_be_var_redeclared(symtable_t *s, const char *key)
     return false;
 }
 
-symtable_item_t *most_recent_vardef(symtable_t *s, const char *key, bool must_be_defined) 
+symtable_item_t *most_recent_vardef(symtable_t *s, const char *key, int block_depth, bool must_be_defined) 
 {
     int index = symtable_hash_index(key);
     symtable_item_t *item = s->items[index];
@@ -157,13 +157,12 @@ symtable_item_t *most_recent_vardef(symtable_t *s, const char *key, bool must_be
             current_depth = item->const_var->block_depth; 
             // Return variable with the same ID which is the closest from above
             if (i == 0) { // First match
-			    if (current_depth <= collision->const_var->block_depth) {
+			    if (current_depth <= block_depth) {
                     closest_depth_above = current_depth;
                     closest_item = item;
                 }
             } else { // Not first match
-			    if ((current_depth <= collision->const_var->block_depth) &&
-                    (current_depth > closest_depth_above)) {
+			    if ((current_depth <= block_depth) && (current_depth > closest_depth_above)) {
                     closest_depth_above = current_depth;
                     closest_item = item;
                 } 

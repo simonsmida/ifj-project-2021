@@ -182,10 +182,11 @@ symtable_item_t *symtable_search(symtable_t *s, const char *key);
  *
  * @param s pointer to the hashtable structure
  * @param key hashtable key
+ * @param block_id current block id
  *
  * @return true = redeclaration would happen, false = no redeclaration
  */
-bool would_be_var_redeclared(symtable_t *x, const char *key);
+bool would_be_var_redeclared(symtable_t *x, const char *key, int block_id);
 
 /**
  * @brief Checks if item with given key had been declared or defined before in valid block 
@@ -197,7 +198,7 @@ bool would_be_var_redeclared(symtable_t *x, const char *key);
  * @return Pointer to the item which has variable closest from above to the
  *         variable given by its key (ID)
  */
-symtable_item_t *most_recent_vardef(symtable_t *s, const char *key, bool declared_only); 
+symtable_item_t *most_recent_vardef(symtable_t *s, const char *key, int block_depth, bool declared_only); 
     
 // TODO Funkcia definovana aj deklarovana?
 
