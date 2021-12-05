@@ -41,6 +41,8 @@ typedef struct symbol_data {
     bool defined; // whether variable had been defined or not
 } symbol_data_t;
 
+typedef struct symtable symtable_t;
+
 typedef struct item_function {
     bool defined;
     bool declared;
@@ -48,18 +50,22 @@ typedef struct item_function {
 	int num_ret_types;
 	data_type_t *type_params;
 	data_type_t *ret_types;
+	symtable_t *local_symtable;	//Scope within the function
 } item_function_t;
 
 typedef struct item_const_var {
-	symbol_data_t data;
-	data_type_value_t value;
-	bool is_var;
+	bool is_var;	  // Indicates whether item is a variable or literal
+	bool declared;	  // Indicates whether variable has been declared or not
+	bool defined;	  // Indicates whether variable has been defined or not
+    int  block_depth; // Code block depth of the variable
+    int  block_id;    // Code block of the variable
+	data_type_t type;
 } const_var_t;
 
 typedef struct symtable_item {
     char *key;
     const_var_t *const_var;
-	item_function_t *function;
+    item_function_t *function;
     struct symtable_item *next;
 } symtable_item_t;
 
@@ -68,11 +74,6 @@ typedef struct symtable {
     unsigned int items_size; // number of items in htab list
     symtable_item_t *items[]; // linked list of items
 } symtable_t;
-
-typedef struct symtable_stack {
-	symtable_t *symstack[SYMSTACK_SIZE];
-	int top_index;
-}symtable_stack_t;
 
 
 /**
@@ -115,21 +116,7 @@ void symtable_destroy(symtable_t *s);
  * @param s Pointer to the hashtable
  * @param key key to the hashtable
  */
-item_function_t *symtable_create_and_insert_function(symtable_t *s, const char *key);
-
-/**
- * @brief Create a structure for const/vars in hashtable
- * The function doesnt insert it into the hashtable, this has to be done
- * with the function symtable_insert_const_var
- * 
- * @param is_var indicates whether symbtable const_var is const or var
- * @param is_defined indicates whether const/var is defined in given "ramec"
- * @param type Type of variable
- * 
- * @return Pointer to the created const_var_t if successfull, otherwise NULL
- */ 
-const_var_t *symtable_create_const_var(bool is_var, bool is_defined, data_type_t type);
-
+symtable_item_t *symtable_create_and_insert_function(symtable_t *s, const char *key);
 
 /**
  * @brief Updates the param list of item_function. Inserts the new found param
@@ -139,7 +126,7 @@ const_var_t *symtable_create_const_var(bool is_var, bool is_defined, data_type_t
  * @param data The type of the new found function parameter
  * @param key Hash to the table
  */
-void symtable_insert_new_function_param(symtable_t *s ,data_type_t data, const char *key);
+int symtable_insert_new_function_param(symtable_t *s ,data_type_t data, const char *key);
 
 
 /**
@@ -151,7 +138,7 @@ void symtable_insert_new_function_param(symtable_t *s ,data_type_t data, const c
  * @param key Hash to the table
  */
 //void symtable_insert_new_function_ret_type(symtable_t *s ,data_type_t data, symtable_item_t *item);
-void symtable_insert_new_function_ret_type(symtable_t *s ,data_type_t data, const char *key);
+int symtable_insert_new_function_ret_type(symtable_t *s ,data_type_t data, const char *key);
 
 
 /**
@@ -161,9 +148,10 @@ void symtable_insert_new_function_ret_type(symtable_t *s ,data_type_t data, cons
  * 
  * @param s Pointer to the hashtable
  * @param key key to the hashtable
- * @param const_var Pointer to be set into the given item->const_var
+ * 
+ * @return Returns a pointer to inserted item, if insertion failed returns NULL
  */
-void symtable_insert_const_var(symtable_t *s, char *key, const_var_t *const_var);
+symtable_item_t* symtable_insert_const_var(symtable_t *s, char *key);
 
 /**
  * @brief Creates an initialized item with the given key and inserts it
@@ -188,14 +176,31 @@ symtable_item_t *symtable_insert(symtable_t *s, const char *key);
  */ 
 symtable_item_t *symtable_search(symtable_t *s, const char *key);
 
-symtable_t *symtable_stack_top(symtable_stack_t *stack);
-void symtable_stack_pop(symtable_stack_t *stack);
-void symtable_stack_push(symtable_stack_t *stack, symtable_t *s);
-void symtable_stack_init(symtable_stack_t *stack);
-void symtable_stack_destroy(symtable_stack_t *stack);
-bool stack_empty(symtable_stack_t *stack);
+/**
+ * @brief Determines whether current variable would be redeclared or not 
+ *        - judging by its name and block id
+ *
+ * @param s pointer to the hashtable structure
+ * @param key hashtable key
+ * @param block_id current block id
+ *
+ * @return true = redeclaration would happen, false = no redeclaration
+ */
+bool would_be_var_redeclared(symtable_t *x, const char *key, int block_id);
 
-
+/**
+ * @brief Checks if item with given key had been declared or defined before in valid block 
+ *
+ * @param s pointer to hashtable structure
+ * @param key hashtable key
+ * @param declared only enables user to decide if variable has to be defined or not
+ *
+ * @return Pointer to the item which has variable closest from above to the
+ *         variable given by its key (ID)
+ */
+symtable_item_t *most_recent_vardef(symtable_t *s, const char *key, int block_depth, bool declared_only); 
+    
 // TODO Funkcia definovana aj deklarovana?
 
 #endif
+

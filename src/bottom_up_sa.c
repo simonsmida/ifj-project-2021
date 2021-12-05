@@ -281,7 +281,13 @@ int analyze_bottom_up(parser_t *parser){
                 prev_token_type = token_in.terminal->type;
             }
 			
-			token_in.terminal = get_next_token(parser -> src);
+			token_in.terminal = get_next_token(stdin);
+            if (token_in.terminal->type == TOKEN_EOF) {
+                parser->token = token_in.terminal;
+				PA_stack_destroy(&stack);
+                return ERR_SYNTAX;
+            }
+
 			/** If the generated token is a function id, return read token
 			  	and control to recursive descent parser */
 			if(token_in.terminal->type == TOKEN_ID){
@@ -363,8 +369,8 @@ int analyze_bottom_up(parser_t *parser){
 				return EXIT_OK;
 		}
 	}while(((top_terminal.terminal->type != TOKEN_EOF) || (token_in.terminal->type != TOKEN_EOF)));
-	
-	/** Check if the PA was successful */
+    
+    /** Check if the PA was successful */
 	if((top_terminal.terminal->type == TOKEN_EOF) && (token_in.terminal->type == TOKEN_EOF)){
 		destroy_token(top_terminal.terminal);
 		destroy_token(token_in.terminal);
