@@ -419,7 +419,9 @@ int arg(parser_t *parser)
             return ERR_SEMANTIC_DEF;
         }
         */
-        if ((item = most_recent_vardef(SYMTAB_L, TOKEN_REPR, parser->curr_block_depth, true)) == NULL) {
+        int b_id = parser->curr_block_id;
+        int b_depth = parser->curr_block_depth;
+        if ((item = most_recent_var(SYMTAB_L, TOKEN_REPR, b_id, b_depth, true)) == NULL) {
             //printf("block depth -> %d\n\n", parser->curr_block_depth);
             error_message("Parser", ERR_SEMANTIC_DEF, "variable '%s' is not defined here", TOKEN_REPR);
             return ERR_SEMANTIC_DEF;    
@@ -1386,7 +1388,9 @@ int stat(parser_t *parser)
         // Current id is variable or undeclared function - its an assignment
         // Check whether it was at least declared
         symtable_item_t *item_dec; 
-        if (!(item_dec = most_recent_vardef(SYMTAB_L, TOKEN_REPR, parser->curr_block_depth, false))) {
+        int b_id = parser->curr_block_id;
+        int b_depth = parser->curr_block_depth;
+        if (!(item_dec = most_recent_var(SYMTAB_L, TOKEN_REPR, b_id, b_depth, false))) {
             error_message("Parser", ERR_SEMANTIC_DEF, "undeclared variable/function '%s'", TOKEN_REPR);
             return ERR_SEMANTIC_DEF;
         } 
@@ -1471,7 +1475,7 @@ int else_nt(parser_t *parser)
                 // <stat_list> 
                 PARSER_EAT();
                 result = stat_list(parser);
-                CHECK_RESULT_VALUE(result, EXIT_OK); 
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
 
                 return EXIT_OK;
             
@@ -1593,8 +1597,10 @@ int id_n(parser_t *parser)
             //////////////////////////////////////////////////////////////////////////////////////////////
             // Current id is variable - its an assignment
             // Check whether it was at least declared
-            symtable_item_t *item_dec; 
-            if (!(item_dec = most_recent_vardef(SYMTAB_L, TOKEN_REPR, parser->curr_block_depth, false))) {
+            symtable_item_t *item_dec;
+            int b_id = parser->curr_block_id;
+            int b_depth = parser->curr_block_depth;
+            if (!(item_dec = most_recent_var(SYMTAB_L, TOKEN_REPR, b_id, b_depth, false))) {
                 error_message("Parser", ERR_SEMANTIC_DEF, "undeclared variable '%s'", TOKEN_REPR);
                 return ERR_SEMANTIC_DEF;
             } 
