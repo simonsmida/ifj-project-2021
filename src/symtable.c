@@ -63,12 +63,6 @@ symtable_t *symtable_init(size_t n)
     return s;
 }
 
-// TODO: symtable_create_item()
-
-// TODO: symtable_create_function();
-
-// TODO: symtable_create_const_var();
-
 /**
  * @brief Hash table destructor
  */
@@ -142,49 +136,39 @@ bool would_be_var_redeclared(symtable_t *s, const char *key, int block_id)
     return false;
 }
 
-symtable_item_t *most_recent_vardef(symtable_t *s, const char *key, int block_depth, bool must_be_defined) 
+symtable_item_t *most_recent_var(symtable_t *s, const char *key, int block_id, int block_depth, bool must_be_defined) 
 {
-    // Find first key occurance in given symtable
     symtable_item_t *item = symtable_search(s, key);
-    while (item != NULL) {
-        const_var_t *var = item->const_var;
-        if (must_be_defined) {
-            if (var != NULL && var->defined) {
-                return item;
-            }
-            item = item->next;
-        } else { 
-            // declaration is enough
-            if (var != NULL && var->declared) {
-                return item;
-            }
-            item = item->next;
-        } // if (must_be_defined)
-    } // while
-    // Nothing good found
-    return NULL;
-    /*
-    int index = symtable_hash_index(key);
-    symtable_item_t *item = s->items[index];
 
     int i = 0;
     int current_depth;
     symtable_item_t *closest_item = NULL;
     int closest_depth_above;
 
-	while (item != NULL){
+	while (item != NULL) {
 		if (!strcmp(item->key, key)) { // variable ID found
-            current_depth = item->const_var->block_depth; 
+            const_var_t *var = item->const_var;
+            current_depth = var->block_depth; 
             // Return variable with the same ID which is the closest from above
             if (i == 0) { // First match
 			    if (current_depth <= block_depth) {
-                    closest_depth_above = current_depth;
-                    closest_item = item;
+                    if (must_be_defined && (var != NULL && var->defined)) {
+                        closest_depth_above = current_depth;
+                        closest_item = item;
+                    } else if (!must_be_defined && (var != NULL && var->declared)) {
+                        closest_depth_above = current_depth;
+                        closest_item = item;
+                    }
                 }
             } else { // Not first match
 			    if ((current_depth <= block_depth) && (current_depth > closest_depth_above)) {
-                    closest_depth_above = current_depth;
-                    closest_item = item;
+                    if (must_be_defined && (var != NULL && var->defined)) {
+                        closest_depth_above = current_depth;
+                        closest_item = item;
+                    } else if (!must_be_defined && (var != NULL && var->declared)) {
+                        closest_depth_above = current_depth;
+                        closest_item = item;
+                    }
                 } 
             }
             i++;
@@ -192,14 +176,12 @@ symtable_item_t *most_recent_vardef(symtable_t *s, const char *key, int block_de
 		item = item->next;
 	} // while
     
-    if (closest_item == NULL) return NULL;
-
-    if (must_be_defined) { // needs to be also defined
-        return (closest_item->const_var->defined) ? closest_item : NULL;
-    } else { // declared is enough
-        return (closest_item->const_var->declared) ? closest_item : NULL; 
+    // Handle special case - variable has same depth, but different block id -> its not visible
+    if ((closest_item->const_var->block_depth == block_depth) && 
+        (closest_item->const_var->block_id != block_id)) {
+        return NULL;
     }
-    */
+    return closest_item;    
 }
 
 symtable_item_t *symtable_insert(symtable_t *s, const char *key)
