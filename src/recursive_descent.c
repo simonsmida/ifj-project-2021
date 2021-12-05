@@ -305,7 +305,7 @@ int func_def(parser_t *parser)
         // No need to eat - current token is 'end'
         CHECK_TOKEN_TYPE(TOKEN_KEYWORD); 
         CHECK_KEYWORD(KEYWORD_END);
-        //generate_function_end();
+        generate_function_end();
 
         // Reset current block depth and id - exiting function definition 
         parser->curr_block_id = 0;
@@ -369,7 +369,7 @@ int func_call(parser_t *parser)
 
         // Reset current argument count
         parser->curr_arg_count = 0;
-        //generate_function_call(func_id);
+        generate_function_call(func_id);
         return EXIT_OK;
     }
     
@@ -572,7 +572,7 @@ int func_head(parser_t *parser)
             
             PARSER_EAT(); /* 'id' */
             CHECK_TOKEN_TYPE(TOKEN_ID);
-            //generate_function_label(TOKEN_REPR);
+            generate_function_label(TOKEN_REPR);
             // Create item in global symtable - insert func ID 
             HANDLE_SYMTABLE_FUNC_DEF();
             
@@ -622,7 +622,7 @@ int func_head(parser_t *parser)
 int param_fdef(parser_t *parser)
 {
     int result;
-	int i;
+
     
     switch (TOKEN_T)
     {
@@ -654,7 +654,7 @@ int param_fdef(parser_t *parser)
             if ((item = symtable_insert_const_var(SYMTAB_L, TOKEN_REPR)) == NULL) {
                 return ERR_INTERNAL;
             }
-            //generate_var_declaration(TOKEN_REPR, TOKEN_T);
+            
 
             // Continue parsing 
             PARSER_EAT(); /* : */
@@ -740,7 +740,7 @@ int param_fdef_n(parser_t *parser)
             CHECK_TOKEN_TYPE(TOKEN_ID); 
 
 		      	generate_var_declaration_function(parser->token->attribute->string, param_index + 1);
-			      param_index++;
+			    param_index++;
             
             ////////////////////////////////////////////////////////////////////////////////////////////// 
             /** SEMANTIC ACTION - check invalid variable name **/
@@ -803,7 +803,7 @@ int param_fdef_n(parser_t *parser)
             item->const_var->block_id    = parser->curr_block_id;
             item->const_var->type = dtype_keyword(TOKEN_KW_T);
             // Keep track of new parameters
-            param_index++;
+           
 
             PARSER_EAT();
             return param_fdef_n(parser); // calls itself

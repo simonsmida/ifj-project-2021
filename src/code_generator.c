@@ -187,7 +187,6 @@ void generate_function_end(){
 void generate_function_label(const char *func_name){
 
 	CODE("LABEL %s", func_name);
-	CODE("CREATEFRAME ");
 	CODE("PUSHFRAME ");
 
 	return;
