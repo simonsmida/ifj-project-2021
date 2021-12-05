@@ -14,7 +14,9 @@ typedef struct parser {
     token_t *token;
     FILE *src;
     int curr_arg_count;
-    int curr_scope;
+    int block_temp_id;
+    int curr_block_id;
+    int curr_block_depth;
     bool inside_func_def;
     bool inside_func_dec;
 } parser_t;

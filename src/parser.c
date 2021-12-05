@@ -26,7 +26,10 @@ parser_t *parser_init(FILE *src)
         return NULL;
     }  
     
-    parser->curr_scope = -1; 
+    parser->curr_block_id = 0; 
+    parser->curr_block_depth = -1;
+    parser->block_temp_id = 0;
+
     parser->curr_arg_count = 0;
     parser->inside_func_def = false;
     parser->inside_func_dec = false;
