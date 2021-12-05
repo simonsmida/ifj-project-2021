@@ -55,7 +55,6 @@ int dtype_token(parser_t *parser)
 int prog(parser_t *parser)
 {
     int result;
-    
 
     // Rule 1: <prog> → <prolog> <seq> 'EOF'
     
@@ -83,6 +82,8 @@ int prog(parser_t *parser)
  */
 int prolog(parser_t *parser)
 {
+    int result;
+
     switch (TOKEN_T) 
     {
         case TOKEN_KEYWORD:
@@ -757,8 +758,8 @@ int param_fdef_n(parser_t *parser)
             item->const_var->is_var   = true;
             item->const_var->declared = true;
             item->const_var->defined  = true;
-            item->const_var->block_depth = parser->block_depth;
-            item->const_var->block_id    = parser->block_id;
+            item->const_var->block_depth = parser->curr_block_depth;
+            item->const_var->block_id    = parser->curr_block_id;
             item->const_var->type = dtype_keyword(TOKEN_KW_T);
             // Keep track of new parameters
             param_index++;
@@ -1144,7 +1145,7 @@ int stat(parser_t *parser)
                 }
                 
                 // Create new item in local symtable - check semantics (redeclaration)
-                if (would_be_var_redeclared(SYMTAB_L, TOKEN_REPR)) {
+                if (would_be_var_redeclared(SYMTAB_L, TOKEN_REPR, parser->curr_block_id)) {
                     error_message("Parser", ERR_SEMANTIC_DEF, "redeclaration of variable '%s'", TOKEN_REPR);
                     return ERR_SEMANTIC_DEF; // TODO: check this, chyba 3?
                 }
@@ -1296,7 +1297,7 @@ int stat(parser_t *parser)
         // Current id is variable - its an assignment
         // Check whether it was at least declared
         symtable_item_t *item_dec; 
-        if ((item_dec = most_recent_vardef(SYMTAB_L, TOKEN_REPR, true)) == NULL) {
+        if (!(item_dec = most_recent_vardef(SYMTAB_L, TOKEN_REPR, parser->curr_block_depth, false))) {
             error_message("Parser", ERR_SEMANTIC_DEF, "undeclared variable '%s'", TOKEN_REPR);
             return ERR_SEMANTIC_DEF;
         } 
@@ -1496,7 +1497,7 @@ int id_n(parser_t *parser)
             // Current id is variable - its an assignment
             // Check whether it was at least declared
             symtable_item_t *item_dec; 
-            if ((item_dec = most_recent_vardef(SYMTAB_L, TOKEN_REPR, true)) == NULL) {
+            if (!(item_dec = most_recent_vardef(SYMTAB_L, TOKEN_REPR, parser->curr_block_depth, false))) {
                 error_message("Parser", ERR_SEMANTIC_DEF, "undeclared variable '%s'", TOKEN_REPR);
                 return ERR_SEMANTIC_DEF;
             } 
