@@ -143,9 +143,10 @@ symtable_item_t *most_recent_var(symtable_t *s, const char *key, int block_id, i
     int i = 0;
     int current_depth;
     symtable_item_t *closest_item = NULL;
-    int closest_depth_above;
-
-	while (item != NULL) {
+    // TODO: check this!! je 5AM sou..
+    int closest_depth_above = -1;
+	
+    while (item != NULL) {
 		if (!strcmp(item->key, key)) { // variable ID found
             const_var_t *var = item->const_var;
             current_depth = var->block_depth; 
