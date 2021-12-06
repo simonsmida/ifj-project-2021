@@ -115,7 +115,6 @@ int check_arg_type_id(parser_t *parser)
     int term_type = parser->curr_item->const_var->type;
     int expected_type = parser->curr_rhs->function->type_params[parser->curr_arg_count];
     if (!is_term_type_valid(term_type, expected_type)) {
-        fprintf(stderr, "[%s(%s)] ->Expected: %d, is: %d\n\n", parser->curr_rhs->key, parser->curr_item->key,expected_type, dtype_token(parser));
         error_message("Pariiser", ERR_SEMANTIC_PROG, "invalid argument type");
         return ERR_SEMANTIC_PROG;
     }
@@ -192,7 +191,6 @@ int check_function_call_arg_count(parser_t *parser)
     if (num_params != parser->curr_arg_count) {
         error_message("Parser", ERR_SEMANTIC_PROG, "invalid number of arguments "
                       "in function '%s'", parser->curr_rhs->key);
-        fprintf(stderr, "expected: %d, has: %d\n", parser->curr_arg_count, num_params);
         return ERR_SEMANTIC_PROG;
     }
     return EXIT_OK;
@@ -240,7 +238,6 @@ int check_param_mismatch(parser_t *parser, int param_index)
         
         if (param_index+1 > CURR_FUNC->num_params) {
             error_message("Parser", ERR_SEMANTIC_PROG, "param count mismatch");
-            fprintf(stderr, "Expected: %d, is: %d", CURR_FUNC->num_params, param_index+1);
             return ERR_SEMANTIC_PROG;                
         }
         

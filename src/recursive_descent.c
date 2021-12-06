@@ -66,7 +66,6 @@ int prolog(parser_t *parser)
             }
 	        generate_head();
             
-            
             // Define built-in functions
             if ((result = define_every_builtin_function(parser)) != EXIT_OK) {
                 error_message("FATAL", ERR_INTERNAL, "failed to load built-in functions");
@@ -1008,7 +1007,6 @@ int stat(parser_t *parser)
                 item->const_var->is_var = true;
                 item->const_var->declared = true; //TODO: definition
                 item->const_var->type = dtype_keyword(TOKEN_KW_T);
-                printf("%s, %d\n\n", item->key, dtype_keyword(TOKEN_KW_T));
                 parser->curr_item = item; // TODO: do this in assignment case also
                 
                 // <var_def>
