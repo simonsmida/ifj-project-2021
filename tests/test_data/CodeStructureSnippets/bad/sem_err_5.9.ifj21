@@ -1,0 +1,17 @@
+require "ifj21"
+
+function foo(x : integer, y : string) : integer, integer
+  local i : integer = 1
+  local j : integer = 2
+
+  return i, j           --bad navratovy typ
+end
+
+--main
+function main()
+    local z : integer
+    local y : integer
+    local x : integer
+    x,y,z = foo(1,"papa")
+end
+main()

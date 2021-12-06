@@ -1,0 +1,2 @@
+require "ifj21"
+local vysl : integer = 0

@@ -1,0 +1,7 @@
+require "ifj21"
+
+function main()
+    local vysl : integer = 0
+    robert = 1
+end
+main()
