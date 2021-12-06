@@ -143,6 +143,41 @@ int reduce_terminal(PA_stack *stack,symtable_t *local_symtab){
 			 *	TODO Don't forget too remove destroy_token above, while generating!
 			 **/
 		
+			/** Semantic action */
+			/*------------------------------------------------------------------------*/
+			/**	1. Check the non-terminal type */
+			int first_op  = items[0].non_terminal.dtype; //first operand data type
+			if ( first_op  == DTYPE_STRING ){
+					reduced_terminal.non_terminal.dtype = DTYPE_INT;
+					//everything ok call generator
+			}
+			else if (first_op == DTYPE_NIL){
+				/** Runtime error, operation + with nil*/
+				error_message("Parser", ERR_RUNTIME_NIL,  "Runtime error, unexpected nil value in '#' operation");
+				destroy_token(items[1].terminal);
+				return ERR_RUNTIME_NIL;
+			}
+			else{
+				//error 6
+				/** Incompatible types error */
+				error_message("Parser", ERR_SEMANTIC_TC,  "Incompatible types, in '#' operation");
+				destroy_token(items[1].terminal);
+				return ERR_SEMANTIC_TC;
+			}
+			 /*	2. Only accepted types in operation
+			 *	Allowed types in operations:
+			 *		int + int -> int
+			 *		num + num -> num
+			 *		num + int -> num
+			 *    		   |---> inttofloat -> send instruction for converting the data type
+			 *		int + num -> num
+			 *   	 |---> inttofloat -> send instruction for converting the data type
+			 *	4. Send instruction for generating the code with token
+			 *	TODO Don't forget too remove destroy_token above, while generating!
+			 **/
+			
+			/** END of Semantic action */
+			/*------------------------------------------------------------------------*/
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
 			return 1;
@@ -568,14 +603,14 @@ int reduce_terminal(PA_stack *stack,symtable_t *local_symtab){
 			}
 			else if (first_op == DTYPE_NIL || second_op == DTYPE_NIL){
 				/** Runtime error, operation + with nil*/
-				error_message("Parser", ERR_RUNTIME_NIL,  "Runtime error, unexpected nil value in '+' operation");
+				error_message("Parser", ERR_RUNTIME_NIL,  "Runtime error, unexpected nil value in '<' operation");
 				destroy_token(items[1].terminal);
 				return ERR_RUNTIME_NIL;
 			}
 			else{
 				//error 6
 				/** Incompatible types error */
-				error_message("Parser", ERR_SEMANTIC_TC,  "Incompatible types, in '+' operation");
+				error_message("Parser", ERR_SEMANTIC_TC,  "Incompatible types, in '<' operation");
 				destroy_token(items[1].terminal);
 				return ERR_SEMANTIC_TC;
 			}
@@ -629,14 +664,14 @@ int reduce_terminal(PA_stack *stack,symtable_t *local_symtab){
 			}
 			else if (first_op == DTYPE_NIL || second_op == DTYPE_NIL){
 				/** Runtime error, operation + with nil*/
-				error_message("Parser", ERR_RUNTIME_NIL,  "Runtime error, unexpected nil value in '+' operation");
+				error_message("Parser", ERR_RUNTIME_NIL,  "Runtime error, unexpected nil value in '>' operation");
 				destroy_token(items[1].terminal);
 				return ERR_RUNTIME_NIL;
 			}
 			else{
 				//error 6
 				/** Incompatible types error */
-				error_message("Parser", ERR_SEMANTIC_TC,  "Incompatible types, in '+' operation");
+				error_message("Parser", ERR_SEMANTIC_TC,  "Incompatible types, in '>' operation");
 				destroy_token(items[1].terminal);
 				return ERR_SEMANTIC_TC;
 			}
@@ -689,14 +724,14 @@ int reduce_terminal(PA_stack *stack,symtable_t *local_symtab){
 			}
 			else if (first_op == DTYPE_NIL || second_op == DTYPE_NIL){
 				/** Runtime error, operation + with nil*/
-				error_message("Parser", ERR_RUNTIME_NIL,  "Runtime error, unexpected nil value in '+' operation");
+				error_message("Parser", ERR_RUNTIME_NIL,  "Runtime error, unexpected nil value in '<=' operation");
 				destroy_token(items[1].terminal);
 				return ERR_RUNTIME_NIL;
 			}
 			else{
 				//error 6
 				/** Incompatible types error */
-				error_message("Parser", ERR_SEMANTIC_TC,  "Incompatible types, in '+' operation");
+				error_message("Parser", ERR_SEMANTIC_TC,  "Incompatible types, in '<=' operation");
 				destroy_token(items[1].terminal);
 				return ERR_SEMANTIC_TC;
 			}
@@ -749,14 +784,14 @@ int reduce_terminal(PA_stack *stack,symtable_t *local_symtab){
 			}
 			else if (first_op == DTYPE_NIL || second_op == DTYPE_NIL){
 				/** Runtime error, operation + with nil*/
-				error_message("Parser", ERR_RUNTIME_NIL,  "Runtime error, unexpected nil value in '+' operation");
+				error_message("Parser", ERR_RUNTIME_NIL,  "Runtime error, unexpected nil value in '>=' operation");
 				destroy_token(items[1].terminal);
 				return ERR_RUNTIME_NIL;
 			}
 			else{
 				//error 6
 				/** Incompatible types error */
-				error_message("Parser", ERR_SEMANTIC_TC,  "Incompatible types, in '+' operation");
+				error_message("Parser", ERR_SEMANTIC_TC,  "Incompatible types, in '>=' operation");
 				destroy_token(items[1].terminal);
 				return ERR_SEMANTIC_TC;
 			}
@@ -819,7 +854,7 @@ int reduce_terminal(PA_stack *stack,symtable_t *local_symtab){
 			else{
 				//error 6
 				/** Incompatible types error */
-				error_message("Parser", ERR_SEMANTIC_TC,  "Incompatible types, in '+' operation");
+				error_message("Parser", ERR_SEMANTIC_TC,  "Incompatible types, in '==' operation");
 				destroy_token(items[1].terminal);
 				return ERR_SEMANTIC_TC;
 			}
@@ -884,7 +919,7 @@ int reduce_terminal(PA_stack *stack,symtable_t *local_symtab){
 			else{
 				//error 6
 				/** Incompatible types error */
-				error_message("Parser", ERR_SEMANTIC_TC,  "Incompatible types, in '+' operation");
+				error_message("Parser", ERR_SEMANTIC_TC,  "Incompatible types, in '~=' operation");
 				destroy_token(items[1].terminal);
 				return ERR_SEMANTIC_TC;
 			}
