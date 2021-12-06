@@ -176,6 +176,8 @@ symtable_item_t *most_recent_var(symtable_t *s, const char *key, int block_id, i
 		item = item->next;
 	} // while
     
+    // Sanity check
+    if(closest_item == NULL) return NULL; 
     // Handle special case - variable has same depth, but different block id -> its not visible
     if ((closest_item->const_var->block_depth == block_depth) && 
         (closest_item->const_var->block_id != block_id)) {
