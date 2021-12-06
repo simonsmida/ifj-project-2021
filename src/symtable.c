@@ -148,10 +148,10 @@ bool is_visible(const_var_t *var, int block_id, int block_depth)
 symtable_item_t *most_recent_var(symtable_t *s, const char *key, int block_id, int block_depth, bool must_be_defined) 
 {
     symtable_item_t *item = symtable_search(s, key);
+    symtable_item_t *closest_item = NULL;
     
     int current_depth;
-    symtable_item_t *closest_item = NULL;
-    int closest_depth_above = -1;
+    int closest_depth_above = -1; // lowest level
     	
     while (item != NULL) {
 		if (!strcmp(item->key, key)) { // variable ID found
@@ -174,8 +174,6 @@ symtable_item_t *most_recent_var(symtable_t *s, const char *key, int block_id, i
 		item = item->next;
 	} // while
     
-    // Sanity check
-    if(closest_item == NULL) return NULL; 
     return closest_item;    
 }
 
