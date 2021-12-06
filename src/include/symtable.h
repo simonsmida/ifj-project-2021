@@ -189,6 +189,12 @@ symtable_item_t *symtable_search(symtable_t *s, const char *key);
 bool would_be_var_redeclared(symtable_t *s, const char *key, int block_id);
 
 /**
+ * @brief Variable is visible if it is declared in the current block (same depth and id) or 
+ *        if its from one of the blocks above it
+ */
+bool is_visible(const_var_t *var, int block_id, int block_depth);
+
+/**
  * @brief Checks if item with given key had been declared or defined before in valid block 
  *
  * @param s pointer to hashtable structure
