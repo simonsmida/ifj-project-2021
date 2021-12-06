@@ -491,6 +491,7 @@ token_t *generate_token(string_t *buffer,  int type)
 	token->attribute->integer = 0;
 	token->attribute->number = 0.0f;
 	//token->attribute->string = NULL;
+    append_character(buffer, '\0');
     token->attribute->string = malloc(strlen(buffer->string) + 1);
     if (token->attribute->string == NULL){
         fprintf(stderr,"Intern malloc problem\n");
@@ -498,7 +499,7 @@ token_t *generate_token(string_t *buffer,  int type)
     }
     strcpy(token->attribute->string,buffer->string);
 	token->attribute->keyword_type = -1;
-	append_character(buffer, '\0');
+	
 	
     switch (type) 
     {

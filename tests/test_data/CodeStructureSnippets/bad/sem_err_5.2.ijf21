@@ -1,0 +1,10 @@
+require "ifj21"
+
+function foo() : integer, integer
+  local i : integer = 1
+  local j : integer = 4
+  local x : integer = 5
+
+  return i,j,x      -- zly pocet
+end
+foo()
