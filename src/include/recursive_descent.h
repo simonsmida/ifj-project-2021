@@ -2,6 +2,12 @@
 #define RECURSIVE_DESCENT_H
 
 #include "parser.h"
+#include "scanner.h"
+#include "error.h"
+#include "bottom_up_sa.h"
+#include "PA_stack.h"
+#include "code_generator.h"
+#include "semantics.h"
 
 int prog(parser_t *parser);
 int prolog(parser_t *parser);
