@@ -12,7 +12,6 @@
 #include "include/scanner.h"
 #include "include/bottom_up_sa.h"
 #include "include/error.h"
-#include "include/code_generator.h"
 
 
 char precedence_table[19][19] = 
@@ -45,12 +44,12 @@ char precedence_table[19][19] =
  *	@param stack Stack filled with terminals and non-terminals
  *	@return 1 if reduction was successful, elsewhere 0
  */
-int reduce_terminal(PA_stack *stack){
+int reduce_terminal(PA_stack *stack,symtable_t *local_symtab){
 	/** Reduce terminal */
 	PA_item_t items[4];
 	PA_item_t top_item;
 	int operands_count = 0;
-	
+	int zero_div_error = 0;	
 	while(1){
 		PA_stack_top(stack, &top_item);
 		if(top_item.item_type == 2){
@@ -73,8 +72,6 @@ int reduce_terminal(PA_stack *stack){
 	if(operands_count == 1){
 		//1.Check item type
 		//2.Reduce
-	//	if(items[0].terminal->type == TOKEN_KEYWORD)
-	//		//printf("Mam keyword\n");
 		if( (items[0].item_type == 1) && 
 		    (items[0].terminal->type == TOKEN_ID	   ||
 			 items[0].terminal->type == TOKEN_INT_LIT  ||
@@ -84,22 +81,46 @@ int reduce_terminal(PA_stack *stack){
 			(items[0].terminal->attribute->keyword_type == KEYWORD_NIL))
 			)){
 			/** Semantic action */
+			/*------------------------------------------------------------------------*/
 			/**	1. Check the item type -> whether it's a variable or literal */
 			PA_item_t reduced_terminal;
 			if (is_literal(items[0].terminal)){
-				reduced_terminal.non_terminal.dtype = get_data_type(items[0].terminal);
-
+			/*	1.1 Assign the type of the item to the newly created non-terminal */
+				int literal_dtype = get_data_type(items[0].terminal);
+				reduced_terminal.non_terminal.dtype = literal_dtype;
+				/** If literal is int, assign int value to nonterminal */
+				if (literal_dtype == 1){
+					reduced_terminal.non_terminal.int_value    = items[0].terminal->attribute->integer;
+				}
+				/** If literal is number, assign double value to nonterminal */
+				else if (literal_dtype == 2){
+					reduced_terminal.non_terminal.double_value = items[0].terminal->attribute->number;
+				}
 			}
-			generate_pass_param_to_operation(items[0].terminal, 0);
-			destroy_token(items[operands_count-1].terminal);
+			/** Item is a variable */
+			else{
+			/*	1.2 Check if it was declared */
+					char *var_id = items[0].terminal->attribute->string;
+					symtable_item_t *search = symtable_search(local_symtab, var_id);
+					/** Variable was not declared -> was not found in symtable */
+					if (search == NULL){
+						error_message("Parser", ERR_SEMANTIC_DEF,  "Variable '%s' is not declared.",var_id);
+						destroy_token(items[operands_count-1].terminal);
+						return ERR_SEMANTIC_DEF;
+					}
+					/** Variable was declared
+					 *	Assign the type of the variable to the non-terminal */
+					else{
+						reduced_terminal.non_terminal.dtype = search->const_var->type;
+					}
+			}
+			/*------------------------------------------------------------------------*/
 			/*
-			 *	2. If the item is variable -> check if it was declared
-			 *	3. Assign the type of the item to the newly created non-terminal
-		 	 *	3.2 If the item was literal -> get the type from token type 	 
 			 *	4. Send instruction for generating the code with token
 			 *	TODO Don't forget too remove destroy_token above, while generating!
+			 *	free in code generator
 			 **/
-					
+			destroy_token(items[operands_count-1].terminal);
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
 			PA_stack_top(stack,&top_item);
@@ -108,7 +129,6 @@ int reduce_terminal(PA_stack *stack){
 	}
 	else if(operands_count == 2){
 		PA_item_t reduced_terminal;
-		//printf("Operands count 2\n");
 		if(	((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_STRLEN)) &&
 			(items[0].item_type == 0) ){
 			/** Semantic action 
@@ -132,23 +152,60 @@ int reduce_terminal(PA_stack *stack){
 				operands_count--;
 				if(items[operands_count].item_type == 1){
 					destroy_token(items[operands_count].terminal);
-					//printf("Dealokuje\n");
 				}
 			}
 			return 0;
 		}
 	}
 	else if(operands_count == 3){
-		//USE E->E+E
+		/** RULE: E->E+E */
 		PA_item_t reduced_terminal;
 		if( (items[0].item_type == 0) &&
 			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_PLUS)) &&
 			(items[2].item_type == 0) ){
 			
-			/** Semantic action 
-			 *
-			 *	1. Check the non-terminal type
-			 *	2. Only accepted types in operation
+			/** Semantic action */
+			/*------------------------------------------------------------------------*/
+			/**	1. Check the non-terminal type */
+			int first_op  = items[0].non_terminal.dtype; //first operand data type
+			int second_op = items[2].non_terminal.dtype; //second operand data type
+			if ( (first_op  == DTYPE_INT || first_op  == DTYPE_NUMBER) &&
+				 (second_op == DTYPE_INT || second_op == DTYPE_NUMBER)){
+				
+				if(first_op == second_op){
+					if (first_op == DTYPE_INT ){
+						reduced_terminal.non_terminal.dtype = DTYPE_INT;
+					}
+					else{
+						reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
+					}
+					//everything ok call generator
+				}
+				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
+					reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
+					//convert first
+					//call generator
+				}
+				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
+					reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
+					//convert second
+					//call generator
+				}
+			}
+			else if (first_op == DTYPE_NIL || second_op == DTYPE_NIL){
+				/** Runtime error, operation + with nil*/
+				error_message("Parser", ERR_RUNTIME_NIL,  "Runtime error, unexpected nil value in '+' operation");
+				destroy_token(items[1].terminal);
+				return ERR_RUNTIME_NIL;
+			}
+			else{
+				//error 6
+				/** Incompatible types error */
+				error_message("Parser", ERR_SEMANTIC_TC,  "Incompatible types, in '+' operation");
+				destroy_token(items[1].terminal);
+				return ERR_SEMANTIC_TC;
+			}
+			 /*	2. Only accepted types in operation
 			 *	Allowed types in operations:
 			 *		int + int -> int
 			 *		num + num -> num
@@ -160,6 +217,8 @@ int reduce_terminal(PA_stack *stack){
 			 *	TODO Don't forget too remove destroy_token above, while generating!
 			 **/
 			
+			/** END of Semantic action */
+			/*------------------------------------------------------------------------*/
 			
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
@@ -171,6 +230,61 @@ int reduce_terminal(PA_stack *stack){
 			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_MINUS)) &&
 			(items[2].item_type == 0) ){
 			
+			/** Semantic action */
+			/*------------------------------------------------------------------------*/
+			/**	1. Check the non-terminal type */
+			int first_op  = items[0].non_terminal.dtype; //first operand data type
+			int second_op = items[2].non_terminal.dtype; //second operand data type
+			if ( (first_op  == DTYPE_INT || first_op  == DTYPE_NUMBER) &&
+				 (second_op == DTYPE_INT || second_op == DTYPE_NUMBER)){
+				
+				if(first_op == second_op){
+					if (first_op == DTYPE_INT ){
+						reduced_terminal.non_terminal.dtype = DTYPE_INT;
+					}
+					else{
+						reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
+					}
+					//everything ok call generator
+				}
+				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
+					reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
+					//convert first
+					//call generator
+				}
+				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
+					reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
+					//convert second
+					//call generator
+				}
+			}
+			else if (first_op == DTYPE_NIL || second_op == DTYPE_NIL){
+				/** Runtime error, operation + with nil*/
+				error_message("Parser", ERR_RUNTIME_NIL,  "Runtime error, unexpected nil value in '-' operation");
+				destroy_token(items[1].terminal);
+				return ERR_RUNTIME_NIL;
+			}
+			else{
+				//error 6
+				/** Incompatible types error */
+				error_message("Parser", ERR_SEMANTIC_TC,  "Incompatible types, in '-' operation");
+				destroy_token(items[1].terminal);
+				return ERR_SEMANTIC_TC;
+			}
+			 /*	2. Only accepted types in operation
+			 *	Allowed types in operations:
+			 *		int - int -> int
+			 *		num - num -> num
+			 *		num - int -> num
+			 *    		   |---> inttofloat -> send instruction for converting the data type
+			 *		int - num -> num
+			 *   	 |---> inttofloat -> send instruction for converting the data type
+			 *	4. Send instruction for generating the code with token
+			 *	TODO Don't forget too remove destroy_token above, while generating!
+			 **/
+			
+			/** END of Semantic action */
+			/*------------------------------------------------------------------------*/
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[1].terminal);
@@ -181,6 +295,61 @@ int reduce_terminal(PA_stack *stack){
 			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_MUL)) &&
 			(items[2].item_type == 0) ){
 		
+			/** Semantic action */
+			/*------------------------------------------------------------------------*/
+			/**	1. Check the non-terminal type */
+			int first_op  = items[0].non_terminal.dtype; //first operand data type
+			int second_op = items[2].non_terminal.dtype; //second operand data type
+			if ( (first_op  == DTYPE_INT || first_op  == DTYPE_NUMBER) &&
+				 (second_op == DTYPE_INT || second_op == DTYPE_NUMBER)){
+				
+				if(first_op == second_op){
+					if (first_op == DTYPE_INT ){
+						reduced_terminal.non_terminal.dtype = DTYPE_INT;
+					}
+					else{
+						reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
+					}
+					//everything ok call generator
+				}
+				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
+					reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
+					//convert first
+					//call generator
+				}
+				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
+					reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
+					//convert second
+					//call generator
+				}
+			}
+			else if (first_op == DTYPE_NIL || second_op == DTYPE_NIL){
+				/** Runtime error, operation * with nil*/
+				error_message("Parser", ERR_RUNTIME_NIL,  "Runtime error, unexpected nil value in '*' operation");
+				destroy_token(items[1].terminal);
+				return ERR_RUNTIME_NIL;
+			}
+			else{
+				//error 6
+				/** Incompatible types error */
+				error_message("Parser", ERR_SEMANTIC_TC,  "Incompatible types, in '*' operation");
+				destroy_token(items[1].terminal);
+				return ERR_SEMANTIC_TC;
+			}
+			 /*	2. Only accepted types in operation
+			 *	Allowed types in operations:
+			 *		int * int -> int
+			 *		num * num -> num
+			 *		num * int -> num
+			 *    		   |---> inttofloat -> send instruction for converting the data type
+			 *		int * num -> num
+			 *   	 |---> inttofloat -> send instruction for converting the data type
+			 *	4. Send instruction for generating the code with token
+			 *	TODO Don't forget too remove destroy_token above, while generating!
+			 **/
+			
+			/** END of Semantic action */
+			/*------------------------------------------------------------------------*/
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[1].terminal);
@@ -190,7 +359,86 @@ int reduce_terminal(PA_stack *stack){
 		else if( (items[0].item_type == 0) &&
 			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_DIV)) &&
 			(items[2].item_type == 0) ){
-			/*TODO zero division control*/	
+			/** Semantic action */
+			/*------------------------------------------------------------------------*/
+			/**	1. Check the non-terminal type */
+			/** Attention first and second operand may seem in reverse order 
+			 *	but they are not because of the stack */
+			int first_op  = items[2].non_terminal.dtype; //first operand data type
+			int second_op = items[0].non_terminal.dtype; //second operand data type
+			non_terminal_t divisor = items[0].non_terminal; //divisor
+			if ( (first_op  == DTYPE_INT || first_op  == DTYPE_NUMBER) &&
+				 (second_op == DTYPE_INT || second_op == DTYPE_NUMBER)){
+					
+				if(first_op == second_op){
+					if(first_op == DTYPE_INT){
+						if(divisor.int_value != 0){
+							reduced_terminal.non_terminal.dtype = DTYPE_INT;
+							//call generator for INT_DIV
+						}
+						else{
+							goto zero_division_error;
+						}
+					}
+					else if(first_op == DTYPE_NUMBER){
+						if(divisor.double_value != 0){
+							reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
+							//call generator for DIV
+						}
+						else{
+							goto zero_division_error;
+						}
+					}
+				}
+				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
+					if(divisor.double_value != 0){
+						reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
+						//convert first
+						//call generator
+					}
+					else{
+						goto zero_division_error;
+					}
+				}
+				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
+					if(divisor.int_value != 0){
+						reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
+						//convert second
+						//call generator
+					}
+					else{
+						goto zero_division_error;
+					}
+				}
+			}
+			else if (first_op == DTYPE_NIL || second_op == DTYPE_NIL){
+				/** Runtime error, operation / with nil*/
+				error_message("Parser", ERR_RUNTIME_NIL,  "Runtime error, unexpected nil value in '/' operation");
+				destroy_token(items[1].terminal);
+				return ERR_RUNTIME_NIL;
+			}
+			else{
+				//error 6
+				/** Incompatible types error */
+				error_message("Parser", ERR_SEMANTIC_TC,  "Incompatible types, in '/' operation");
+				destroy_token(items[1].terminal);
+				return ERR_SEMANTIC_TC;
+			}
+
+			 /*	2. Only accepted types in operation
+			 *	Allowed types in operations:
+			 *		int / int -> int
+			 *		num / num -> num
+			 *		num / int -> num
+			 *    		   |---> inttofloat -> send instruction for converting the data type
+			 *		int / num -> num
+			 *   	 |---> inttofloat -> send instruction for converting the data type
+			 *	4. Send instruction for generating the code with token
+			 *	TODO Don't forget too remove destroy_token above, while generating!
+			 **/
+			
+			/** END of Semantic action */
+			/*------------------------------------------------------------------------*/
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[1].terminal);
@@ -201,7 +449,46 @@ int reduce_terminal(PA_stack *stack){
 			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_INT_DIV)) &&
 			(items[2].item_type == 0) ){
 			
-			/*TODO zero division control*/	
+			/** Semantic action */
+			/*------------------------------------------------------------------------*/
+			/**	1. Check the non-terminal type */
+			/** Attention first and second operand may seem in reverse order 
+			 *	but they are not because of the stack */
+			int first_op  = items[2].non_terminal.dtype; //first operand data type
+			int second_op = items[0].non_terminal.dtype; //second operand data type
+			non_terminal_t divisor = items[0].non_terminal; //divisor
+			if ( (first_op  == DTYPE_INT) && (first_op  == DTYPE_INT) ){
+				if (divisor.int_value != 0){
+					reduced_terminal.non_terminal.dtype = DTYPE_INT;
+					//call generator
+				}
+				else{
+					goto zero_division_error;
+				}
+			}
+			else if (first_op == DTYPE_NIL || second_op == DTYPE_NIL){
+				/** Runtime error, operation / with nil*/
+				error_message("Parser", ERR_RUNTIME_NIL,  "Runtime error, unexpected nil value in '//' operation");
+				destroy_token(items[1].terminal);
+				return ERR_RUNTIME_NIL;
+			}
+			else{
+				//error 6
+				/** Incompatible types error */
+				error_message("Parser", ERR_SEMANTIC_TC,  "Incompatible types, in '//' operation");
+				destroy_token(items[1].terminal);
+				return ERR_SEMANTIC_TC;
+			}
+
+			 /*	2. Only accepted types in operation
+			 *	Allowed types in operations:
+			 *		int // int -> int
+			 *	4. Send instruction for generating the code with token
+			 *	TODO Don't forget too remove destroy_token above, while generating!
+			 **/
+			
+			/** END of Semantic action */
+			/*------------------------------------------------------------------------*/
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[1].terminal);
@@ -212,6 +499,40 @@ int reduce_terminal(PA_stack *stack){
 			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_CONCAT)) &&
 			(items[2].item_type == 0) ){
 			
+			/** Semantic action */
+			/*------------------------------------------------------------------------*/
+			/**	1. Check the non-terminal type */
+			/** Attention first and second operand may seem in reverse order 
+			 *	but they are not because of the stack */
+			int first_op  = items[2].non_terminal.dtype; //first operand data type
+			int second_op = items[0].non_terminal.dtype; //second operand data type
+			if ( (first_op  == DTYPE_STRING) && (first_op  == DTYPE_STRING) ){
+					reduced_terminal.non_terminal.dtype = DTYPE_INT;
+					//call generator
+			}
+			else if (first_op == DTYPE_NIL || second_op == DTYPE_NIL){
+				/** Runtime error, operation / with nil*/
+				error_message("Parser", ERR_RUNTIME_NIL,  "Runtime error, unexpected nil value in '//' operation");
+				destroy_token(items[1].terminal);
+				return ERR_RUNTIME_NIL;
+			}
+			else{
+				//error 6
+				/** Incompatible types error */
+				error_message("Parser", ERR_SEMANTIC_TC,  "Incompatible types, in '//' operation");
+				destroy_token(items[1].terminal);
+				return ERR_SEMANTIC_TC;
+			}
+
+			 /*	2. Only accepted types in operation
+			 *	Allowed types in operations:
+			 *		str .. str -> str
+			 *	4. Send instruction for generating the code with token
+			 *	TODO Don't forget too remove destroy_token above, while generating!
+			 **/
+			
+			/** END of Semantic action */
+			/*------------------------------------------------------------------------*/
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[1].terminal);
@@ -221,6 +542,57 @@ int reduce_terminal(PA_stack *stack){
 		else if( (items[0].item_type == 0) &&
 			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_LT)) &&
 			(items[2].item_type == 0) ){
+			
+			/** Semantic action */
+			/*------------------------------------------------------------------------*/
+			/**	1. Check the non-terminal type */
+			int first_op  = items[0].non_terminal.dtype; //first operand data type
+			int second_op = items[2].non_terminal.dtype; //second operand data type
+			if ( (first_op  == DTYPE_INT || first_op  == DTYPE_NUMBER) &&
+				 (second_op == DTYPE_INT || second_op == DTYPE_NUMBER)){
+				
+				if(first_op == second_op){
+					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
+					//everything ok call generator
+				}
+				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
+					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
+					//convert first
+					//call generator
+				}
+				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
+					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
+					//convert second
+					//call generator
+				}
+			}
+			else if (first_op == DTYPE_NIL || second_op == DTYPE_NIL){
+				/** Runtime error, operation + with nil*/
+				error_message("Parser", ERR_RUNTIME_NIL,  "Runtime error, unexpected nil value in '+' operation");
+				destroy_token(items[1].terminal);
+				return ERR_RUNTIME_NIL;
+			}
+			else{
+				//error 6
+				/** Incompatible types error */
+				error_message("Parser", ERR_SEMANTIC_TC,  "Incompatible types, in '+' operation");
+				destroy_token(items[1].terminal);
+				return ERR_SEMANTIC_TC;
+			}
+			 /*	2. Only accepted types in operation
+			 *	Allowed types in operations:
+			 *		int < int -> bool
+			 *		num < num -> bool
+			 *		num < int -> bool
+			 *    		   |---> inttofloat -> send instruction for converting the data type
+			 *		int < num -> bool
+			 *   	 |---> inttofloat -> send instruction for converting the data type
+			 *	4. Send instruction for generating the code with token
+			 *	TODO Don't forget too remove destroy_token above, while generating!
+			 **/
+			
+			/** END of Semantic action */
+			/*------------------------------------------------------------------------*/
 			
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
@@ -232,6 +604,56 @@ int reduce_terminal(PA_stack *stack){
 			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_GT)) &&
 			(items[2].item_type == 0) ){
 			
+			/** Semantic action */
+			/*------------------------------------------------------------------------*/
+			/**	1. Check the non-terminal type */
+			int first_op  = items[0].non_terminal.dtype; //first operand data type
+			int second_op = items[2].non_terminal.dtype; //second operand data type
+			if ( (first_op  == DTYPE_INT || first_op  == DTYPE_NUMBER) &&
+				 (second_op == DTYPE_INT || second_op == DTYPE_NUMBER)){
+				
+				if(first_op == second_op){
+					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
+					//everything ok call generator
+				}
+				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
+					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
+					//convert first
+					//call generator
+				}
+				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
+					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
+					//convert second
+					//call generator
+				}
+			}
+			else if (first_op == DTYPE_NIL || second_op == DTYPE_NIL){
+				/** Runtime error, operation + with nil*/
+				error_message("Parser", ERR_RUNTIME_NIL,  "Runtime error, unexpected nil value in '+' operation");
+				destroy_token(items[1].terminal);
+				return ERR_RUNTIME_NIL;
+			}
+			else{
+				//error 6
+				/** Incompatible types error */
+				error_message("Parser", ERR_SEMANTIC_TC,  "Incompatible types, in '+' operation");
+				destroy_token(items[1].terminal);
+				return ERR_SEMANTIC_TC;
+			}
+			 /*	2. Only accepted types in operation
+			 *	Allowed types in operations:
+			 *		int > int -> bool
+			 *		num > num -> bool
+			 *		num > int -> bool
+			 *    		   |---> inttofloat -> send instruction for converting the data type
+			 *		int > num -> bool
+			 *   	 |---> inttofloat -> send instruction for converting the data type
+			 *	4. Send instruction for generating the code with token
+			 *	TODO Don't forget too remove destroy_token above, while generating!
+			 **/
+			
+			/** END of Semantic action */
+			/*------------------------------------------------------------------------*/
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[1].terminal);
@@ -242,6 +664,56 @@ int reduce_terminal(PA_stack *stack){
 			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_LE)) &&
 			(items[2].item_type == 0) ){
 			
+			/** Semantic action */
+			/*------------------------------------------------------------------------*/
+			/**	1. Check the non-terminal type */
+			int first_op  = items[0].non_terminal.dtype; //first operand data type
+			int second_op = items[2].non_terminal.dtype; //second operand data type
+			if ( (first_op  == DTYPE_INT || first_op  == DTYPE_NUMBER) &&
+				 (second_op == DTYPE_INT || second_op == DTYPE_NUMBER)){
+				
+				if(first_op == second_op){
+					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
+					//everything ok call generator
+				}
+				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
+					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
+					//convert first
+					//call generator
+				}
+				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
+					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
+					//convert second
+					//call generator
+				}
+			}
+			else if (first_op == DTYPE_NIL || second_op == DTYPE_NIL){
+				/** Runtime error, operation + with nil*/
+				error_message("Parser", ERR_RUNTIME_NIL,  "Runtime error, unexpected nil value in '+' operation");
+				destroy_token(items[1].terminal);
+				return ERR_RUNTIME_NIL;
+			}
+			else{
+				//error 6
+				/** Incompatible types error */
+				error_message("Parser", ERR_SEMANTIC_TC,  "Incompatible types, in '+' operation");
+				destroy_token(items[1].terminal);
+				return ERR_SEMANTIC_TC;
+			}
+			 /*	2. Only accepted types in operation
+			 *	Allowed types in operations:
+			 *		int <= int -> bool
+			 *		num <= num -> bool
+			 *		num <= int -> bool
+			 *    		   |---> inttofloat -> send instruction for converting the data type
+			 *		int <= num -> bool
+			 *   	 |---> inttofloat -> send instruction for converting the data type
+			 *	4. Send instruction for generating the code with token
+			 *	TODO Don't forget too remove destroy_token above, while generating!
+			 **/
+			
+			/** END of Semantic action */
+			/*------------------------------------------------------------------------*/
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[1].terminal);
@@ -252,6 +724,56 @@ int reduce_terminal(PA_stack *stack){
 			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_GE)) &&
 			(items[2].item_type == 0) ){
 			
+			/** Semantic action */
+			/*------------------------------------------------------------------------*/
+			/**	1. Check the non-terminal type */
+			int first_op  = items[0].non_terminal.dtype; //first operand data type
+			int second_op = items[2].non_terminal.dtype; //second operand data type
+			if ( (first_op  == DTYPE_INT || first_op  == DTYPE_NUMBER) &&
+				 (second_op == DTYPE_INT || second_op == DTYPE_NUMBER)){
+				
+				if(first_op == second_op){
+					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
+					//everything ok call generator
+				}
+				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
+					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
+					//convert first
+					//call generator
+				}
+				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
+					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
+					//convert second
+					//call generator
+				}
+			}
+			else if (first_op == DTYPE_NIL || second_op == DTYPE_NIL){
+				/** Runtime error, operation + with nil*/
+				error_message("Parser", ERR_RUNTIME_NIL,  "Runtime error, unexpected nil value in '+' operation");
+				destroy_token(items[1].terminal);
+				return ERR_RUNTIME_NIL;
+			}
+			else{
+				//error 6
+				/** Incompatible types error */
+				error_message("Parser", ERR_SEMANTIC_TC,  "Incompatible types, in '+' operation");
+				destroy_token(items[1].terminal);
+				return ERR_SEMANTIC_TC;
+			}
+			 /*	2. Only accepted types in operation
+			 *	Allowed types in operations:
+			 *		int >= int -> bool
+			 *		num >= num -> bool
+			 *		num >= int -> bool
+			 *    		   |---> inttofloat -> send instruction for converting the data type
+			 *		int >= num -> bool
+			 *   	 |---> inttofloat -> send instruction for converting the data type
+			 *	4. Send instruction for generating the code with token
+			 *	TODO Don't forget too remove destroy_token above, while generating!
+			 **/
+			
+			/** END of Semantic action */
+			/*------------------------------------------------------------------------*/
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[1].terminal);
@@ -262,6 +784,60 @@ int reduce_terminal(PA_stack *stack){
 			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_EQ)) &&
 			(items[2].item_type == 0) ){
 			
+			/** Semantic action */
+			/*------------------------------------------------------------------------*/
+			/**	1. Check the non-terminal type */
+			int first_op  = items[0].non_terminal.dtype; //first operand data type
+			int second_op = items[2].non_terminal.dtype; //second operand data type
+			if ( (first_op  == DTYPE_INT || first_op  == DTYPE_NUMBER) &&
+				 (second_op == DTYPE_INT || second_op == DTYPE_NUMBER)){
+				
+				if(first_op == second_op){
+					if (first_op == DTYPE_INT ){
+						reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
+					}
+					else{
+						reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
+					}
+					//everything ok call generator
+				}
+				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
+					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
+					//convert first
+					//call generator
+				}
+				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
+					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
+					//convert second
+					//call generator
+				}
+			}
+			else if (first_op == DTYPE_NIL || second_op == DTYPE_NIL){
+					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
+					//generate code
+			}
+			else{
+				//error 6
+				/** Incompatible types error */
+				error_message("Parser", ERR_SEMANTIC_TC,  "Incompatible types, in '+' operation");
+				destroy_token(items[1].terminal);
+				return ERR_SEMANTIC_TC;
+			}
+			 /*	2. Only accepted types in operation
+			 *	Allowed types in operations:
+			 *		int == int -> bool
+			 *		num == num -> bool
+			 *		num == int -> bool
+			 *    		   |---> inttofloat -> send instruction for converting the data type
+			 *		int == num -> bool
+			 *   	 |---> inttofloat -> send instruction for converting the data type
+			 * 		+ all combinations with nil
+			 *	4. Send instruction for generating the code with token
+			 *	TODO Don't forget too remove destroy_token above, while generating!
+			 **/
+			
+			/** END of Semantic action */
+			/*------------------------------------------------------------------------*/
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[1].terminal);
@@ -273,6 +849,60 @@ int reduce_terminal(PA_stack *stack){
 			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_NOT_EQ)) &&
 			(items[2].item_type == 0) ){
 			
+			/** Semantic action */
+			/*------------------------------------------------------------------------*/
+			/**	1. Check the non-terminal type */
+			int first_op  = items[0].non_terminal.dtype; //first operand data type
+			int second_op = items[2].non_terminal.dtype; //second operand data type
+			if ( (first_op  == DTYPE_INT || first_op  == DTYPE_NUMBER) &&
+				 (second_op == DTYPE_INT || second_op == DTYPE_NUMBER)){
+				
+				if(first_op == second_op){
+					if (first_op == DTYPE_INT ){
+						reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
+					}
+					else{
+						reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
+					}
+					//everything ok call generator
+				}
+				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
+					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
+					//convert first
+					//call generator
+				}
+				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
+					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
+					//convert second
+					//call generator
+				}
+			}
+			else if (first_op == DTYPE_NIL || second_op == DTYPE_NIL){
+					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
+					//generate code
+			}
+			else{
+				//error 6
+				/** Incompatible types error */
+				error_message("Parser", ERR_SEMANTIC_TC,  "Incompatible types, in '+' operation");
+				destroy_token(items[1].terminal);
+				return ERR_SEMANTIC_TC;
+			}
+			 /*	2. Only accepted types in operation
+			 *	Allowed types in operations:
+			 *		int ~= int -> bool
+			 *		num ~= num -> bool
+			 *		num ~= int -> bool
+			 *    		   |---> inttofloat -> send instruction for converting the data type
+			 *		int ~= num -> bool
+			 *   	 |---> inttofloat -> send instruction for converting the data type
+			 * 		+ all combinations with nil
+			 *	4. Send instruction for generating the code with token
+			 *	TODO Don't forget too remove destroy_token above, while generating!
+			 **/
+			
+			/** END of Semantic action */
+			/*------------------------------------------------------------------------*/
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[1].terminal);
@@ -283,15 +913,22 @@ int reduce_terminal(PA_stack *stack){
 		else if(((items[0].item_type == 1) && (items[0].terminal->type == TOKEN_R_PAR)) &&
 				 (items[1].item_type == 0) && 
 				((items[2].item_type == 1) && (items[2].terminal->type == TOKEN_L_PAR))){
-			////printf("Token type: %d\n", items[1].terminal->type);
-		
-			////printf("Zredukoval som zatvorky\n");
+			//Pass just the attributes of the non_terminal
+				
+			reduced_terminal.non_terminal.dtype = items[1].non_terminal.dtype;
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[0].terminal);
 			destroy_token(items[2].terminal);
 			return 1;
 		}
+	}
+	if(zero_div_error){
+		zero_division_error:
+		//error 9
+		error_message("Parser", ERR_RUNTIME_ZERODIV,  "Zero division error.");
+		destroy_token(items[1].terminal);
+		return ERR_RUNTIME_ZERODIV;
 	}
 	return 0;
 }
@@ -362,9 +999,9 @@ int analyze_bottom_up(parser_t *parser){
 				reduction = 0;
 			}
 		}
-		////printf("Type of token:%d\n",token_in.terminal->type);
+		//printf("Type of token:%d\n",token_in.terminal->type);
 		/**5. Look the operator priority in the precedence table */
-		switch(precedence_table[get_index(top_terminal.terminal->type)][get_index(token_in.terminal->type)]){
+		switch(precedence_table[get_index(top_terminal.terminal)][get_index(token_in.terminal)]){
 			case '<':
 				PA_stack_top(&stack,&item);
 				handle.handle = '<';
@@ -396,13 +1033,29 @@ int analyze_bottom_up(parser_t *parser){
 				/** While reducing the terminal, we don't want to get
 				 *	new terminal from the stream. Therefore we set the reduction variable
 				 *	to 1, to prevent the new token from reading from stdin */
-				if(!reduce_terminal(&stack)){
-				//printf("Tu som \n");
-					//parser -> token = token_in.terminal;
+				if( parser->curr_func == NULL || parser->curr_func->function == NULL ||
+					parser->curr_func->function->local_symtable == NULL ){
+					error_message("Parser", ERR_INTERNAL,  "Internal error.");
+					destroy_token(token_in.terminal);
+					PA_stack_destroy(&stack);
+					return ERR_INTERNAL;
+				}
+				int reduction_result = reduce_terminal(&stack,SYMTAB_L);
+				if(reduction_result == ERR_REDUCTION ){
 					destroy_token(token_in.terminal);
 					PA_stack_destroy(&stack);
                     return (prev_token_type == TOKEN_ID) ? EXIT_ID_BEFORE :
 					(error_message("Parser", ERR_SYNTAX,  "No reduction rule."),ERR_SYNTAX);
+				}
+				else if(reduction_result == ERR_SEMANTIC_TC ){
+					destroy_token(token_in.terminal);
+					PA_stack_destroy(&stack);
+					return ERR_SEMANTIC_TC;
+				}
+				else if(reduction_result == ERR_RUNTIME_NIL ){
+					destroy_token(token_in.terminal);
+					PA_stack_destroy(&stack);
+					return ERR_RUNTIME_NIL;
 				}
 				reduction = 1;
 				
@@ -439,8 +1092,8 @@ int analyze_bottom_up(parser_t *parser){
  *	@param token Terminal of given string
  *	@return index to precedence table
  */
-int get_index(int token){
-	switch(token){
+int get_index(token_t *token){
+	switch(token->type){
 		case TOKEN_STRLEN	: return  0;
 		case TOKEN_MUL  	: return  1;
 		case TOKEN_DIV  	: return  2;
@@ -460,7 +1113,12 @@ int get_index(int token){
 		case TOKEN_INT_LIT	: return 15;
 		case TOKEN_NUM_LIT	: return 15;
 		case TOKEN_STR_LIT	: return 15;
+		case TOKEN_KEYWORD:
+			if (token->attribute->keyword_type == KEYWORD_NIL){
+				return 15;
+			}
 		case TOKEN_EOF		: return 18;
+		default				: break;
 	};
    return -1;	
 }
@@ -494,12 +1152,11 @@ int is_literal(token_t *token){
  */
 int get_data_type(token_t* token){
 	switch(token->type){
-		case TOKEN_INT_LIT	://printf("Je to INT\n"); return DTYPE_INT;
-		case TOKEN_NUM_LIT	://printf("Je to NUM\n"); return DTYPE_NUMBER;
-		case TOKEN_STR_LIT	://printf("Je to STR\n"); return DTYPE_STRING;
+		case TOKEN_INT_LIT	: return DTYPE_INT;
+		case TOKEN_NUM_LIT	: return DTYPE_NUMBER;
+		case TOKEN_STR_LIT	: return DTYPE_STRING;
 		case TOKEN_KEYWORD  :
 			if(token->attribute->keyword_type == KEYWORD_NIL){
-				//printf("Je to NIL\n");
 				return DTYPE_NIL;
 			}
 		case TOKEN_ID		: //Search in symtab return 0;
@@ -578,15 +1235,13 @@ int switch_context(token_t* token){
 		case TOKEN_ID:
 		case TOKEN_STR_LIT:
 		case TOKEN_INT_LIT:
-		case TOKEN_NUM_LIT:
-		case TOKEN_EOF: return 0;
+		case TOKEN_NUM_LIT: return 0;
+		//case TOKEN_EOF: return 0;
 		case TOKEN_KEYWORD:
 			if (token->attribute->keyword_type == KEYWORD_NIL){
 				return 0;
 			}
 		default: break;
 	}
-	//printf("Prepinam context\n");
 	return 1; 
 }             
-

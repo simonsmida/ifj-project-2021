@@ -16,9 +16,10 @@
 #include "symtable.h"
 #include "parser.h"
 
-#define EXIT_FUNC_ID 42
+#define ERR_REDUCTION   0
+#define EXIT_FUNC_ID    42
 #define EXIT_EMPTY_EXPR 404
-#define EXIT_ID_BEFORE 69
+#define EXIT_ID_BEFORE  69
 
 #define ERR '0'
 #define END '1'
@@ -30,16 +31,17 @@
  *	@param token Terminal of given string
  *	@return 
  */
-int get_index(int token);
+int get_index(token_t *token);
 
 
 /**
  *	@brief Function reduces terminal on the top of the stack,
  *		   according to given rules
  *	@param stack Stack filled with terminals and non-terminals
+ *	@param local_symtab Local symtable of the current function 
  *	@return 1 if reduction was successful, elsewhere 0
  */
-int reduce_terminal(PA_stack *stack);
+int reduce_terminal(PA_stack *stack,symtable_t *local_symtab);
 
 /**
  *	@brief Function returns 1 if the given token
@@ -81,4 +83,3 @@ int get_type(token_t* token);
 int analyze_bottom_up(parser_t *parser);
 
 #endif /** BOTOM_UP_PARSER */
-

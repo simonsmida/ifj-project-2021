@@ -28,6 +28,7 @@ typedef enum data_type {
     DTYPE_NUMBER,
     DTYPE_STRING,
     DTYPE_NIL,
+	DTYPE_BOOL
 } data_type_t;
 
 typedef union data_type_value{
@@ -176,6 +177,13 @@ symtable_item_t *symtable_insert(symtable_t *s, const char *key);
  */ 
 symtable_item_t *symtable_search(symtable_t *s, const char *key);
 
+
+/**
+ * @brief Variable is visible if it is declared in the current block (same depth and id) or 
+ *        if its from one of the blocks above it
+ */
+bool is_visible(const_var_t *var, int block_id, int block_depth);
+
 /**
  * @brief Determines whether current variable would be redeclared or not 
  *        - judging by its name and block id
@@ -186,13 +194,7 @@ symtable_item_t *symtable_search(symtable_t *s, const char *key);
  *
  * @return true = redeclaration would happen, false = no redeclaration
  */
-bool would_be_var_redeclared(symtable_t *s, const char *key, int block_id);
-
-/**
- * @brief Variable is visible if it is declared in the current block (same depth and id) or 
- *        if its from one of the blocks above it
- */
-bool is_visible(const_var_t *var, int block_id, int block_depth);
+bool would_be_var_redeclared(symtable_t *x, const char *key, int block_id);
 
 /**
  * @brief Checks if item with given key had been declared or defined before in valid block 
@@ -207,6 +209,7 @@ bool is_visible(const_var_t *var, int block_id, int block_depth);
  *         variable given by its key (ID)
  */
 symtable_item_t *most_recent_var(symtable_t *s, const char *key, int block_id, int block_depth, bool must_be_defined); 
+    
 // TODO Funkcia definovana aj deklarovana?
 
 #endif
