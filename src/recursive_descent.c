@@ -513,7 +513,6 @@ int arg_n(parser_t *parser)
 int term(parser_t *parser, int num_param)
 {
     if (TOKEN_T == TOKEN_ID) { // RULE 12: <term> → 'id'
-        generate_pass_param_to_function(parser->token , num_param);
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         // SEMANTIC ACTION - check if actual parameter had been defined in current block
         symtable_item_t *item;
@@ -539,7 +538,7 @@ int term(parser_t *parser, int num_param)
             }
         }
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        
+        generate_pass_param_to_function(parser->token , parser->curr_arg_count);
         generate_pass_param_to_operation(parser->token , TOKEN_T); 
         // Keep track of arguments
         parser->curr_arg_count += 1;
@@ -754,8 +753,7 @@ int param_fdef_n(parser_t *parser)
             
             PARSER_EAT();/* 'id' */
             CHECK_TOKEN_TYPE(TOKEN_ID); 
-	    generate_var_declaration_function(parser->token->attribute->string, param_index + 1);
-	    param_index++;
+	        generate_var_declaration_function(TOKEN_REPR, param_index + 1);
             
             ////////////////////////////////////////////////////////////////////////////////////////////// 
             /** SEMANTIC ACTION - check invalid variable name **/
@@ -1358,7 +1356,11 @@ int stat(parser_t *parser)
 
                 // Current token is  'return'
                 result = analyze_bottom_up(parser);
-                CHECK_RESULT_VALUE(result, EXIT_OK); 
+                if ((result != EXIT_EMPTY_EXPR) && (result != EXIT_OK)) {
+                    printf("res: %d\n", result); 
+                    return result; 
+                }
+                // CHECK_RESULT_VALUE(result, EXIT_OK); 
 
                 // Currently we either parsed expression, or the expression was
                 // empty, in both cases we continue further - unlike with if and while
@@ -1390,7 +1392,7 @@ int stat(parser_t *parser)
             if ((item->function != NULL) && (item->function->declared)) {
                 result = func_call(parser);
                 CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
-		generate_pop_stack_to_var(id_name);
+		        generate_pop_stack_to_var(id_name);
                 PARSER_EAT();
                 return EXIT_OK;
             }
@@ -1425,7 +1427,7 @@ int stat(parser_t *parser)
             case EXIT_OK:
                 item_dec->const_var->defined = true;
                 result = expr_list(parser);
-		generate_pop_stack_to_var(id_name);
+		        generate_pop_stack_to_var(id_name);
                 CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
                 return EXIT_OK;
 
@@ -1687,7 +1689,11 @@ int expr_list(parser_t *parser)
 
         // Current token is ','
         result = analyze_bottom_up(parser);
-        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
+        if ((result != EXIT_EMPTY_EXPR) && (result != EXIT_OK)) {
+            printf("res: %d\n", result); 
+            return result; 
+        }
+        //CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
         
         return expr_list(parser);
     
