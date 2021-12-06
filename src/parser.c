@@ -134,13 +134,13 @@ int create_builtin_function(parser_t *parser, char *func_id)
  */
 int define_every_builtin_function(parser_t *parser)
 {
-    if ((define_ord(parser, "ord")             == EXIT_OK) &&
-        (define_chr(parser, "chr")             == EXIT_OK) &&
-        (define_reads(parser, "reads")         == EXIT_OK) &&
-        (define_readi(parser, "readi")         == EXIT_OK) &&
-        (define_readn(parser, "readn")         == EXIT_OK) &&
-        (define_write(parser, "write")         == EXIT_OK) &&
-        (define_substr(parser, "substr")       == EXIT_OK) &&
+    if ((define_ord(      parser, "ord"      ) == EXIT_OK) &&
+        (define_chr(      parser, "chr"      ) == EXIT_OK) &&
+        (define_reads(    parser, "reads"    ) == EXIT_OK) &&
+        (define_readi(    parser, "readi"    ) == EXIT_OK) &&
+        (define_readn(    parser, "readn"    ) == EXIT_OK) &&
+        (define_write(    parser, "write"    ) == EXIT_OK) &&
+        (define_substr(   parser, "substr"   ) == EXIT_OK) &&
         (define_tointeger(parser, "tointeger") == EXIT_OK)) {
         return EXIT_OK;
     }
