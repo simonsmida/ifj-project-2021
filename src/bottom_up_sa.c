@@ -149,6 +149,7 @@ int reduce_terminal(PA_stack *stack,symtable_t *local_symtab){
 			int first_op  = items[0].non_terminal.dtype; //first operand data type
 			if ( first_op  == DTYPE_STRING ){
 					reduced_terminal.non_terminal.dtype = DTYPE_INT;
+					printf("Tu som\n");
 					//everything ok call generator
 			}
 			else if (first_op == DTYPE_NIL){
