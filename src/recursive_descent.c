@@ -479,8 +479,8 @@ int arg_n(parser_t *parser)
         // <term>
         PARSER_EAT(); 
         result = term(parser, num_param);
-	num_param++;
-        CHECK_RESULT_VALUE_SILENT(result, XIT_OK);
+	    num_param++;
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
 
         
         // <arg_n> calls itself
@@ -1265,7 +1265,7 @@ int stat(parser_t *parser)
                 
                 // <var_def>
                 PARSER_EAT();
-                result = var_def(parser);
+                result = var_def(parser, id_name);
                 item->const_var->defined = true; //TODO: definition !! not always
 
 		//generate_pop_stack_to_var(id_name);
