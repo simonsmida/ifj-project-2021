@@ -285,7 +285,7 @@ int func_call(parser_t *parser)
         char func_id[100];
         strcpy(func_id, TOKEN_REPR);
 
-        PARSER_EAT(); /* '(' */
+        PARSER_EAT(); /* expected: '(' */
         CHECK_TOKEN_TYPE(TOKEN_L_PAR); 
         
         // <arg>
@@ -511,15 +511,7 @@ int param_fdef(parser_t *parser)
     {
         case TOKEN_ID: // RULE 18: <param_fdef> → 'id' ':' <dtype> <param_fdef_n>
             
-            ///////////////////////////////////////////////////////////////////////////////////////// 
-            // TODO: required?
-            /** SEMANTIC ACTION - check invalid variable name **/
-            if (symtable_search(SYMTAB_G, TOKEN_REPR)) {
-                error_message("Parser", ERR_SEMANTIC_DEF, "invalid variable name '%s'", TOKEN_REPR);
-                return ERR_SEMANTIC_DEF; // TODO: check this, chyba 3?
-            }
-            ///////////////////////////////////////////////////////////////////////////////////////// 
-            
+            SEMANTIC_ACTION(check_invalid_variable_name, parser);
             SEMANTIC_ACTION(check_param_redeclaration, parser); 
 
             // Insert current variable ID into newly created item in local symtable
@@ -599,14 +591,7 @@ int param_fdef_n(parser_t *parser)
             CHECK_TOKEN_TYPE(TOKEN_ID); 
 	        generate_var_declaration_function(TOKEN_REPR, param_index + 1);
             
-            ////////////////////////////////////////////////////////////////////////////////////////////// 
-            /** SEMANTIC ACTION - check invalid variable name **/
-            if (symtable_search(SYMTAB_G, TOKEN_REPR)) {
-                error_message("Parser", ERR_SEMANTIC_DEF, "invalid variable name '%s'", TOKEN_REPR);
-                return ERR_SEMANTIC_DEF; // TODO: check this, chyba 3?
-            }
-            ////////////////////////////////////////////////////////////////////////////////////////////// 
-            
+            SEMANTIC_ACTION(check_invalid_variable_name, parser);
             SEMANTIC_ACTION(check_param_redeclaration, parser); 
 
             // Insert current variable ID into newly created item in local symtable
@@ -956,13 +941,7 @@ int stat(parser_t *parser)
                 PARSER_EAT(); /* 'id' */
                 CHECK_TOKEN_TYPE(TOKEN_ID);
 
-                ///////////////////////////////////////////////////////////////////////////////////////////// 
-                /** SEMANTIC ACTION - check invalid variable name **/
-                if (symtable_search(SYMTAB_G, TOKEN_REPR)) {
-                    error_message("Parser", ERR_SEMANTIC_DEF, "invalid variable name '%s'", TOKEN_REPR);
-                    return ERR_SEMANTIC_DEF; // TODO: check this, chyba 3?
-                }
-                
+                SEMANTIC_ACTION(check_invalid_variable_name, parser);
                 SEMANTIC_ACTION(check_variable_redeclaration, parser); 
 
                 symtable_item_t *item;
@@ -970,7 +949,6 @@ int stat(parser_t *parser)
                 if ((item = symtable_insert_const_var(SYMTAB_L, TOKEN_REPR)) == NULL) {
                     return ERR_INTERNAL;
                 }
-                ////////////////////////////////////////////////////////////////////////////////////////////
                 
                 if (parser->curr_block_depth == 0) {
                     parser->block_temp_id = parser->curr_block_id;
@@ -1023,7 +1001,7 @@ int stat(parser_t *parser)
                 
                 // Current token is 'if' - switch context
                 result = analyze_bottom_up(parser);
-                CHECK_RESULT_VALUE(result, EXIT_OK);
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
 
                 // 'then'
                 CHECK_TOKEN_TYPE(TOKEN_KEYWORD); 
@@ -1120,7 +1098,7 @@ int stat(parser_t *parser)
         //          <stat> → 'id' <id_n> '=' 'id' '(' term_list ')'
         //          <stat> → 'id' '(' term_list ')' 
 
-        strcpy(id_name, parser->token->attribute->string);
+        strcpy(id_name, TOKEN_REPR);
         symtable_item_t *item; 
         if ((item = symtable_search(SYMTAB_G, TOKEN_REPR)) != NULL) {
             // Current ID is function id
@@ -1133,6 +1111,7 @@ int stat(parser_t *parser)
             }
         }
         
+        // Current ID is variable id
         symtable_item_t *item_dec = NULL; 
         SEMANTIC_ACTION(check_undeclared_var_or_func, parser, item_dec);
 

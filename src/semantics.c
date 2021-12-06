@@ -322,6 +322,16 @@ int check_undeclared_var_or_func(parser_t *parser, symtable_item_t *item_dec)
     return EXIT_OK;
 }
 
+int check_invalid_variable_name(parser_t *parser)
+{
+    /** SEMANTIC ACTION - check invalid variable name **/
+    if (symtable_search(SYMTAB_G, TOKEN_REPR)) {
+        error_message("Parser", ERR_SEMANTIC_DEF, "invalid variable name '%s'", TOKEN_REPR);
+        return ERR_SEMANTIC_DEF; // TODO: check this, chyba 3?
+    }
+    return EXIT_OK;
+}
+
 // TODO: solve error output
 
 
