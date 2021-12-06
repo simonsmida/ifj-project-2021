@@ -526,6 +526,12 @@ int term(parser_t *parser, int num_param)
                 return ERR_SEMANTIC_DEF;
             }
         }
+        // Check variable count
+        int expected_arg_count = parser->curr_rhs->function->num_params;
+        if (parser->curr_arg_count+1 > expected_arg_count) {
+            error_message("Parser", ERR_SEMANTIC_PROG, "invalid argument count");
+            return ERR_SEMANTIC_PROG;
+        }
         // Check variable type
         int term_type = item->const_var->type;
         int expected_type = parser->curr_rhs->function->type_params[parser->curr_arg_count];
@@ -551,6 +557,12 @@ int term(parser_t *parser, int num_param)
         // RULE 16: <term> → 'nil'
         
         ////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Check variable count
+        int expected_arg_count = parser->curr_rhs->function->num_params;
+        if (parser->curr_arg_count+1 > expected_arg_count) {
+            error_message("Parser", ERR_SEMANTIC_PROG, "invalid argument count");
+            return ERR_SEMANTIC_PROG;
+        }
         // Check variable type
         int expected_type = parser->curr_rhs->function->type_params[parser->curr_arg_count];
         //printf("arg -> %s, func: %s\n", TOKEN_REPR, parser->curr_rhs->key);
