@@ -85,6 +85,21 @@ int check_arg_type_literal(parser_t *parser)
     return EXIT_OK;
 }
 
+int check_undefined_arg(parser_t *parser)
+{
+    if ((parser->curr_item = symtable_search(SYMTAB_L, TOKEN_REPR)) == NULL) {
+        error_message("Parser", ERR_SEMANTIC_DEF, "variable '%s' not found in local symtab", TOKEN_REPR);
+        return ERR_SEMANTIC_DEF; 
+    } else if (parser->curr_item->const_var != NULL) {
+        // Variable with same id found in this function - check if previously defined
+        if (!parser->curr_item->const_var->defined) {
+            error_message("Parser", ERR_SEMANTIC_DEF, "variable '%s' undefined", TOKEN_REPR);
+            return ERR_SEMANTIC_DEF;
+        }
+    }
+    return EXIT_OK;
+}
+
 int check_arg_type_id(parser_t *parser)
 {
     if (parser->curr_item == NULL || parser->curr_item->const_var == NULL) {
@@ -95,12 +110,13 @@ int check_arg_type_id(parser_t *parser)
         return EXIT_OK;
     }
 
+
     // Check variable type
     int term_type = parser->curr_item->const_var->type;
     int expected_type = parser->curr_rhs->function->type_params[parser->curr_arg_count];
     if (!is_term_type_valid(term_type, expected_type)) {
-        fprintf(stderr, "Expected: %d, is: %d\n\n", expected_type, dtype_token(parser));
-        error_message("Parser", ERR_SEMANTIC_PROG, "invalid argument type");
+        fprintf(stderr, "[%s(%s)] ->Expected: %d, is: %d\n\n", parser->curr_rhs->key, parser->curr_item->key,expected_type, dtype_token(parser));
+        error_message("Pariiser", ERR_SEMANTIC_PROG, "invalid argument type");
         return ERR_SEMANTIC_PROG;
     }
     return EXIT_OK;

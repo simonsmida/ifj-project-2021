@@ -25,5 +25,6 @@ int check_return_value_count(parser_t *parser, int ret_type_index);
 int check_return_values(parser_t *parser, int ret_type_index);
 int check_variable_redeclaration(parser_t *parser);
 int check_undeclared_var_or_func(parser_t *parser, symtable_item_t *i);
+int check_undefined_arg(parser_t *parser);
 
 #endif
