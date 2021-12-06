@@ -24,6 +24,8 @@ typedef enum non_terminals_type{
 typedef struct nonterminal{
 	non_terminal_type expr_type;
 	data_type_t	dtype;
+	int int_value;
+	double double_value;
 }non_terminal_t;
 
 /** Stack item structure */
@@ -129,4 +131,3 @@ void PA_stack_destroy(PA_stack *stack);
 void PA_item_destroy(PA_item_t item);
 
 #endif /** PA_STACK_H */
-

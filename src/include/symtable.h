@@ -28,6 +28,7 @@ typedef enum data_type {
     DTYPE_NUMBER,
     DTYPE_STRING,
     DTYPE_NIL,
+	DTYPE_BOOL
 } data_type_t;
 
 typedef union data_type_value{
@@ -186,27 +187,20 @@ symtable_item_t *symtable_search(symtable_t *s, const char *key);
  *
  * @return true = redeclaration would happen, false = no redeclaration
  */
-bool would_be_var_redeclared(symtable_t *s, const char *key, int block_id);
-
-/**
- * @brief Variable is visible if it is declared in the current block (same depth and id) or 
- *        if its from one of the blocks above it
- */
-bool is_visible(const_var_t *var, int block_id, int block_depth);
+bool would_be_var_redeclared(symtable_t *x, const char *key, int block_id);
 
 /**
  * @brief Checks if item with given key had been declared or defined before in valid block 
  *
  * @param s pointer to hashtable structure
  * @param key hashtable key
- * @param block_id block id
- * @param block_depth block depth
  * @param declared only enables user to decide if variable has to be defined or not
  *
  * @return Pointer to the item which has variable closest from above to the
  *         variable given by its key (ID)
  */
-symtable_item_t *most_recent_var(symtable_t *s, const char *key, int block_id, int block_depth, bool must_be_defined); 
+symtable_item_t *most_recent_vardef(symtable_t *s, const char *key, int block_depth, bool declared_only); 
+    
 // TODO Funkcia definovana aj deklarovana?
 
 #endif
