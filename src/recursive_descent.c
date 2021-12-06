@@ -47,6 +47,16 @@ int dtype_token(parser_t *parser)
     return DTYPE_UNKNOWN;
 }
 
+bool is_term_type_valid(int term_type, int expected_type)
+{
+    printf("is: %d, expected: %d\n", term_type, expected_type);
+    if (expected_type == DTYPE_NUMBER) {
+        printf("cool\n");
+        return (term_type == DTYPE_INT || term_type == DTYPE_NUMBER);
+    } 
+    return (term_type == expected_type);
+}
+
 /**
  * @brief Starting nonterminal <prog>
  * @param parser pointer to the parser structure
@@ -56,15 +66,15 @@ int prog(parser_t *parser)
 {
     int result;
 
-    // Rule 1: <prog> → <prolog> <seq> 'EOF'
+    // RULE 1: <prog> → <prolog> <seq> 'EOF'
     
     // <prolog>
     result = prolog(parser); 
-    CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+    CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
 
     // <seq>
     result = seq(parser);
-    CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+    CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
 
     // Check End Of File
     CHECK_TOKEN_TYPE(TOKEN_EOF);
@@ -143,22 +153,22 @@ int seq(parser_t *parser)
 
             if (TOKEN_KW_T == KEYWORD_GLOBAL) {
 
-                // Rule 3: <seq> → <func_dec> <seq>
+                // RULE 3: <seq> → <func_dec> <seq>
 
                 // <func_dec>
                 result = func_dec(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
                 
                 // <seq> calls itself
                 return seq(parser); 
             
             } else if (TOKEN_KW_T == KEYWORD_FUNCTION) {
                 
-                // Rule 4: <seq> → <func_def> <seq>
+                // RULE 4: <seq> → <func_def> <seq>
                 
                 // <func_def>
                 result = func_def(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
                 
                 // <seq> calls itself
                 PARSER_EAT();
@@ -166,11 +176,11 @@ int seq(parser_t *parser)
             }
             break; // Must end up in error
 
-        case TOKEN_ID: // Rule 5: <seq> → <func_call> <seq>
+        case TOKEN_ID: // RULE 5: <seq> → <func_call> <seq>
             
             // Nondeterminism not present - if not func_call, its syntax error
             result = func_call(parser);
-            CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+            CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
 
             // <seq> calls itself
             PARSER_EAT();
@@ -236,7 +246,7 @@ int func_dec(parser_t *parser)
                 // <param_fdec>
                 PARSER_EAT();
                 result = param_fdec(parser); 
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
                 
                 // Already eaten - just check validity 
                 CHECK_TOKEN_TYPE(TOKEN_R_PAR); /* ')' */
@@ -244,7 +254,7 @@ int func_dec(parser_t *parser)
                 // <ret_type_list>
                 PARSER_EAT();
                 result = ret_type_list(parser); 
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
                 
                 // If everything went well function is now declared
                 FUNC_ITEM->declared = true;
@@ -290,7 +300,7 @@ int func_def(parser_t *parser)
         
         // <func_head> - block_depth = -1
         result = func_head(parser);
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
 
         // Function body starts here 
         parser->curr_block_depth += 1; // increase block depth
@@ -300,12 +310,12 @@ int func_def(parser_t *parser)
 
         // <stat_list>
         result = stat_list(parser);
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
         
         // No need to eat - current token is 'end'
         CHECK_TOKEN_TYPE(TOKEN_KEYWORD); 
         CHECK_KEYWORD(KEYWORD_END);
-        generate_function_end();
+        //generate_function_end();
 
         // Reset current block depth and id - exiting function definition 
         parser->curr_block_id = 0;
@@ -354,7 +364,7 @@ int func_call(parser_t *parser)
         // <arg>
         PARSER_EAT();
         result = arg(parser);
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
         
         // we dont need to eat, ')' is current token
         CHECK_TOKEN_TYPE(TOKEN_R_PAR); 
@@ -362,14 +372,16 @@ int func_call(parser_t *parser)
         ///////////////////////////////////////////////////////////////////////////////////
         /** SEMANTIC ACTION - check function call argument count **/ 
         if (parser->curr_rhs->function->num_params != parser->curr_arg_count) {
-            error_message("Parser", ERR_SEMANTIC_PROG, "invalid number of arguments in function '%s'", func_id);
-            return ERR_SEMANTIC_PROG;
+            if (strcmp(parser->curr_rhs->key, "write") != 0) { // write is variadic
+                error_message("Parser", ERR_SEMANTIC_PROG, "invalid number of arguments in function '%s'", func_id);
+                return ERR_SEMANTIC_PROG;
+            }
         }
         ///////////////////////////////////////////////////////////////////////////////////
 
         // Reset current argument count
         parser->curr_arg_count = 0;
-        generate_function_call(func_id);
+        //generate_function_call(func_id);
         return EXIT_OK;
     }
     
@@ -385,12 +397,9 @@ int func_call(parser_t *parser)
  */
 int arg(parser_t *parser)
 {
-	
-     int result;
-
-     generate_createframe();
-     if (TOKEN_T == TOKEN_ID) { // RULE 10: <arg> → <term> <arg_n>
-
+    int result;
+    generate_createframe();
+    if (TOKEN_T == TOKEN_ID) { // RULE 10: <arg> → <term> <arg_n>
         
         // Check if this variable was previously defined
         // Check if its name does not conflict with function
@@ -411,7 +420,9 @@ int arg(parser_t *parser)
             return ERR_SEMANTIC_DEF;
         }
         */
-        if ((item = most_recent_vardef(SYMTAB_L, TOKEN_REPR, parser->curr_block_depth, true)) == NULL) {
+        int b_id = parser->curr_block_id;
+        int b_depth = parser->curr_block_depth;
+        if ((item = most_recent_var(SYMTAB_L, TOKEN_REPR, b_id, b_depth, true)) == NULL) {
             //printf("block depth -> %d\n\n", parser->curr_block_depth);
             error_message("Parser", ERR_SEMANTIC_DEF, "variable '%s' is not defined here", TOKEN_REPR);
             return ERR_SEMANTIC_DEF;    
@@ -419,17 +430,13 @@ int arg(parser_t *parser)
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         
         // <term>
-		
         result = term(parser, 1);
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK);
-
-        // Keep track of arguments
-        parser->curr_arg_count += 1;
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
         
         // <arg_n>
         PARSER_EAT(); 
         result = arg_n(parser);
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
         
         return EXIT_OK;
 
@@ -437,15 +444,12 @@ int arg(parser_t *parser)
         
         // <term>
         result = term(parser, 1);
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK);
-
-        // Keep track of arguments
-        parser->curr_arg_count += 1;
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
 
         // <arg_n>
         PARSER_EAT(); 
         result = arg_n(parser);
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
         
         return EXIT_OK;
 
@@ -469,38 +473,31 @@ int arg(parser_t *parser)
 int arg_n(parser_t *parser)
 {
     int result;
-
-	static int num_param = 2;
-    if (parser->token->type == TOKEN_COMMA) {
-    
-        // RULE 15: <arg> → ',' <term> <arg_n>
-
+    static int num_param = 2;
+    if (TOKEN_T == TOKEN_COMMA) { // RULE 15: <arg> → ',' <term> <arg_n>
     
         // <term>
         PARSER_EAT(); 
         result = term(parser, num_param);
-		num_param++;
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+	num_param++;
+        CHECK_RESULT_VALUE_SILENT(result, XIT_OK);
 
-        // Keep track of arguments
-        parser->curr_arg_count += 1;
         
         // <arg_n> calls itself
         PARSER_EAT();
         return arg_n(parser);
 
-
-    } else if (parser->token->type == TOKEN_R_PAR) {
-		num_param = 2;
-
-        // RULE 16: <arg> → ε
+    } else if (TOKEN_T == TOKEN_R_PAR) { 
         
+        // RULE 11: <arg> → ε
+        num_param = 2;
         return EXIT_OK;
     }
 
     error_message("Parser", ERR_SYNTAX, "unexpected token '%s' (%s)", TOKEN_REPR, STRING_TOKEN_T);
     return ERR_SYNTAX;
 }
+
 
 /**
  * @brief Nonterminal <term>
@@ -509,7 +506,6 @@ int arg_n(parser_t *parser)
  */
 int term(parser_t *parser, int num_param)
 {
-
     if (TOKEN_T == TOKEN_ID) { // RULE 12: <term> → 'id'
         generate_pass_param_to_function(parser->token , num_param);
         ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -521,29 +517,49 @@ int term(parser_t *parser, int num_param)
         } else if (item->const_var != NULL) {
             // Variable with same id found in this function - check if previously defined
             if (!item->const_var->defined) {
-            error_message("Parser", ERR_SEMANTIC_DEF, "variable '%s' undefined", TOKEN_REPR);
-            return ERR_SEMANTIC_DEF;
+                error_message("Parser", ERR_SEMANTIC_DEF, "variable '%s' undefined", TOKEN_REPR);
+                return ERR_SEMANTIC_DEF;
+            }
+        }
+        // Check variable type
+        int term_type = item->const_var->type;
+        int expected_type = parser->curr_rhs->function->type_params[parser->curr_arg_count];
+        printf("arg -> %s, func: %s\n", TOKEN_REPR, parser->curr_rhs->key);
+        if (!is_term_type_valid(term_type, expected_type)) {
+            if (strcmp(parser->curr_rhs->key, "write") != 0) { // write function is variadic
+                printf("Arg count: %d, id: %s, type: %d\n", parser->curr_arg_count, TOKEN_REPR, item->const_var->type);
+                error_message("Parser", ERR_SEMANTIC_PROG, "invalid argument type");
+                return ERR_SEMANTIC_PROG;
             }
         }
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         
         //generate_pass_param_to_operation(parser->token , TOKEN_T); 
+        // Keep track of arguments
+        parser->curr_arg_count += 1;
         return EXIT_OK;
 
     } else if (IS_LITERAL(TOKEN_T) || IS_NIL(TOKEN_T)) {
 
-         generate_pass_param_to_function(parser->token, num_param);
-
-        // RULE 13: <term> → 'literal' ... 'literal' = str_lit|int_lit|num_lit
-        // RULE 14: <term> → 'nil'
-
-        // TODO: semantically check type
-
-        if (parser->curr_rhs->function->type_params[parser->curr_arg_count] != dtype_token(parser)) {
-            error_message("Parser", ERR_SEMANTIC_PROG, "invalid argument count");
-            return ERR_SEMANTIC_PROG;
-        }
+        //generate_pass_param_to_operation(parser->token, 0);
+        // RULE 15: <term> → 'literal' ... 'literal' = str_lit|int_lit|num_lit
+        // RULE 16: <term> → 'nil'
         
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Check variable type
+        int expected_type = parser->curr_rhs->function->type_params[parser->curr_arg_count];
+        printf("arg -> %s, func: %s\n", TOKEN_REPR, parser->curr_rhs->key);
+        if (!is_term_type_valid(dtype_token(parser), expected_type)) {
+            if (strcmp(parser->curr_rhs->key, "write") != 0) { // write function is variadic
+                printf("Arg count2: %d\n", parser->curr_arg_count);
+                error_message("Parser", ERR_SEMANTIC_PROG, "invalid argument type");
+                return ERR_SEMANTIC_PROG;
+            }
+        }
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        
+        // Keep track of arguments
+        parser->curr_arg_count += 1;
         return EXIT_OK;
     }
 
@@ -565,7 +581,7 @@ int func_head(parser_t *parser)
     {
         case TOKEN_KEYWORD: 
             
-            // RULE 9: <func_head> → 'function' 'id' '(' <param_fdef> ')' <ret_type_list>
+            // RULE 17: <func_head> → 'function' 'id' '(' <param_fdef> ')' <ret_type_list>
             
             // Expected keyword is 'function' 
             CHECK_KEYWORD(KEYWORD_FUNCTION);
@@ -591,7 +607,7 @@ int func_head(parser_t *parser)
             // <param_fdef>
             PARSER_EAT();
             result = param_fdef(parser); 
-            CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+            CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
 
             // TODO: PARSER_EAT();
             CHECK_TOKEN_TYPE(TOKEN_R_PAR); // ')'
@@ -599,7 +615,7 @@ int func_head(parser_t *parser)
             // <ret_type_list>
             PARSER_EAT();
             result = ret_type_list(parser); 
-            CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+            CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
              
             // If everyting went well, function is now declared and defined
             CURR_FUNC->declared = true;
@@ -622,11 +638,10 @@ int func_head(parser_t *parser)
 int param_fdef(parser_t *parser)
 {
     int result;
-
     
     switch (TOKEN_T)
     {
-        case TOKEN_ID: // RULE 10: <param_fdef> → 'id' ':' <dtype> <param_fdef_n>
+        case TOKEN_ID: // RULE 18: <param_fdef> → 'id' ':' <dtype> <param_fdef_n>
             
             ////////////////////////////////////////////////////////////////////////////////////////////// 
             // TODO: required?
@@ -635,11 +650,7 @@ int param_fdef(parser_t *parser)
                 error_message("Parser", ERR_SEMANTIC_DEF, "invalid variable name '%s'", TOKEN_REPR);
                 return ERR_SEMANTIC_DEF; // TODO: check this, chyba 3?
             }
-
-
-            // TODO: add param ID into the symtable
-		      	generate_var_declaration_function(parser->token->attribute->string, 1);
-
+	    generate_var_declaration_function(parser->token->attribute->string, 1);
             
             // Create new item in local symtable - check semantics (redeclaration)
             symtable_item_t *item;
@@ -663,7 +674,7 @@ int param_fdef(parser_t *parser)
             // <dtype>
             PARSER_EAT();
             result = dtype(parser);
-            CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+            CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
             
             ////////////////////////////////////////////////////////////////////////////////////////////// 
             /** SEMANTIC ACTION - check param type mismatch **/
@@ -697,7 +708,7 @@ int param_fdef(parser_t *parser)
             // <param_fdef_n>
             PARSER_EAT();
             result = param_fdef_n(parser);
-            CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+            CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
             
             return EXIT_OK;
 
@@ -733,14 +744,12 @@ int param_fdef_n(parser_t *parser)
 
     switch (TOKEN_T)
     {
-        case TOKEN_COMMA: // RULE 19: <param_fdef_n> → ',' 'id' ':' <dtype> <param_fdef_n>
+        case TOKEN_COMMA: // RULE 20: <param_fdef_n> → ',' 'id' ':' <dtype> <param_fdef_n>
             
-
             PARSER_EAT();/* 'id' */
             CHECK_TOKEN_TYPE(TOKEN_ID); 
-
-		      	generate_var_declaration_function(parser->token->attribute->string, param_index + 1);
-			    param_index++;
+	    generate_var_declaration_function(parser->token->attribute->string, param_index + 1);
+	    param_index++;
             
             ////////////////////////////////////////////////////////////////////////////////////////////// 
             /** SEMANTIC ACTION - check invalid variable name **/
@@ -768,7 +777,7 @@ int param_fdef_n(parser_t *parser)
             // <dtype>
             PARSER_EAT();
             result = dtype(parser);
-            CHECK_RESULT_VALUE(EXIT_OK); 
+            CHECK_RESULT_VALUE(result, EXIT_OK); 
             
             ////////////////////////////////////////////////////////////////////////////////////////////// 
             /** SEMANTIC ACTION - check function's param validity **/
@@ -792,7 +801,6 @@ int param_fdef_n(parser_t *parser)
                 if (parser->curr_func == NULL) return ERR_INTERNAL; // TODO: FIX THIS
                 symtable_insert_new_function_param(SYMTAB_G, dtype_keyword(TOKEN_KW_T), CURR_F_KEY);  
             }
-
             ////////////////////////////////////////////////////////////////////////////////////////////// 
             
             // Store useful data about current parameter
@@ -803,12 +811,12 @@ int param_fdef_n(parser_t *parser)
             item->const_var->block_id    = parser->curr_block_id;
             item->const_var->type = dtype_keyword(TOKEN_KW_T);
             // Keep track of new parameters
-           
+            param_index++;
 
             PARSER_EAT();
             return param_fdef_n(parser); // calls itself
 
-        case TOKEN_R_PAR: // RULE 20: <param_fdef_n> → ε
+        case TOKEN_R_PAR: // RULE 19: <param_fdef_n> → ε
 
             ////////////////////////////////////////////////////////////////////////////////////////////// 
             /** SEMANTIC ACTION - check if function declaration has more params **/
@@ -842,11 +850,11 @@ int param_fdec(parser_t *parser)
     {
         case TOKEN_KEYWORD:
 
-            if (IS_DTYPE(TOKEN_KW_T)) { // RULE 21: <param_fdec> → <dtype> <param_fdec_n>
+            if (IS_DTYPE(TOKEN_KW_T)) { // RULE 22: <param_fdec> → <dtype> <param_fdec_n>
 
                 // <dtype>
                 result = dtype(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
                 
                 // Insert into symtable(s)
                 if (parser->curr_item == NULL) return ERR_INTERNAL; // TODO: FIX THIS
@@ -855,13 +863,13 @@ int param_fdec(parser_t *parser)
                 // <param_fdec_n>
                 PARSER_EAT();
                 result = param_fdec_n(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
                 
                 return EXIT_OK;
             }
             break; // TODO: beware, must end up in error
 
-        case TOKEN_R_PAR: // RULE 22: <param_fdec> → ε
+        case TOKEN_R_PAR: // RULE 23: <param_fdec> → ε
             
             return EXIT_OK;
 
@@ -884,12 +892,12 @@ int param_fdec_n(parser_t *parser)
 
     switch (TOKEN_T)
     {
-        case TOKEN_COMMA: // RULE 23: <param_fdec_n> → ',' <dtype> <param_fdec_n>
+        case TOKEN_COMMA: // RULE 24: <param_fdec_n> → ',' <dtype> <param_fdec_n>
             
             // <dtype>
             PARSER_EAT();
             result = dtype(parser);
-            CHECK_RESULT_VALUE_SILENT(EXIT_OK); // TODO: check me 
+            CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); // TODO: check me 
             
             // Insert into symtable(s)
             if (parser->curr_item == NULL) return ERR_INTERNAL; // TODO: FIX THIS
@@ -898,7 +906,7 @@ int param_fdec_n(parser_t *parser)
             PARSER_EAT();
             return param_fdec_n(parser); // calls itself
 
-        case TOKEN_R_PAR: // RULE 24: <param_fdec_n> → ε
+        case TOKEN_R_PAR: // RULE 25: <param_fdec_n> → ε
             return EXIT_OK;
         
         default: break;
@@ -918,7 +926,7 @@ int ret_type_list(parser_t *parser)
 {
     int result;
 
-    if (TOKEN_T == TOKEN_COLON) { // RULE 25: <ret_type_list> → ':' <dtype> <ret_type_list_n>
+    if (TOKEN_T == TOKEN_COLON) { // RULE 26: <ret_type_list> → ':' <dtype> <ret_type_list_n>
         
         /* ':' */ 
         CHECK_TOKEN_TYPE(TOKEN_COLON);
@@ -926,7 +934,7 @@ int ret_type_list(parser_t *parser)
         // <dtype>
         PARSER_EAT();
         result = dtype(parser);
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
         
         //////////////////////////////////////////////////////////////////////////////////////////////
         // If function was previously declared check validity of return value types
@@ -955,7 +963,7 @@ int ret_type_list(parser_t *parser)
         // <ret_type_list_n>
         PARSER_EAT();
         result = ret_type_list_n(parser);
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
         return EXIT_OK;
 
     } else if (TOKEN_T == TOKEN_KEYWORD) {
@@ -984,7 +992,7 @@ int ret_type_list(parser_t *parser)
             default: break;
         } // switch()
 
-    } else if (TOKEN_T == TOKEN_ID) { // RULE 26: <ret_type_list> → ε
+    } else if (TOKEN_T == TOKEN_ID) { // RULE 27: <ret_type_list> → ε
         
         //////////////////////////////////////////////////////////////////////////////////////////////
         /** SEMANTIC ACTION**/ 
@@ -995,7 +1003,7 @@ int ret_type_list(parser_t *parser)
         //////////////////////////////////////////////////////////////////////////////////////////////
         return EXIT_OK;
 
-    } else if (TOKEN_T == TOKEN_EOF) { // RULE 26: <ret_type_list> → ε
+    } else if (TOKEN_T == TOKEN_EOF) { // RULE 27: <ret_type_list> → ε
         
         //////////////////////////////////////////////////////////////////////////////////////////////
         /** SEMANTIC ACTION **/ 
@@ -1033,7 +1041,7 @@ int ret_type_list_n(parser_t *parser)
             case KEYWORD_IF:
             case KEYWORD_WHILE:
                 
-                // RULE 28: <ret_type_list_n> → ε
+                // RULE 29: <ret_type_list_n> → ε
 
                 /*
                 if (parser->curr_func != NULL && !parser->curr_func->function->defined) {
@@ -1053,12 +1061,12 @@ int ret_type_list_n(parser_t *parser)
             default: break;
         } // switch()
 
-    } else if (TOKEN_T == TOKEN_COMMA) { // RULE 27: <ret_type_list_n> → ',' <dtype> <ret_type_list_n>
+    } else if (TOKEN_T == TOKEN_COMMA) { // RULE 28: <ret_type_list_n> → ',' <dtype> <ret_type_list_n>
             
         // <dtype>
         PARSER_EAT();
         result = dtype(parser);
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
        
         //////////////////////////////////////////////////////////////////////////////////////////////
         /** SEMANTIC ACTION - check function's return values validity **/
@@ -1095,7 +1103,7 @@ int ret_type_list_n(parser_t *parser)
         PARSER_EAT();
         return ret_type_list_n(parser); // calls itself          
     
-    } else if (TOKEN_T == TOKEN_ID) { // RULE 28: <ret_type_list_n> → ε
+    } else if (TOKEN_T == TOKEN_ID) { // RULE 29: <ret_type_list_n> → ε
         // TODO: MAYBE BS - CHECK TAB/RULES
 
         //////////////////////////////////////////////////////////////////////////////////////////////
@@ -1114,7 +1122,7 @@ int ret_type_list_n(parser_t *parser)
         
         return EXIT_OK;
 
-    } else if (TOKEN_T == TOKEN_EOF) { // RULE 28: <ret_type_list_n> → ε
+    } else if (TOKEN_T == TOKEN_EOF) { // RULE 29: <ret_type_list_n> → ε
         
         //////////////////////////////////////////////////////////////////////////////////////////////
         /** SEMANTIC ACTION - check if function declaration has more params **/
@@ -1151,28 +1159,28 @@ int stat_list(parser_t *parser)
             case KEYWORD_WHILE:
             case KEYWORD_RETURN:
 
-                // RULE 29: <stat_list> → <stat> <stat_list>
+                // RULE 30: <stat_list> → <stat> <stat_list>
                 
                 // <stat>
                 result = stat(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
                 
                 return stat_list(parser); // calls itself  
 
             case KEYWORD_END:
             case KEYWORD_ELSE:
                 
-                // RULE 30: <stat_list> → ε
+                // RULE 31: <stat_list> → ε
                 
                 return EXIT_OK;
 
             default:break;    
         } // switch()
 
-    } else if (TOKEN_T == TOKEN_ID) { // RULE 29: <stat_list> → <stat> <stat_list>
+    } else if (TOKEN_T == TOKEN_ID) { // RULE 30: <stat_list> → <stat> <stat_list>
         // <stat>
         result = stat(parser);
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
         return stat_list(parser); // calls itself  
     } 
     
@@ -1189,11 +1197,11 @@ int stat_list(parser_t *parser)
 int stat(parser_t *parser)
 {
     int result;
-	char id_name[100];
+    char id_name[100];
     if (TOKEN_T == TOKEN_KEYWORD) {
         switch (TOKEN_KW_T) 
         {
-            case KEYWORD_LOCAL: // RULE 31: <stat> → 'local' 'id' ':' <dtype> <var_def> 
+            case KEYWORD_LOCAL: // RULE 32: <stat> → 'local' 'id' ':' <dtype> <var_def> 
 
                 PARSER_EAT(); /* 'id' */
                 CHECK_TOKEN_TYPE(TOKEN_ID);
@@ -1242,7 +1250,7 @@ int stat(parser_t *parser)
                 // <dtype>
                 PARSER_EAT();
                 result = dtype(parser);
-                CHECK_RESULT_VALUE(EXIT_OK); 
+                CHECK_RESULT_VALUE(result, EXIT_OK); 
                
                 //printf("function id: %s\n", parser->curr_func->key); 
                 //printf("Curr id: %s\n", item->key);
@@ -1257,20 +1265,20 @@ int stat(parser_t *parser)
                 
                 // <var_def>
                 PARSER_EAT();
+                result = var_def(parser);
+                item->const_var->defined = true; //TODO: definition !! not always
 
-                result = var_def(parser, id_name);
-                 item->const_var->defined = true; //TODO: definition !! not always
-			      	// generate_pop_stack_to_var(id_name);
+		//generate_pop_stack_to_var(id_name);
 
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
                 
                 return EXIT_OK;
             
-            case KEYWORD_IF: // RULE 32: <stat> → 'if' 'expr' 'then' <stat_list> <else> 'end'
+            case KEYWORD_IF: // RULE 33: <stat> → 'if' 'expr' 'then' <stat_list> <else> 'end'
                 
                 // Current token is 'if' - switch context
                 result = analyze_bottom_up(parser);
-                CHECK_RESULT_VALUE(EXIT_OK);
+                CHECK_RESULT_VALUE(result, EXIT_OK);
 
                 // 'then'
                 CHECK_TOKEN_TYPE(TOKEN_KEYWORD); 
@@ -1287,11 +1295,11 @@ int stat(parser_t *parser)
                 // <stat_list>
                 PARSER_EAT();
                 result = stat_list(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
                 
                 // <else> - do not eat, we need this token
                 result = else_nt(parser); 
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
                  
                 // Do not eat, 'end' is current token
                 CHECK_TOKEN_TYPE(TOKEN_KEYWORD);
@@ -1303,11 +1311,11 @@ int stat(parser_t *parser)
                 PARSER_EAT(); // to get next statement 
                 return EXIT_OK;
             
-            case KEYWORD_WHILE: // RULE 33: <stat> → 'while' 'expr' 'do' <stat_list> 'end'
+            case KEYWORD_WHILE: // RULE 34: <stat> → 'while' 'expr' 'do' <stat_list> 'end'
                 
                 // Current token is 'while' - switch context
                 result = analyze_bottom_up(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
                 /*
                 if ((result == EXIT_EMPTY_EXPR) || (result == ERR_SYNTAX)) {
                     error_message("Parser", ERR_SYNTAX, "expression parsing failed");
@@ -1329,7 +1337,7 @@ int stat(parser_t *parser)
                 // <stat_list>
                 PARSER_EAT(); 
                 result = stat_list(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
 
                 CHECK_TOKEN_TYPE(TOKEN_KEYWORD); // 'end'
                 CHECK_KEYWORD(KEYWORD_END);
@@ -1340,11 +1348,11 @@ int stat(parser_t *parser)
                 PARSER_EAT(); // to get next statement 
                 return EXIT_OK;
 
-            case KEYWORD_RETURN: // RULE 35: <stat> → 'return' 'expr' <expr_list>
+            case KEYWORD_RETURN: // RULE 36: <stat> → 'return' 'expr' <expr_list>
 
                 // Current token is  'return'
                 result = analyze_bottom_up(parser);
-                CHECK_RESULT_VALUE(EXIT_OK); 
+                CHECK_RESULT_VALUE(result, EXIT_OK); 
 
                 // Currently we either parsed expression, or the expression was
                 // empty, in both cases we continue further - unlike with if and while
@@ -1354,7 +1362,7 @@ int stat(parser_t *parser)
 
                 // <expr_list>
                 result = expr_list(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
                  
                 return EXIT_OK;
 
@@ -1363,7 +1371,7 @@ int stat(parser_t *parser)
 
     } else if (TOKEN_T == TOKEN_ID) { 
         
-        // RULE 34: <stat> → 'id' <id_n> '=' 'expr' <expr_list>
+        // RULE 35: <stat> → 'id' <id_n> '=' 'expr' <expr_list>
 
         // Beware - nondeterminism is possible here! - solved adhoc 
         //          <stat> → 'id' <id_n> '=' 'id' '(' term_list ')'
@@ -1374,11 +1382,9 @@ int stat(parser_t *parser)
         if ((item = symtable_search(SYMTAB_G, TOKEN_REPR)) != NULL) {
             // Current ID is function id
             if ((item->function != NULL) && (item->function->declared)) {
-
                 result = func_call(parser);
-			 	generate_pop_stack_to_var(id_name);
-
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
+		generate_pop_stack_to_var(id_name);
                 PARSER_EAT();
                 return EXIT_OK;
             }
@@ -1389,42 +1395,41 @@ int stat(parser_t *parser)
         // Current id is variable or undeclared function - its an assignment
         // Check whether it was at least declared
         symtable_item_t *item_dec; 
-        if (!(item_dec = most_recent_vardef(SYMTAB_L, TOKEN_REPR, parser->curr_block_depth, false))) {
+        int b_id = parser->curr_block_id;
+        int b_depth = parser->curr_block_depth;
+        if (!(item_dec = most_recent_var(SYMTAB_L, TOKEN_REPR, b_id, b_depth, false))) {
             error_message("Parser", ERR_SEMANTIC_DEF, "undeclared variable/function '%s'", TOKEN_REPR);
             return ERR_SEMANTIC_DEF;
         } 
         //////////////////////////////////////////////////////////////////////////////////////////////
         
         // <id_n> 
-		strcpy(id_name, parser->token->attribute->string);
+	strcpy(id_name, parser->token->attribute->string);
         PARSER_EAT();
         result = id_n(parser);
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
         
         /* '=' */
         CHECK_TOKEN_TYPE(TOKEN_ASSIGN);
         
         // *ATTENTION* - nondeterminism handling - func id vs var id
         result = analyze_bottom_up(parser);
-
         switch (result) 
         { // TODO: Define const var
             case EXIT_OK:
                 item_dec->const_var->defined = true;
                 result = expr_list(parser);
-                generate_pop_stack_to_var(id_name);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+		generate_pop_stack_to_var(id_name);
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
                 return EXIT_OK;
 
             case EXIT_FUNC_ID:
-                item_dec->const_var->defined = true;
+                //item_dec->const_var->defined = true; TODO: wtf
                 // Semantic check handled by func_call()
                 result = func_call(parser);
-                generate_pop_stack_to_var(id_name);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
                 PARSER_EAT();
                 return EXIT_OK;
-
 
             case EXIT_ID_BEFORE:
                 if (TOKEN_T == TOKEN_L_PAR) {
@@ -1433,7 +1438,7 @@ int stat(parser_t *parser)
                     // <arg>
                     PARSER_EAT();
                     result = arg(parser);
-                    CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+                    CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
                     
                     //////////////////////////////////////////////////////////////////////////////////////////////
                     // we dont need to eat, ')' is current token
@@ -1466,7 +1471,7 @@ int else_nt(parser_t *parser)
         case TOKEN_KEYWORD:
             if (TOKEN_KW_T == KEYWORD_ELSE) {
 
-                // RULE 38: <else> → 'else' <stat_list>
+                // RULE 39: <else> → 'else' <stat_list>
                 // Current token is keyword 'else'
                 
                 // Keep track of current block info
@@ -1479,13 +1484,13 @@ int else_nt(parser_t *parser)
                 // <stat_list> 
                 PARSER_EAT();
                 result = stat_list(parser);
-                CHECK_RESULT_VALUE(EXIT_OK); 
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
 
                 return EXIT_OK;
             
             } else if (TOKEN_KW_T == KEYWORD_END) {
                 
-                // RULE 39: <else> → ε
+                // RULE 40: <else> → ε
 
                 return EXIT_OK;
             }
@@ -1517,14 +1522,14 @@ int var_def(parser_t *parser, char *id_name)
             case KEYWORD_RETURN:
             case KEYWORD_ELSE:
                 
-                // RULE 41: <var_def> → ε
+                // RULE 42: <var_def> → ε
 
                 return EXIT_OK;
 
             default: break;
         } // switch()
 
-    } else if (TOKEN_T == TOKEN_ASSIGN) { // RULE 40: <var_def> → '=' 'expr'
+    } else if (TOKEN_T == TOKEN_ASSIGN) { // RULE 41: <var_def> → '=' 'expr'
         
         // Current token is '='
 
@@ -1536,7 +1541,7 @@ int var_def(parser_t *parser, char *id_name)
         {
             case EXIT_OK:
                 result = expr_list(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
                 parser->curr_item->const_var->defined = true;
                 return EXIT_OK;
 
@@ -1544,10 +1549,9 @@ int var_def(parser_t *parser, char *id_name)
                 parser->curr_item->const_var->defined = true;
                 // Semantic check handled by func_call()
                 result = func_call(parser);
-                CHECK_RESULT_VALUE_SILENT(EXIT_OK);
+                CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
                 PARSER_EAT();
                 return EXIT_OK;
-
 
             case EXIT_ID_BEFORE:
                 if (TOKEN_T == TOKEN_L_PAR) {
@@ -1556,7 +1560,7 @@ int var_def(parser_t *parser, char *id_name)
                     // <arg>
                     PARSER_EAT();
                     result = arg(parser);
-                    CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+                    CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
                     
                     //////////////////////////////////////////////////////////////////////////////////////////////
                     // we dont need to eat, ')' is current token
@@ -1573,7 +1577,7 @@ int var_def(parser_t *parser, char *id_name)
 
     } else if (TOKEN_T == TOKEN_ID) {
         
-        // RULE 41: <var_def> → ε
+        // RULE 42: <var_def> → ε
 
         return EXIT_OK;
     }
@@ -1596,7 +1600,7 @@ int id_n(parser_t *parser)
     {
         case TOKEN_COMMA:
             
-            // RULE 42: <id_n> → ',' 'id' <id_n>
+            // RULE 43: <id_n> → ',' 'id' <id_n>
             
             PARSER_EAT();
             CHECK_TOKEN_TYPE(TOKEN_ID); // 'id' 
@@ -1604,8 +1608,10 @@ int id_n(parser_t *parser)
             //////////////////////////////////////////////////////////////////////////////////////////////
             // Current id is variable - its an assignment
             // Check whether it was at least declared
-            symtable_item_t *item_dec; 
-            if (!(item_dec = most_recent_vardef(SYMTAB_L, TOKEN_REPR, parser->curr_block_depth, false))) {
+            symtable_item_t *item_dec;
+            int b_id = parser->curr_block_id;
+            int b_depth = parser->curr_block_depth;
+            if (!(item_dec = most_recent_var(SYMTAB_L, TOKEN_REPR, b_id, b_depth, false))) {
                 error_message("Parser", ERR_SEMANTIC_DEF, "undeclared variable '%s'", TOKEN_REPR);
                 return ERR_SEMANTIC_DEF;
             } 
@@ -1616,7 +1622,7 @@ int id_n(parser_t *parser)
 
         case TOKEN_ASSIGN:
 
-            // RULE 43: <id_n> → ε
+            // RULE 44: <id_n> → ε
 
             return EXIT_OK;
 
@@ -1627,7 +1633,7 @@ int id_n(parser_t *parser)
             // <arg>
             PARSER_EAT();
             result = arg(parser);
-            CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+            CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
             
             //////////////////////////////////////////////////////////////////////////////////////////////
             // we dont need to eat, ')' is current token
@@ -1662,7 +1668,7 @@ int expr_list(parser_t *parser)
             case KEYWORD_RETURN:
             case KEYWORD_ELSE: 
 
-                // RULE 37: <expr_list> → ε
+                // RULE 38: <expr_list> → ε
                 
                 return EXIT_OK;
 
@@ -1671,17 +1677,17 @@ int expr_list(parser_t *parser)
 
     } else if (TOKEN_T == TOKEN_COMMA) {
             
-        // RULE 36: <expr_list> → ',' 'expr' <expr_list>
+        // RULE 37: <expr_list> → ',' 'expr' <expr_list>
 
         // Current token is ','
         result = analyze_bottom_up(parser);
-        CHECK_RESULT_VALUE_SILENT(EXIT_OK); 
+        CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
         
         return expr_list(parser);
     
     } else if (TOKEN_T == TOKEN_ID) {
 
-        // RULE 37: <expr_list> → ε
+        // RULE 38: <expr_list> → ε
         
         return EXIT_OK;
     }
@@ -1701,10 +1707,10 @@ int dtype(parser_t *parser)
     if (TOKEN_T == TOKEN_KEYWORD) {
         switch (TOKEN_KW_T) 
         {
-            case KEYWORD_NIL:     // RULE 44: <dtype> → 'nil'
-            case KEYWORD_NUMBER:  // RULE 45: <dtype> → 'number'
-            case KEYWORD_INTEGER: // RULE 46: <dtype> → 'integer'
-            case KEYWORD_STRING:  // RULE 47: <dtype> → 'string'
+            case KEYWORD_NIL:     // RULE 45: <dtype> → 'nil'
+            case KEYWORD_NUMBER:  // RULE 46: <dtype> → 'number'
+            case KEYWORD_INTEGER: // RULE 47: <dtype> → 'integer'
+            case KEYWORD_STRING:  // RULE 48: <dtype> → 'string'
                 return EXIT_OK;
             default: break;
         } // switch()

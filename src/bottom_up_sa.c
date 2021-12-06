@@ -50,6 +50,7 @@ int reduce_terminal(PA_stack *stack){
 	PA_item_t items[4];
 	PA_item_t top_item;
 	int operands_count = 0;
+	
 	while(1){
 		PA_stack_top(stack, &top_item);
 		if(top_item.item_type == 2){
@@ -72,14 +73,33 @@ int reduce_terminal(PA_stack *stack){
 	if(operands_count == 1){
 		//1.Check item type
 		//2.Reduce
-		if((items[0].item_type == 1) && (items[0].terminal->type == TOKEN_ID ||
-										 items[0].terminal->type == TOKEN_INT_LIT ||
-										 items[0].terminal->type == TOKEN_NUM_LIT ||
-										 items[0].terminal->type == TOKEN_STR_LIT)){
+	//	if(items[0].terminal->type == TOKEN_KEYWORD)
+	//		//printf("Mam keyword\n");
+		if( (items[0].item_type == 1) && 
+		    (items[0].terminal->type == TOKEN_ID	   ||
+			 items[0].terminal->type == TOKEN_INT_LIT  ||
+			 items[0].terminal->type == TOKEN_NUM_LIT  ||
+			 items[0].terminal->type == TOKEN_STR_LIT  ||
+			(items[0].terminal->type == TOKEN_KEYWORD  &&
+			(items[0].terminal->attribute->keyword_type == KEYWORD_NIL))
+			)){
+			/** Semantic action */
+			/**	1. Check the item type -> whether it's a variable or literal */
+			PA_item_t reduced_terminal;
+			if (is_literal(items[0].terminal)){
+				reduced_terminal.non_terminal.dtype = get_data_type(items[0].terminal);
 
+			}
 			generate_pass_param_to_operation(items[0].terminal, 0);
 			destroy_token(items[operands_count-1].terminal);
-			PA_item_t reduced_terminal;
+			/*
+			 *	2. If the item is variable -> check if it was declared
+			 *	3. Assign the type of the item to the newly created non-terminal
+		 	 *	3.2 If the item was literal -> get the type from token type 	 
+			 *	4. Send instruction for generating the code with token
+			 *	TODO Don't forget too remove destroy_token above, while generating!
+			 **/
+					
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
 			PA_stack_top(stack,&top_item);
@@ -88,11 +108,21 @@ int reduce_terminal(PA_stack *stack){
 	}
 	else if(operands_count == 2){
 		PA_item_t reduced_terminal;
-		//printf("Token type: %d\n", items[1].terminal->type);
+		//printf("Operands count 2\n");
 		if(	((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_STRLEN)) &&
 			(items[0].item_type == 0) ){
+			/** Semantic action 
+			 *	1. Check the item type -> whether it's a variable or literal
+			 *	2. If the item is variable -> check if it was declared
+			 *	2.1 If the item was id -> get the type from symtab
+		 	 *	2.2 If the item was literal -> get the type from token type 	 
+			 *	3. Only accepted type is string
+			 *	4. Result of the operation # should be integer, so
+			 *	   the type of reduced non-terminal will be int 
+			 *	5. Send instruction for generating the code with token
+			 *	TODO Don't forget too remove destroy_token above, while generating!
+			 **/
 		
-			//printf("Zredukoval binarny operator\n");
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
 			return 1;
@@ -102,6 +132,7 @@ int reduce_terminal(PA_stack *stack){
 				operands_count--;
 				if(items[operands_count].item_type == 1){
 					destroy_token(items[operands_count].terminal);
+					//printf("Dealokuje\n");
 				}
 			}
 			return 0;
@@ -113,6 +144,23 @@ int reduce_terminal(PA_stack *stack){
 		if( (items[0].item_type == 0) &&
 			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_PLUS)) &&
 			(items[2].item_type == 0) ){
+			
+			/** Semantic action 
+			 *
+			 *	1. Check the non-terminal type
+			 *	2. Only accepted types in operation
+			 *	Allowed types in operations:
+			 *		int + int -> int
+			 *		num + num -> num
+			 *		num + int -> num
+			 *    		   |---> inttofloat -> send instruction for converting the data type
+			 *		int + num -> num
+			 *   	 |---> inttofloat -> send instruction for converting the data type
+			 *	4. Send instruction for generating the code with token
+			 *	TODO Don't forget too remove destroy_token above, while generating!
+			 **/
+			
+			
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[1].terminal);
@@ -142,7 +190,7 @@ int reduce_terminal(PA_stack *stack){
 		else if( (items[0].item_type == 0) &&
 			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_DIV)) &&
 			(items[2].item_type == 0) ){
-			
+			/*TODO zero division control*/	
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[1].terminal);
@@ -153,6 +201,7 @@ int reduce_terminal(PA_stack *stack){
 			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_INT_DIV)) &&
 			(items[2].item_type == 0) ){
 			
+			/*TODO zero division control*/	
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[1].terminal);
@@ -234,9 +283,9 @@ int reduce_terminal(PA_stack *stack){
 		else if(((items[0].item_type == 1) && (items[0].terminal->type == TOKEN_R_PAR)) &&
 				 (items[1].item_type == 0) && 
 				((items[2].item_type == 1) && (items[2].terminal->type == TOKEN_L_PAR))){
-			//printf("Token type: %d\n", items[1].terminal->type);
+			////printf("Token type: %d\n", items[1].terminal->type);
 		
-			//printf("Zredukoval som zatvorky\n");
+			////printf("Zredukoval som zatvorky\n");
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[0].terminal);
@@ -250,7 +299,6 @@ int reduce_terminal(PA_stack *stack){
 int analyze_bottom_up(parser_t *parser){
 	//Dealloc the read token from recursive descent
 	destroy_token(parser->token);
-
 	
 	/** 1. Create stack */
 	//Static allocation
@@ -284,15 +332,17 @@ int analyze_bottom_up(parser_t *parser){
                 prev_token_type = token_in.terminal->type;
             }
 			
-			token_in.terminal = get_next_token(stdin);
-            if (token_in.terminal->type == TOKEN_EOF) {
-                parser->token = token_in.terminal;
-				PA_stack_destroy(&stack);
-                return ERR_SYNTAX;
-            }
-
+			token_in.terminal = get_next_token(parser -> src);
+			
 			/** If the generated token is a function id, return read token
 			  	and control to recursive descent parser */
+			if(token_in.terminal->type == TOKEN_EOF){
+					parser -> token = token_in.terminal;
+					/** Dealloc the stack */
+					PA_stack_destroy(&stack);
+					error_message("Parser", ERR_SYNTAX,  "EOF while processing the expression"); 
+					return ERR_SYNTAX;
+			}
 			if(token_in.terminal->type == TOKEN_ID){
 				symtable_item_t *id = symtable_search(parser->global_symtable, token_in.terminal->attribute->string);
 				if ((id != NULL) && (id -> function != NULL) ){
@@ -312,7 +362,7 @@ int analyze_bottom_up(parser_t *parser){
 				reduction = 0;
 			}
 		}
-		//printf("Type of token:%d\n",token_in.terminal->type);
+		////printf("Type of token:%d\n",token_in.terminal->type);
 		/**5. Look the operator priority in the precedence table */
 		switch(precedence_table[get_index(top_terminal.terminal->type)][get_index(token_in.terminal->type)]){
 			case '<':
@@ -347,20 +397,22 @@ int analyze_bottom_up(parser_t *parser){
 				 *	new terminal from the stream. Therefore we set the reduction variable
 				 *	to 1, to prevent the new token from reading from stdin */
 				if(!reduce_terminal(&stack)){
-					//printf("redukujem\n");
-					parser -> token = token_in.terminal;
+				//printf("Tu som \n");
+					//parser -> token = token_in.terminal;
+					destroy_token(token_in.terminal);
 					PA_stack_destroy(&stack);
-                    return (prev_token_type == TOKEN_ID) ? EXIT_ID_BEFORE : ERR_SYNTAX;
+                    return (prev_token_type == TOKEN_ID) ? EXIT_ID_BEFORE :
+					(error_message("Parser", ERR_SYNTAX,  "No reduction rule."),ERR_SYNTAX);
 				}
 				reduction = 1;
 				
 				PA_stack_top_terminal(&stack,&top_terminal);
 				break;
 			case ERR: 
-				//PA_stack_top(&stack,&item);
 				PA_stack_destroy(&stack);
 				parser -> token = token_in.terminal;
-                return (prev_token_type == TOKEN_ID) ? EXIT_ID_BEFORE : ERR_SYNTAX;
+                return (prev_token_type == TOKEN_ID) ? EXIT_ID_BEFORE :
+				(error_message("Parser", ERR_SYNTAX,  "Missing operator."),ERR_SYNTAX);
 			case EPT:
 				/** Dealloc the stack */
 				PA_stack_destroy(&stack);
@@ -372,8 +424,8 @@ int analyze_bottom_up(parser_t *parser){
 				return EXIT_OK;
 		}
 	}while(((top_terminal.terminal->type != TOKEN_EOF) || (token_in.terminal->type != TOKEN_EOF)));
-    
-    /** Check if the PA was successful */
+	
+	/** Check if the PA was successful */
 	if((top_terminal.terminal->type == TOKEN_EOF) && (token_in.terminal->type == TOKEN_EOF)){
 		destroy_token(top_terminal.terminal);
 		destroy_token(token_in.terminal);
@@ -414,6 +466,82 @@ int get_index(int token){
 }
 
 /**
+ *	@brief Function decides whether given token 
+ *		   type is a literal or identifier.
+ *	@param token_type For identifying token data type
+ *	@return 1 if the given token type corresponds with literal.
+ *			0 if the given token type corresponds with identifier.
+ *		   -1 if the given token type is invalid.
+ */
+int is_literal(token_t *token){
+	switch(token->type){
+		case TOKEN_INT_LIT	: return 1;
+		case TOKEN_NUM_LIT	: return 1;
+		case TOKEN_STR_LIT	: return 1;
+		case TOKEN_KEYWORD  :
+			if(token->attribute->keyword_type == KEYWORD_NIL)
+				return 1;
+		case TOKEN_ID		: return 0;
+		default				: break;
+	}
+	return -1;
+}
+
+/**
+ *	@brief Function returns data type of the given token.
+ *	@param token_type For identifying token data type
+ *	@return data_type_t.
+ */
+int get_data_type(token_t* token){
+	switch(token->type){
+		case TOKEN_INT_LIT	://printf("Je to INT\n"); return DTYPE_INT;
+		case TOKEN_NUM_LIT	://printf("Je to NUM\n"); return DTYPE_NUMBER;
+		case TOKEN_STR_LIT	://printf("Je to STR\n"); return DTYPE_STRING;
+		case TOKEN_KEYWORD  :
+			if(token->attribute->keyword_type == KEYWORD_NIL){
+				//printf("Je to NIL\n");
+				return DTYPE_NIL;
+			}
+		case TOKEN_ID		: //Search in symtab return 0;
+		default				: break;
+	}
+	return -1;
+}
+
+/**
+ *	@brief Function returns data type of the
+ *		   given token, while using reduction
+ *		   rule for IDs/literals.
+ *	@param token_type For identifying token data type
+ *	@return token data type.
+ */
+int get_type(token_t* token){
+	switch(token->type){
+		case TOKEN_STRLEN	: return  0;
+		case TOKEN_MUL  	: return  1;
+		case TOKEN_DIV  	: return  2;
+		case TOKEN_INT_DIV  : return  3;
+		case TOKEN_PLUS		: return  4;
+		case TOKEN_MINUS	: return  5;
+		case TOKEN_CONCAT   : return  6;
+		case TOKEN_LT		: return  7;
+		case TOKEN_GT  		: return  8;
+		case TOKEN_LE		: return  9;
+		case TOKEN_GE		: return 10;
+		case TOKEN_EQ		: return 11;
+		case TOKEN_NOT_EQ	: return 12;
+		case TOKEN_L_PAR	: return 13;
+		case TOKEN_R_PAR	: return 14;
+		case TOKEN_ID		: return 15;
+		case TOKEN_INT_LIT	: return 15;
+		case TOKEN_NUM_LIT	: return 15;
+		case TOKEN_STR_LIT	: return 15;
+		case TOKEN_EOF		: return 18;
+		default: break;
+	};
+   return -1;	
+}
+/**
  *	@brief Function returns 1 if the given token
  *		   is not supported in precedence operator
  *		   parser, so it will terminate the 
@@ -452,7 +580,13 @@ int switch_context(token_t* token){
 		case TOKEN_INT_LIT:
 		case TOKEN_NUM_LIT:
 		case TOKEN_EOF: return 0;
+		case TOKEN_KEYWORD:
+			if (token->attribute->keyword_type == KEYWORD_NIL){
+				return 0;
+			}
 		default: break;
 	}
+	//printf("Prepinam context\n");
 	return 1; 
 }             
+

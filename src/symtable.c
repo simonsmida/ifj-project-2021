@@ -63,12 +63,6 @@ symtable_t *symtable_init(size_t n)
     return s;
 }
 
-// TODO: symtable_create_item()
-
-// TODO: symtable_create_function();
-
-// TODO: symtable_create_const_var();
-
 /**
  * @brief Hash table destructor
  */
@@ -142,29 +136,39 @@ bool would_be_var_redeclared(symtable_t *s, const char *key, int block_id)
     return false;
 }
 
-symtable_item_t *most_recent_vardef(symtable_t *s, const char *key, int block_depth, bool must_be_defined) 
+symtable_item_t *most_recent_var(symtable_t *s, const char *key, int block_id, int block_depth, bool must_be_defined) 
 {
-    int index = symtable_hash_index(key);
-    symtable_item_t *item = s->items[index];
+    symtable_item_t *item = symtable_search(s, key);
 
     int i = 0;
     int current_depth;
     symtable_item_t *closest_item = NULL;
     int closest_depth_above;
 
-	while (item != NULL){
+	while (item != NULL) {
 		if (!strcmp(item->key, key)) { // variable ID found
-            current_depth = item->const_var->block_depth; 
+            const_var_t *var = item->const_var;
+            current_depth = var->block_depth; 
             // Return variable with the same ID which is the closest from above
             if (i == 0) { // First match
 			    if (current_depth <= block_depth) {
-                    closest_depth_above = current_depth;
-                    closest_item = item;
+                    if (must_be_defined && (var != NULL && var->defined)) {
+                        closest_depth_above = current_depth;
+                        closest_item = item;
+                    } else if (!must_be_defined && (var != NULL && var->declared)) {
+                        closest_depth_above = current_depth;
+                        closest_item = item;
+                    }
                 }
             } else { // Not first match
 			    if ((current_depth <= block_depth) && (current_depth > closest_depth_above)) {
-                    closest_depth_above = current_depth;
-                    closest_item = item;
+                    if (must_be_defined && (var != NULL && var->defined)) {
+                        closest_depth_above = current_depth;
+                        closest_item = item;
+                    } else if (!must_be_defined && (var != NULL && var->declared)) {
+                        closest_depth_above = current_depth;
+                        closest_item = item;
+                    }
                 } 
             }
             i++;
@@ -172,53 +176,46 @@ symtable_item_t *most_recent_vardef(symtable_t *s, const char *key, int block_de
 		item = item->next;
 	} // while
     
-    if (closest_item == NULL) return NULL;
-
-    if (must_be_defined) { // needs to be also defined
-        return (closest_item->const_var->defined) ? closest_item : NULL;
-    } else { // declared is enough
-        return (closest_item->const_var->declared) ? closest_item : NULL; 
+    // Handle special case - variable has same depth, but different block id -> its not visible
+    if ((closest_item->const_var->block_depth == block_depth) && 
+        (closest_item->const_var->block_id != block_id)) {
+        return NULL;
     }
+    return closest_item;    
 }
 
 symtable_item_t *symtable_insert(symtable_t *s, const char *key)
 {
-	symtable_item_t *item;
-	symtable_item_t *previous = NULL;
+    if (s == NULL || key == NULL) {
+        return NULL;
+    }
+
+	symtable_item_t *first_in_chain;
+	symtable_item_t *new;
     int index = symtable_hash_index(key);
     
-    if ((item = calloc(1, sizeof(symtable_item_t))) == NULL) {
+    if ((new = calloc(1, sizeof(symtable_item_t))) == NULL) {
         return NULL; // INTERNAL ERROR
     }
-    if ((item->key = calloc(1, strlen(key) + 1)) == NULL) {
-        free(item);
+
+    if ((new->key = calloc(1, strlen(key) + 1)) == NULL) {
+        free(new);
         return NULL;
     }
     
-    strcpy(item->key, key);
-    item->const_var = NULL;
-    item->function = NULL;
-    item->next = NULL;
-	
-    symtable_item_t *search;
-    if ((search = symtable_search(s, key)) != NULL) {
-        // Item found
-        while (search != NULL) {
-            previous = search;
-            search = search->next;
-        } 
-        if (previous != NULL) {
-            previous->next = item;
-        } else {
-            s->items[index] = item;
-        }
-    } else {
-        // Item not found - insert it at index
-        s->items[index] = item;
-    }
+    // First item of the chain
+    first_in_chain = s->items[index];
+
+    strcpy(new->key, key);
+    new->const_var = NULL;
+    new->function = NULL;
+    new->next = first_in_chain; // connect the chain
     
+    // Insert new item at the chain start 
+    s->items[index] = new;    
 	s->size++;
-	return item;
+	
+    return new;
 }
 
 

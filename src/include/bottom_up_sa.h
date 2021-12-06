@@ -13,6 +13,7 @@
 
 #include "PA_stack.h"
 #include "scanner.h"
+#include "symtable.h"
 #include "parser.h"
 
 #define EXIT_FUNC_ID 42
@@ -31,7 +32,6 @@
  */
 int get_index(int token);
 
-int analyze_bottom_up(parser_t *parser);
 
 /**
  *	@brief Function reduces terminal on the top of the stack,
@@ -53,11 +53,32 @@ int reduce_terminal(PA_stack *stack);
 int switch_context(token_t* token);
 
 /**
- *	@brief Function returns if the given token
- *		   is a keyword which terminates the 
- *		   operator precedence parser
- *	@param token For identifying token type
- *	@return 1 if token is a keyword, else 0
+ *	@brief Function decides whether given token 
+ *		   type is a literal or identifier.
+ *	@param token_type For identifying token data type
+ *	@return 1 if the given token type corresponds with literal.
+ *			0 if the given token type corresponds with identifier.
+ *		   -1 if the given token type is invalid.
  */
-int is_input_keyword(token_t* token);
+int is_literal(token_t* token);
+
+/**
+ *	@brief Function returns data type of the given token.
+ *	@param token_type For identifying token data type
+ *	@return data_type_t.
+ */
+int get_data_type(token_t* token);
+
+/**
+ *	@brief Function returns data type of the
+ *		   given token, while using reduction
+ *		   rule for IDs/literals.
+ *	@param token For identifying token data type
+ *	@return token data type.
+ */
+int get_type(token_t* token);
+
+int analyze_bottom_up(parser_t *parser);
+
 #endif /** BOTOM_UP_PARSER */
+

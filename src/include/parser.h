@@ -57,8 +57,20 @@ void parser_destroy(parser_t *parser);
 #define TOKEN_REPR parser->token->attribute->string
 #define TOKEN_KW_T parser->token->attribute->keyword_type 
 
+#define IS_DTYPE(_keyword) ((_keyword) == KEYWORD_NIL    || \
+                            (_keyword) == KEYWORD_NUMBER || \
+                            (_keyword) == KEYWORD_STRING || \
+                            (_keyword) == KEYWORD_INTEGER)
+
+#define IS_LITERAL(_ttype) ((_ttype) == TOKEN_NUM_LIT || \
+                            (_ttype) == TOKEN_INT_LIT || \
+                            (_ttype) == TOKEN_STR_LIT)
+
+#define IS_NIL(_ttype) (((_ttype) == TOKEN_KEYWORD) && (TOKEN_KW_T == KEYWORD_NIL))
+
 #define GET_TOKEN() do {                                                   \
     destroy_token(parser->token);                                          \
+    if (parser == NULL) return ERR_INTERNAL;                               \
     parser->token = get_next_token(parser->src);                           \
     if (parser->token == NULL) {                                           \
         error_message("Fatal", ERR_INTERNAL, "INTERNAL INTERPRET ERROR!"); \
@@ -66,24 +78,23 @@ void parser_destroy(parser_t *parser);
     }                                                                      \
 } while(0)
 
-// TODO: make me func
 // TODO: error message for specific nonterminal rule function
-#define CHECK_RESULT_VALUE(_value) do {                                         \
-    if (result != (_value)) {                                                   \
-        if (TOKEN_T == TOKEN_ERROR) {                                           \
-            error_message("Scanner", result, "unknown token '%s'", TOKEN_REPR); \
-        } else {                                                                \
-            error_message("Parser", result, "unexpected token '%s' (%s)",       \
-                    TOKEN_REPR, STRING_TOKEN_T);                                \
-        }                                                                       \
-        return result;                                                          \
-    }                                                                           \
+#define CHECK_RESULT_VALUE(_result, _value) do {                                  \
+    if ((_result) != (_value)) {                                                  \
+        if (TOKEN_T == TOKEN_ERROR) {                                             \
+            error_message("Scanner", (_result), "unknown token '%s'", TOKEN_REPR);\
+        } else {                                                                  \
+            error_message("Parser", (_result), "unexpected token '%s' (%s)",      \
+                                                TOKEN_REPR, STRING_TOKEN_T);      \
+        }                                                                         \
+        return (_result);                                                         \
+    }                                                                             \
 } while(0)
 
-#define CHECK_RESULT_VALUE_SILENT(_value) do { \
-    if (result != (_value)) {                  \
-        return result;                         \
-    }                                          \
+#define CHECK_RESULT_VALUE_SILENT(_result, _value) do { \
+    if ((_result) != (_value)) {                        \
+        return (_result);                               \
+    }                                                   \
 } while(0)
 
 #define CHECK_TOKEN_ERROR() do {                                             \
@@ -96,15 +107,15 @@ void parser_destroy(parser_t *parser);
 #define CHECK_TOKEN_TYPE(_type) do {                                    \
     if (TOKEN_T != (_type)) {                                           \
         error_message("Parser", ERR_SYNTAX, "expected: '%s', is: '%s'", \
-                      token_type_to_str(_type), STRING_TOKEN_T);        \
+                             token_type_to_str(_type), STRING_TOKEN_T); \
         return ERR_SYNTAX;                                              \
     }                                                                   \
 } while(0)
 
 #define CHECK_KEYWORD(_type) do {                                               \
-    if (TOKEN_KW_T != (_type)) {                                             \
+    if (TOKEN_KW_T != (_type)) {                                                \
         error_message("Parser", ERR_SYNTAX, "expected keyword: '%s', is: '%s'", \
-                      kw_type_to_str(_type), STRING_KW_T);                      \
+                                           kw_type_to_str(_type), STRING_KW_T); \
         return ERR_SYNTAX;                                                      \
     }                                                                           \
 } while(0)
@@ -115,37 +126,6 @@ void parser_destroy(parser_t *parser);
     CHECK_TOKEN_ERROR();  \
 } while(0)
 
-#define IS_DTYPE(_keyword)           \
-    (_keyword) == KEYWORD_NIL     || \
-    (_keyword) == KEYWORD_NUMBER  || \
-    (_keyword) == KEYWORD_INTEGER || \
-    (_keyword) == KEYWORD_STRING     
-
-#define IS_LITERAL(_token)        \
-    (_token) == TOKEN_NUM_LIT  || \
-    (_token) == TOKEN_INT_LIT  || \
-    (_token) == TOKEN_STR_LIT    
-
-#define IS_NIL(_token) \
-    (((_token) == (TOKEN_KEYWORD)) && ((TOKEN_KW_T) == (KEYWORD_NIL)))
-
-#if 0
-#define HANDLE_SYMTABLE_FUNCTION() do {                                                 \
-    /* Create symtable item for current ID if not present in  symtable */               \
-    if (!(parser->curr_item = symtable_search(SYMTAB_G, TOKEN_REPR))) {                 \
-                                                                                        \
-        /* Current function ID not found in global symtab */                            \
-        parser->curr_item = symtable_insert(SYMTAB_G, TOKEN_REPR);                      \
-        if (parser->curr_item == NULL) {                                                \
-            return ERR_INTERNAL;                                                        \
-        }                                                                               \
-        /* Insert function ID into the newly created item of global symtable */         \
-        if (!(FUNC_ITEM = symtable_create_and_insert_function(SYMTAB_G, TOKEN_REPR))) { \
-            return ERR_INTERNAL;                                                        \
-        }                                                                               \
-    } /* if item not found */                                                           \
-} while(0)
-#endif
 
 #define HANDLE_SYMTABLE_FUNC_DEC() do {                                                         \
     /* Create symtable item for current ID if not present in symtable */                        \
