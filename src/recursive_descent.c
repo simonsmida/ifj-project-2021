@@ -412,6 +412,7 @@ int term(parser_t *parser, int num_param)
 {
     if (TOKEN_T == TOKEN_ID) { // RULE 12: <term> → 'id'
         
+        SEMANTIC_ACTION(check_undefined_arg, parser); 
         SEMANTIC_ACTION(check_arg_count, parser);
         SEMANTIC_ACTION(check_arg_type_id, parser);
         
@@ -1007,6 +1008,7 @@ int stat(parser_t *parser)
                 item->const_var->is_var = true;
                 item->const_var->declared = true; //TODO: definition
                 item->const_var->type = dtype_keyword(TOKEN_KW_T);
+                printf("%s, %d\n\n", item->key, dtype_keyword(TOKEN_KW_T));
                 parser->curr_item = item; // TODO: do this in assignment case also
                 
                 // <var_def>
