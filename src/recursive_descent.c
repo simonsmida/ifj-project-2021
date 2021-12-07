@@ -990,16 +990,22 @@ int stat(parser_t *parser)
 
                 //SEMANTIC_ACTION(check_invalid_variable_name, parser);
                 //SEMANTIC_ACTION(check_variable_redeclaration, parser); 
+                
+                // Check if block depth is 0 -> then block_id must be set to 1
+                CHECK_MAIN_BLOCK();
+
+                parser->curr_item->const_var->block_id = parser->curr_block_id;
+                parser->curr_item->const_var->block_depth = parser->curr_block_depth;
+                
+                SEMANTIC_ACTION(check_invalid_variable_name, parser);
+                SEMANTIC_ACTION(check_variable_redeclaration, parser); 
 
                 //symtable_item_t *item;
                 // Insert current variable ID into newly created item in local symtable
                 if (!(parser->curr_item = symtable_insert_const_var(SYMTAB_L, TOKEN_REPR))) {
                     return ERR_INTERNAL;
                 }
-                
-                // Check if block depth is 0 -> then block_id must be set to 1
-                CHECK_MAIN_BLOCK();
-                
+                            
                 /*
                 // Set current block info
                 if (parser->curr_block_id == 1 && parser->curr_block_depth == 0) {
@@ -1007,12 +1013,7 @@ int stat(parser_t *parser)
                 } else {
                     parser->curr_item->const_var->block_id = parser->curr_block_id;
                 }*/
-
-                parser->curr_item->const_var->block_id = parser->curr_block_id;
-                parser->curr_item->const_var->block_depth = parser->curr_block_depth;
                 
-                SEMANTIC_ACTION(check_invalid_variable_name, parser);
-                SEMANTIC_ACTION(check_variable_redeclaration, parser); 
                 
                 strcpy(id_name, TOKEN_REPR);
                 char *key = parser->curr_func->key; //TODO: REMOVEME
@@ -1353,6 +1354,7 @@ int var_def(parser_t *parser, char *id_name)
 
         // *ATTENTION* - nondeterminism handling - func id vs var id
         result = analyze_bottom_up(parser);
+        printf("curr expr type: %d\n", parser->curr_expr_type);
         switch (result) 
         {
             case EXIT_OK:
