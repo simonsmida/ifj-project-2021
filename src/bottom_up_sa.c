@@ -120,6 +120,8 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 			 *	TODO Don't forget too remove destroy_token above, while generating!
 			 *	free in code generator
 			 **/
+			generate_pass_param_to_operation(items[0].terminal, parser->curr_func->key, parser->curr_block_depth, parser->array_depth);
+			
 			destroy_token(items[operands_count-1].terminal);
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
@@ -215,17 +217,21 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 					else{
 						reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
 					}
-					//everything ok call generator
+					generate_stack_operation(items[1].terminal);
 				}
 				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
 					reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
 					//convert first
+					generate_type_conversion(1);
 					//call generator
+					generate_stack_operation(items[1].terminal);
 				}
 				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
 					reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
 					//convert second
+					generate_type_conversion(2);
 					//call generator
+					generate_stack_operation(items[1].terminal);
 				}
 			}
 			else if (first_op == DTYPE_NIL || second_op == DTYPE_NIL){
@@ -258,7 +264,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 			
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
-			destroy_token(items[1].terminal);
+			//destroy_token(items[1].terminal);
 			return 1;
 		}
 		//USE E->E-E
@@ -1028,7 +1034,7 @@ int analyze_bottom_up(parser_t *parser){
 			/** If the generated token has not supported type, transfrom it as $,
 			 	and return read token and control to recursive descent parser */	
 			else if(switch_context(token_in.terminal)){
-				printf("Switchujem context pri narazeni na %d\n", token_in.terminal->type);
+				//printf("Switchujem context pri narazeni na %d\n", token_in.terminal->type);
 				parser->token = copy_token(token_in.terminal);
 				token_in.terminal -> type = TOKEN_EOF;
 				reduction = 1;
