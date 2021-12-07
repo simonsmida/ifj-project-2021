@@ -261,10 +261,6 @@ int check_param_count_mismatch(parser_t *parser)
 
 int check_no_return_values(parser_t *parser)
 {
-    if (parser->curr_func == NULL) {
-        return ERR_INTERNAL;
-    }
-
     if (CURR_FUNC->num_ret_types != 0) {
         error_message("Parser", ERR_SEMANTIC_PROG, "expected 0 return values");
         return ERR_SEMANTIC_PROG;

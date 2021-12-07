@@ -811,20 +811,29 @@ int ret_type_list(parser_t *parser)
             
                 // RULE 26: <ret_type_list> → ε
                 
-                SEMANTIC_ACTION(check_no_return_values, parser);
+                if (parser->curr_func != NULL) { // check for declared functions
+                    SEMANTIC_ACTION(check_no_return_values, parser);
+                }
+                
                 return EXIT_OK;
 
             default: break;
         } // switch()
 
     } else if (TOKEN_T == TOKEN_ID) { // RULE 27: <ret_type_list> → ε
-        
-        SEMANTIC_ACTION(check_no_return_values, parser);
+       
+        if (parser->curr_func != NULL) { // check for declared functions
+            SEMANTIC_ACTION(check_no_return_values, parser);
+        }
+
         return EXIT_OK;
 
     } else if (TOKEN_T == TOKEN_EOF) { // RULE 27: <ret_type_list> → ε
         
-        SEMANTIC_ACTION(check_no_return_values, parser);
+        if (parser->curr_func != NULL) { // check for declared functions
+            SEMANTIC_ACTION(check_no_return_values, parser);
+        
+        }
         return EXIT_OK;
     }
 
