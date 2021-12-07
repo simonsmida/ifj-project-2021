@@ -4,7 +4,7 @@
 #include "error.h"
 #include "parser.h"
 
-bool is_term_type_valid(int term_type, int expected_type);
+bool is_expr_type_valid(int expr_type, int expected_type);
 int dtype_token(parser_t *parser);
 int dtype_keyword(int keyword_type);
 
@@ -29,5 +29,6 @@ int check_undefined_arg(parser_t *parser);
 int check_invalid_variable_name(parser_t *parser);
 int check_declared_function_defined(parser_t *parser);
 int check_ret_val_count(parser_t *parser);
+int check_ret_val_type(parser_t *parser);
 
 #endif
