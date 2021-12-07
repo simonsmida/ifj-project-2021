@@ -328,6 +328,26 @@ int check_invalid_variable_name(parser_t *parser)
     return EXIT_OK;
 }
 
+int check_declared_function_defined(parser_t *parser)
+{
+    symtable_item_t *item;
+    // Traverse Global Symtable and check if every declared function was defined
+    for (int i = 0; i < SYMTAB_G->items_size; i++) {
+        item = SYMTAB_G->items[i];
+        while (item != NULL) {
+            if (item->function != NULL) {
+                if (item->function->declared && !item->function->defined) {
+                    error_message("Parser", ERR_SEMANTIC_DEF, "declared function '%s' "
+                                  "was never defined", item->key);
+                    return ERR_SEMANTIC_DEF;
+                }
+            } // if function
+            item = item->next;
+        } // while
+    } // for
+    return EXIT_OK;
+}
+
 // TODO: solve error output
 
 
