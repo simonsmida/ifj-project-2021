@@ -4,7 +4,7 @@ function foo(x : integer, y : string) : integer, integer
   local i : integer = 1
   local j : integer = 2
 
-  return i, j           --bad navratovy typ
+  return i, j          
 end
 
 --main
@@ -12,6 +12,6 @@ function main()
     local z : integer
     local y : integer
     local x : integer
-    x,y,z = foo(1,"papa")
+    x,y,z = foo(1,"papa") --pokud funkce vrací méně hodnot, než je očekáváno dle počtu proměnných id1 až id𝑛, dojde k chybě 5.
 end
 main()

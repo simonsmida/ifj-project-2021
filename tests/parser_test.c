@@ -24,7 +24,7 @@ void write_1(void)
     */
 
     FILE *srcfile = fopen("tests/test_data/CodeStructureSnippets/good/snipWrite.ifj21", "r");
-    TEST_ASSERT_EQUAL_INT(EXIT_OK, parser_parse(srcfile));
+    TEST_ASSERT_EQUAL_INT32(EXIT_OK, parser_parse(srcfile));
 }
 
 void err_sem_3(void)
@@ -171,16 +171,16 @@ int main(void)
 {
     UNITY_BEGIN();
     
-    //RUN_TEST(write_1);
-    RUN_TEST(err_sem_3);
-    RUN_TEST(err_sem_4);
-    RUN_TEST(err_sem_5);
-    //RUN_TEST(err_sem_6);
-    RUN_TEST(err_sem_7);
-    RUN_TEST(err_syn_1);
-    RUN_TEST(test_fun_dec);
-    RUN_TEST(test_fun_multiassign);
-    RUN_TEST(test_fun_var_def);
+    RUN_TEST(write_1);
+    //RUN_TEST(err_sem_3);
+    // RUN_TEST(err_sem_4);
+    // RUN_TEST(err_sem_5);
+    // RUN_TEST(err_sem_6);
+    // RUN_TEST(err_sem_7);
+    // RUN_TEST(err_syn_1);
+    // RUN_TEST(test_fun_dec);
+    // RUN_TEST(test_fun_multiassign);
+    // RUN_TEST(test_fun_var_def);
 
     return UNITY_END();
 }

@@ -4,7 +4,7 @@ function foo(x : integer, y : string) : string, integer
   local i : integer = 1
   local j : string = "papa"
 
-  return j,i           --bad navratovy typ
+  return j,i       
 end
 
 --main

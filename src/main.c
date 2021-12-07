@@ -26,6 +26,5 @@ int main(int argc, char *argv[])
     sleep(2);
     printf("\nSource file read successfully\n");
 #endif
-
     return parser_parse(stdin);
 }
