@@ -1263,8 +1263,14 @@ int stat(parser_t *parser)
 
                 
                 strcpy(id_name, TOKEN_REPR);
-                generate_var_declaration(id_name, parser->curr_func->key, parser->array_depth , parser->curr_block_depth );
-
+				if (parser->inside_while == false){
+                	generate_var_declaration(id_name, parser->curr_func->key, parser->array_depth , parser->curr_block_depth );
+				}
+				else {
+					char some_string[200]; 
+					sprintf(some_string,"DEFVAR LF@%s$%s$%d$%d\n", id_name, parser->curr_func->key, parser->array_depth[parser->curr_block_depth] , parser->curr_block_depth);
+					append_string(parser->buffer, some_string);
+				}
                 PARSER_EAT(); /* ':' */
                 CHECK_TOKEN_TYPE(TOKEN_COLON);
                 
@@ -1338,11 +1344,18 @@ int stat(parser_t *parser)
                 return EXIT_OK;
             
             case KEYWORD_WHILE: // RULE 34: <stat> → 'while' 'expr' 'do' <stat_list> 'end'
+
+				// We update block_depth before bottom_up analysis because of the need to print labels now
+                parser->curr_block_depth += 1;
+				parser->array_depth[parser->curr_block_depth]++;
+
 				parser->inside_while = true;
+				generate_while_repeat_label(parser->curr_func->key, parser->curr_block_depth, parser->array_depth);
                 
                 // Current token is 'while' - switch context
                 result = analyze_bottom_up(parser);
                 CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
+				generate_jump_while_end(parser->curr_func->key, parser->curr_block_depth, parser->array_depth);
                 /*
                 if ((result == EXIT_EMPTY_EXPR) || (result == ERR_SYNTAX)) {
                     error_message("Parser", ERR_SYNTAX, "expression parsing failed");
@@ -1359,7 +1372,6 @@ int stat(parser_t *parser)
                 } else {
                     parser->curr_block_id += 1;
                 }
-                parser->curr_block_depth += 1;
 
                 // <stat_list>
                 PARSER_EAT(); 
@@ -1368,9 +1380,15 @@ int stat(parser_t *parser)
 
                 CHECK_TOKEN_TYPE(TOKEN_KEYWORD); // 'end'
                 CHECK_KEYWORD(KEYWORD_END);
+				generate_while_end_label(parser->curr_func->key, parser->curr_block_depth, parser->array_depth, parser->buffer);
+				// We now get rid of this buffer, as it is no longer needed
+				// But we will need it again in the future so we init it again
+				destroy_buffer(parser->buffer);
+				parser->buffer = init_buffer();
                 
                 // Leaving this block -> decrement depth
                 parser->curr_block_depth -= 1;
+				parser->inside_while = false;
 
                 PARSER_EAT(); // to get next statement 
                 return EXIT_OK;

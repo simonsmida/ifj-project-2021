@@ -64,3 +64,7 @@ void generate_label_if_end(char *function_name, int *pole_zanoreni, int depth);
 void generate_if_body();
 
 void generate_while_repeat_label(char *func_id, int depth, int *array_depth);
+
+void generate_jump_while_end(char *func_id, int depth, int *array_depth);
+
+void generate_while_end_label(char *func_id, int depth, int *array_depth, string_t *buffer);
