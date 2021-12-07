@@ -430,9 +430,10 @@ int term(parser_t *parser, int num_param)
         if (is_write) {
 		    generate_built_in_write(parser->token, 
                                     parser->curr_func->key, 
-                                    parser->curr_block_depth);
+                                    parser->curr_block_depth,
+									parser->array_depth);
 		} else {
-            generate_pass_param_to_function(parser->token, num_param);
+            generate_pass_param_to_function(parser->token,parser->curr_func->key, parser->curr_block_depth, parser->array_depth, num_param);
 		}
 
         // Keep track of arguments
@@ -444,9 +445,10 @@ int term(parser_t *parser, int num_param)
       	if (is_write) {
 		    generate_built_in_write(parser->token, 
                                     parser->curr_func->key, 
-                                    parser->curr_block_depth);
+                                    parser->curr_block_depth,
+									parser->array_depth);
 		} else {
-            generate_pass_param_to_function(parser->token , num_param);
+            generate_pass_param_to_function(parser->token,parser->curr_func->key, parser->curr_block_depth, parser->array_depth, num_param);
 		}
 
         // RULE 15: <term> → 'literal' ... 'literal' = str_lit|int_lit|num_lit
@@ -988,31 +990,30 @@ int stat(parser_t *parser)
                 PARSER_EAT(); /* 'id' */
                 CHECK_TOKEN_TYPE(TOKEN_ID);
 
-                //SEMANTIC_ACTION(check_invalid_variable_name, parser);
-                //SEMANTIC_ACTION(check_variable_redeclaration, parser); 
+                
+                SEMANTIC_ACTION(check_invalid_variable_name, parser);
+                SEMANTIC_ACTION(check_variable_redeclaration, parser); 
 
                 //symtable_item_t *item;
                 // Insert current variable ID into newly created item in local symtable
                 if (!(parser->curr_item = symtable_insert_const_var(SYMTAB_L, TOKEN_REPR))) {
                     return ERR_INTERNAL;
                 }
-                
+                            
                 // Check if block depth is 0 -> then block_id must be set to 1
                 CHECK_MAIN_BLOCK();
+
+
+                //parser->curr_item->const_var->block_depth = parser->curr_block_depth;
                 
-                /*
                 // Set current block info
                 if (parser->curr_block_id == 1 && parser->curr_block_depth == 0) {
                     parser->curr_item->const_var->block_id = parser->block_temp_id;
                 } else {
                     parser->curr_item->const_var->block_id = parser->curr_block_id;
-                }*/
-
+                }
                 parser->curr_item->const_var->block_id = parser->curr_block_id;
-                parser->curr_item->const_var->block_depth = parser->curr_block_depth;
                 
-                SEMANTIC_ACTION(check_invalid_variable_name, parser);
-                SEMANTIC_ACTION(check_variable_redeclaration, parser); 
                 
                 strcpy(id_name, TOKEN_REPR);
                 char *key = parser->curr_func->key; //TODO: REMOVEME
@@ -1353,6 +1354,7 @@ int var_def(parser_t *parser, char *id_name)
 
         // *ATTENTION* - nondeterminism handling - func id vs var id
         result = analyze_bottom_up(parser);
+        printf("curr expr type: %d\n", parser->curr_expr_type);
         switch (result) 
         {
             case EXIT_OK:

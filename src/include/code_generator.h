@@ -5,7 +5,7 @@
 #include "scanner.h"
 #include "symtable.h"
 
-void generate_built_in_write( token_t *token, char *function_id, int depth);
+void generate_built_in_write( token_t *token, char *function_id, int depth, int *array_depth);
 
 void generate_head();
 
@@ -45,7 +45,7 @@ void generate_type_conversion(int op);
 
 void generate_pass_param_to_operation(token_t *token, char *function_name, int depth, int *array_depth);
 
-void generate_pass_param_to_function(token_t *token, int param_index);
+void generate_pass_param_to_function(token_t *token,  char *function_name, int depth, int *array_depth, int param_index);
 
 void generate_function_end ();
 

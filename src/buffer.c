@@ -52,7 +52,7 @@ void append_character(string_t *buffer, int c)
 }
 
 void append_string(string_t *buffer, char *string_to_be_appended){
-	for (int i = 0; i != '\0'; i++){
+	for (int i = 0; string_to_be_appended[i] != '\0'; i++){
 		append_character(buffer, string_to_be_appended[i]);
 	}
 
