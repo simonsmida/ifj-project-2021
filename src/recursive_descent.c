@@ -557,7 +557,7 @@ int param_fdef(parser_t *parser)
             if (parser->curr_func != NULL) {
                 if (!CURR_FUNC->declared) {
                     symtable_insert_new_function_param(SYMTAB_G, dtype_keyword(TOKEN_KW_T), CURR_F_KEY);  
-                }
+                } 
             }
             
             // Store useful data about current parameter
@@ -772,6 +772,7 @@ int ret_type_list(parser_t *parser)
         
         // TODO: this is sus
         if ((parser->curr_item != NULL) && (FUNC_ITEM != NULL)) {
+            printf("item: %s\n\n", parser->curr_item->key);
             // Insert param into symtable(s) only if not already defined
             if (!FUNC_ITEM->defined) {// TODO: check this
                 symtable_insert_new_function_ret_type(SYMTAB_G, dtype_keyword(TOKEN_KW_T), parser->curr_item->key);  
@@ -780,6 +781,8 @@ int ret_type_list(parser_t *parser)
             if (!CURR_FUNC->declared) {
                 // Function is not declared - store return value info
                 symtable_insert_new_function_ret_type(SYMTAB_G, dtype_keyword(TOKEN_KW_T), parser->curr_func->key); 
+            } else {
+                printf("DECLARED\n\n");
             } 
         }
 
@@ -1135,8 +1138,10 @@ int stat(parser_t *parser)
                 switch (result)  {
                     case EXIT_EMPTY_EXPR: 
                         break;
-                    case EXIT_OK: 
-                        parser->curr_ret_val_count += 1; 
+                    case EXIT_OK:
+                        parser->curr_ret_val_count += 1;
+                        // Beware of index vs count (off by one) 
+                        //SEMANTIC_ACTION(check_ret_val_type, parser); 
                         break;
                     default:
                         return result;
@@ -1147,12 +1152,11 @@ int stat(parser_t *parser)
                 // Currently we either parsed expression, or the expression was
                 // empty, in both cases we continue further - unlike with if and while
 
-                // Switch context to the precedence analysis
-                // If no expression is present, returns current token back
-
                 // <expr_list>
                 result = expr_list(parser);
                 CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
+
+                // Beware - returning less values is not an error
                 SEMANTIC_ACTION(check_ret_val_count, parser);
 
                 // Reset curr return value count
