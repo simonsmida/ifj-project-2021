@@ -67,4 +67,6 @@ void generate_while_repeat_label(char *func_id, int depth, int *array_depth);
 
 void generate_jump_while_end(char *func_id, int depth, int *array_depth);
 
-void generate_while_end_label(char *func_id, int depth, int *array_depth, string_t *buffer);
+void generate_while_end_label(char *func_id, int depth, int *array_depth, string_t *buffer); 
+
+void generate_stack_operation(token_t *token);
