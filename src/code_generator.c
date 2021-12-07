@@ -453,7 +453,6 @@ void generate_stack_operation(token_t *token){
 				break;
 		}
 	}
-	destroy_token(token);
 }
 
 void generate_type_conversion(int op){//konverzia bude vzdy len z int na number???
