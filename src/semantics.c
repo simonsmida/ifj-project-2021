@@ -369,8 +369,6 @@ int check_ret_val_count(parser_t *parser)
 
 int check_ret_val_type(parser_t *parser)
 {
-    return EXIT_OK;
-#if 0
     if (parser->curr_func == NULL) {
         return ERR_INTERNAL;
     }
@@ -383,14 +381,13 @@ int check_ret_val_type(parser_t *parser)
     int expected = parser->curr_func->function->ret_types[index];
 
     // Expression is here considered to be a term
-    if (is_expr_type_valid(parser->curr_expr_type, expected)) {
+    if (!is_expr_type_valid(parser->curr_expr_type, expected)) {
         error_message("Parser", ERR_SEMANTIC_PROG, "invalid return value type");
         fprintf(stderr, "expected: %d, is: %d\n", expected, parser->curr_expr_type);
         return ERR_SEMANTIC_PROG;
     }
 
     return EXIT_OK;
-#endif
 }
 
 // TODO: solve error output
