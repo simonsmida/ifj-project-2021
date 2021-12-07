@@ -201,7 +201,7 @@ void generate_function_label(const char *func_name){
 }
 
 void generate_var_declaration(char *var_name, char *function_id, int *array_depth,  int depth){
-	printf("DEFVAR LF@%s$%s$%d$%d\n", var_name, function_id, depth, array_depth[depth]);
+	//printf("DEFVAR LF@%s$%s$%d$%d\n", var_name, function_id, depth, array_depth[depth]);
 
 	return;
 	
@@ -261,37 +261,37 @@ void generate_function_param( char *param_id, data_type_t data_type ){
 }
 
 void generate_createframe(){
-	printf("CREATEFRAME\n");
+	//printf("CREATEFRAME\n");
 
 	return;
 }
 
 void generate_pass_param_to_function(token_t *token, int param_index){
 	
-	printf("DEFVAR TF@%c%d\n", '%', param_index);
-	printf("MOVE TF@%c%d ", '%', param_index);
-	if (token != NULL){
-		switch ( token->type ){
-			case TOKEN_INT_LIT:
+	// printf("DEFVAR TF@%c%d\n", '%', param_index);
+	// printf("MOVE TF@%c%d ", '%', param_index);
+	// if (token != NULL){
+	// 	switch ( token->type ){
+	// 		case TOKEN_INT_LIT:
 
-				printf("int@%d\n", token->attribute->integer);
-				break;
-			case TOKEN_NUM_LIT  :
-				printf("number@%f\n", token->attribute->number);
-				break;
-			case TOKEN_STR_LIT:
-				printf("string@%s\n", token->attribute->string);
-				break;
-			case TOKEN_ID:
-				printf("LF@%s\n", token->attribute->string);
-				break;
+	// 			printf("int@%d\n", token->attribute->integer);
+	// 			break;
+	// 		case TOKEN_NUM_LIT  :
+	// 			printf("number@%f\n", token->attribute->number);
+	// 			break;
+	// 		case TOKEN_STR_LIT:
+	// 			printf("string@%s\n", token->attribute->string);
+	// 			break;
+	// 		case TOKEN_ID:
+	// 			printf("LF@%s\n", token->attribute->string);
+	// 			break;
 		
-			default:
-				break;
-		}
-	}
+	// 		default:
+	// 			break;
+	// 	}
+	// }
 
-	return;
+	// return;
 }
 
 
@@ -514,8 +514,8 @@ void generate_start_of_program(){
 
 
 void generate_var_declaration_function(char *var_name, char *function_id, int depth, int *array_depth, int num_param){
-	printf("DEFVAR LF@%s$%s$%d$%d\n", var_name, function_id, depth, array_depth[depth]);
-	printf("MOVE LF@%s$%s$%d$%d LF@%c%d\n", var_name, function_id, depth, array_depth[depth], '%',  num_param);
+	// printf("DEFVAR LF@%s$%s$%d$%d\n", var_name, function_id, depth, array_depth[depth]);
+	// printf("MOVE LF@%s$%s$%d$%d LF@%c%d\n", var_name, function_id, depth, array_depth[depth], '%',  num_param);
 
 	return;
 }
