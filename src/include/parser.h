@@ -4,6 +4,8 @@
 #include "symtable.h"
 #include "scanner.h"
 
+#define ARRAY_DEPTH_NUM 10
+
 typedef struct parser {
     symtable_t *global_symtable;
     symtable_item_t *curr_item;
@@ -19,6 +21,9 @@ typedef struct parser {
     int curr_block_depth;
     bool inside_func_def;
     bool inside_func_dec;
+	bool inside_while;
+	int array_depth[ARRAY_DEPTH_NUM];
+	string_t *buffer;
 } parser_t;
 
 
