@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#include "include/buffer.h"
 #include "include/symtable.h"
 #include "include/scanner.h"
 #include "include/parser.h"
@@ -96,6 +97,10 @@ void parser_destroy(parser_t *parser)
     parser->curr_rhs = NULL;
     // Destroying global symtab handles destruction of locals
     symtable_destroy(SYMTAB_G);
+	if (parser->buffer != NULL){
+		destroy_buffer(parser->buffer);
+		parser->buffer = NULL;
+	}
     free(parser);
 }
 

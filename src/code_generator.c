@@ -11,6 +11,7 @@ void CODE(const char *fmt, ...) {
    	vfprintf(out,fmt, args);
    	va_end(args);
    	fprintf(out,"\n");
+	fclose(out);
 }
 
 void generate_built_in_write( token_t *token, char *function_id, int depth){
