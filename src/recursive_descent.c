@@ -29,7 +29,7 @@ int prog(parser_t *parser)
     // Check End Of File
     CHECK_TOKEN_TYPE(TOKEN_EOF);
     SEMANTIC_ACTION(check_declared_function_defined, parser); 
-
+    
     // TODO: generate instruction for program end
     
     return EXIT_OK; 

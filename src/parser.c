@@ -56,14 +56,14 @@ parser_t *parser_init(FILE *src)
 int parser_parse(FILE *src)
 {
     if (src == NULL) { 
-        error_message("FATAL", -69, "input source filed is NULL");
-        return -69;
+        error_message("FATAL", ERR_INTERNAL, "input source filed is NULL");
+        return ERR_INTERNAL;
     }
     
     parser_t *parser = parser_init(src);
     if (parser == NULL) {
-        error_message("FATAL", -69, "parser initialization failed");
-        return -69;
+        error_message("FATAL", ERR_INTERNAL, "parser initialization failed");
+        return ERR_INTERNAL;
     }
     if ((parser->token = get_next_token(parser->src)) == NULL) {
         error_message("Scanner", ERR_LEX, "token returned NULL");
