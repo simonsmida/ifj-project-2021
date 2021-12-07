@@ -41,6 +41,8 @@ void generate_function_param();
 
 void generate_pass_param(token_t *token, int param_index);
 
+void generate_type_conversion(int op);
+
 void generate_pass_param_to_operation(token_t *token, char *function_name, int depth, int *array_depth);
 
 void generate_pass_param_to_function(token_t *token, int param_index);
@@ -67,4 +69,6 @@ void generate_while_repeat_label(char *func_id, int depth, int *array_depth);
 
 void generate_jump_while_end(char *func_id, int depth, int *array_depth);
 
-void generate_while_end_label(char *func_id, int depth, int *array_depth, string_t *buffer);
+void generate_while_end_label(char *func_id, int depth, int *array_depth, string_t *buffer); 
+
+void generate_stack_operation(token_t *token);

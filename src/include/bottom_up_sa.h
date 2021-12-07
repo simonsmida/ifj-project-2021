@@ -15,6 +15,7 @@
 #include "scanner.h"
 #include "symtable.h"
 #include "parser.h"
+#include "code_generator.h"
 
 #define ERR_REDUCTION   0
 #define EXIT_FUNC_ID    42
