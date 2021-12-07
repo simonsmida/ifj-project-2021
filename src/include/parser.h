@@ -158,6 +158,13 @@ void parser_destroy(parser_t *parser);
     } /* if item not found */                                                                   \
 } while(0)
 
+#define CHECK_MAIN_BLOCK() do {                         \
+    if (parser->curr_block_depth == 0) {                \
+        parser->block_temp_id = parser->curr_block_id;  \
+        parser->curr_block_id = 1;                      \
+    }                                                   \
+} while(0)
+
 #define SET_PARAM_INFO() do {                                               \
     if (parser->curr_item == NULL) return ERR_INTERNAL;                     \
     if (parser->curr_item->const_var == NULL) return ERR_INTERNAL;          \

@@ -24,11 +24,12 @@ int check_no_return_values(parser_t *parser);
 int check_return_value_count(parser_t *parser, int ret_type_index);
 int check_return_values(parser_t *parser, int ret_type_index);
 int check_variable_redeclaration(parser_t *parser);
-int check_undeclared_var_or_func(parser_t *parser, symtable_item_t *i);
+int check_undeclared_var_or_func(parser_t *parser, bool defined);
 int check_undefined_arg(parser_t *parser);
 int check_invalid_variable_name(parser_t *parser);
 int check_declared_function_defined(parser_t *parser);
 int check_ret_val_count(parser_t *parser);
 int check_ret_val_type(parser_t *parser);
+int check_expr_type_compat(parser_t *parser, int expected);
 
 #endif
