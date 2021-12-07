@@ -988,14 +988,6 @@ int stat(parser_t *parser)
                 PARSER_EAT(); /* 'id' */
                 CHECK_TOKEN_TYPE(TOKEN_ID);
 
-                //SEMANTIC_ACTION(check_invalid_variable_name, parser);
-                //SEMANTIC_ACTION(check_variable_redeclaration, parser); 
-                
-                // Check if block depth is 0 -> then block_id must be set to 1
-                CHECK_MAIN_BLOCK();
-
-                parser->curr_item->const_var->block_id = parser->curr_block_id;
-                parser->curr_item->const_var->block_depth = parser->curr_block_depth;
                 
                 SEMANTIC_ACTION(check_invalid_variable_name, parser);
                 SEMANTIC_ACTION(check_variable_redeclaration, parser); 
@@ -1006,13 +998,19 @@ int stat(parser_t *parser)
                     return ERR_INTERNAL;
                 }
                             
-                /*
+                // Check if block depth is 0 -> then block_id must be set to 1
+                CHECK_MAIN_BLOCK();
+
+
+                //parser->curr_item->const_var->block_depth = parser->curr_block_depth;
+                
                 // Set current block info
                 if (parser->curr_block_id == 1 && parser->curr_block_depth == 0) {
                     parser->curr_item->const_var->block_id = parser->block_temp_id;
                 } else {
                     parser->curr_item->const_var->block_id = parser->curr_block_id;
-                }*/
+                }
+                parser->curr_item->const_var->block_id = parser->curr_block_id;
                 
                 
                 strcpy(id_name, TOKEN_REPR);
