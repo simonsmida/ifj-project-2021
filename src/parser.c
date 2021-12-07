@@ -38,6 +38,12 @@ parser_t *parser_init(FILE *src)
     parser->curr_func = NULL;
     parser->curr_item = NULL;
     parser->curr_rhs = NULL;
+
+	for (int i = 0; i < ARRAY_DEPTH_NUM; i++){
+		parser->array_depth[i] = 0;
+	}
+	parser->inside_while = false;
+	parser->buffer = init_buffer();
     
     return parser;
 }

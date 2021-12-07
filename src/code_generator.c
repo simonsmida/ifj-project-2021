@@ -1,6 +1,7 @@
 
 // TODO code_gen.h move to the include file
 #include "include/code_generator.h"
+#include "include/parser.h"
 #include<stdarg.h>
 
 void CODE(const char *fmt, ...) {
@@ -11,7 +12,7 @@ void CODE(const char *fmt, ...) {
    printf("\n");
 }
 
-void generate_built_in_write(bool is_global, token_t *token){
+void generate_built_in_write( token_t *token, char *function_id, int depth){
 	
 	if ( token->type == TOKEN_ID ){
 		// We have to make sure to not start printing WRITE if the token string is "write"
@@ -19,11 +20,8 @@ void generate_built_in_write(bool is_global, token_t *token){
 			// do nothing
 			return;
 		}
-		else if (is_global){
-			CODE("WRITE GF@%s", token->attribute->string);
-		}
 		else {
-			CODE("WRITE LF@%s", token->attribute->string);
+			CODE("WRITE LF@%s$%s$%d", token->attribute->string, function_id, depth);
 		}
 	}
 	else if (token->type == TOKEN_STR_LIT){
@@ -201,26 +199,11 @@ void generate_function_label(const char *func_name){
 	CODE("PUSHFRAME ");
 }
 
-void generate_var_declaration(const char *var_name, data_type_t data_type){
-	CODE("DEFVAR LF@%s", var_name);
-	CODE("MOVE LF@%s ", var_name);
+void generate_var_declaration(char *var_name, char *function_id, int *array_depth,  int depth){
+	printf("DEFVAR LF@%s$%s$%d$%d\n", var_name, function_id, depth, array_depth[depth]);
 
-	switch( data_type ){
-		case DTYPE_INT:
-			CODE("int@0");
-			break;
-		case DTYPE_NIL:
-			CODE("nil@nil");
-			break;
-		case  DTYPE_STRING:
-			CODE("string@");
-			break;
-		case DTYPE_NUMBER:
-			CODE("float@0x0p-1 ");
-			break;
-		default:
-			break;
-	} // switch
+	return;
+	
 }
 
 void generate_function_call(const char *func_name){
@@ -312,7 +295,7 @@ void generate_pass_param_to_function(token_t *token, int param_index){
 
 
 
-void generate_pass_param_to_operation(token_t *token, int param_index){
+void generate_pass_param_to_operation(token_t *token, char *function_name, int depth, int *array_depth){
 	if (token != NULL){
 		switch ( token->type ){
 			case TOKEN_INT_LIT:
@@ -325,7 +308,7 @@ void generate_pass_param_to_operation(token_t *token, int param_index){
 				CODE("PUSHS string@%s", token->attribute->string);
 				break;
 			case TOKEN_ID:
-				CODE("PUSHS LF@%s", token->attribute->string);
+				CODE("PUSHS LF@%s$%s$%d$%d", token->attribute->string, function_name, depth, array_depth[depth]);
 				break;
 			default:
 				break;
@@ -337,9 +320,7 @@ void generate_return_params(token_t *token, int param_index){
 
 }
 
-void generate_push_operand(token_t *token){
-	generate_pass_param_to_operation(token, 0);
-}
+
 
 void check_nil_op(){
 
@@ -493,16 +474,24 @@ void generate_type_conversion(int op){//konverzia bude vzdy len z int na number?
 	}	
 }
 
-void generate_label_if(int function,int depth){ //zavola sa ked narazis na "if" ----> "if"(expr)
+void generate_label_if(char *function_name, int *pole_zanoreni, int depth){ //zavola sa ked narazis na "if" ----> "if"(expr)
 	CODE("CALL $if");
-	CODE("JUMPIFEQ $else GF@tmp1 bool$true");
+	CODE("JUMPIFEQ %s$else$%d$%d\n", function_name, depth, pole_zanoreni[depth]);
 }
 
-void generate_label_else(){
-	CODE("LABEL $else");
+void generate_label_else(char *function_name, int *pole_zanoreni, int depth){
+	CODE("JUMP %s$if_end$%d$%d",function_name, depth, pole_zanoreni[depth]);
+	CODE("LABEL %s$else$%d$%d\n", function_name, depth, pole_zanoreni[depth]);
+
 }
 
-void generate_if_body(int function,int depth){//nazov labelov sa bude odvijat od nazvu funkcie a hlbky
+void generate_label_if_end(char *function_name, int *pole_zanoreni, int depth){
+	CODE("LABEL %s$if_end$%d$%d\n", function_name, depth, pole_zanoreni[depth]);
+
+	return;
+}
+
+void generate_if_body(){//nazov labelov sa bude odvijat od nazvu funkcie a hlbky
 	CODE("MOVE GF@tmp1 bool@false");
 	CODE("POPS GF@tmp2");
 	CODE("PUSHS GF@tmp2");
@@ -510,8 +499,10 @@ void generate_if_body(int function,int depth){//nazov labelov sa bude odvijat od
 	CODE("RETURN");
 }
 
-void generate_pop_stack_to_var(char *var_id){
-	CODE("POPS LF@%s", var_id);
+void generate_pop_stack_to_var(char *var_id, char *function_id, int *array_depth, int depth){
+	CODE("POPS LF@%s$%s$%d$%d", var_id, function_id, depth, array_depth[depth]);
+
+	return;
 }
 
 void generate_start_of_program(){
@@ -521,9 +512,32 @@ void generate_start_of_program(){
 }
 
 
-void generate_var_declaration_function(char *var_name, int num_param){
-	printf("DEFVAR LF@%s\n", var_name);
-	printf("MOVE LF@%s LF@%c%d\n", var_name, '%',  num_param);
+void generate_var_declaration_function(char *var_name, char *function_id, int depth, int *array_depth, int num_param){
+	printf("DEFVAR LF@%s$%s$%d$%d\n", var_name, function_id, depth, array_depth[depth]);
+	printf("MOVE LF@%s$%s$%d$%d LF@%c%d\n", var_name, function_id, depth, array_depth[depth], '%',  num_param);
+
+	return;
+}
+
+
+void generate_while_repeat_label(char *func_id, int depth, int *array_depth){
+	printf("JUMP %s$define_vars$%d%d\n",  func_id, depth, array_depth[depth]);
+	printf("LABEL %s$while$%d%d\n", func_id, depth, array_depth[depth]);
+
+	return;
+}
+
+void generate_while_end_label(char *func_id, int depth, int *array_depth, string_t *buffer){
+	printf("JUMP %s$while$%d%d\n",  func_id, depth, array_depth[depth]);
+	printf("LABEL %s$define_vars$%d%d\n", func_id, depth, array_depth[depth]);
+	printf("%s", buffer->string);
+	printf("LABEL %s$while_end$%d$%d\n", func_id, depth, array_depth[depth] );
+}
+
+
+// Use this after then if inside_while == true 
+void generate_jump_while_end(char *func_id, int depth, int *array_depth){
+	printf("JUMP %s$while_end$%d$%d\n",func_id, depth, array_depth[depth] );
 
 	return;
 }
