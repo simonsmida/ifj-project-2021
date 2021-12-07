@@ -44,7 +44,7 @@ char precedence_table[19][19] =
  *	@param stack Stack filled with terminals and non-terminals
  *	@return 1 if reduction was successful, elsewhere 0
  */
-int reduce_terminal(PA_stack *stack,symtable_t *local_symtab){
+int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 	/** Reduce terminal */
 	PA_item_t items[4];
 	PA_item_t top_item;
@@ -179,6 +179,7 @@ int reduce_terminal(PA_stack *stack,symtable_t *local_symtab){
 			
 			/** END of Semantic action */
 			/*------------------------------------------------------------------------*/
+			destroy_token(items[1].terminal);
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
 			return 1;
@@ -1007,8 +1008,6 @@ int analyze_bottom_up(parser_t *parser){
 			
 			token_in.terminal = get_next_token(parser -> src);
 			
-			/** If the generated token is a function id, return read token
-			  	and control to recursive descent parser */
 			if(token_in.terminal->type == TOKEN_EOF){
 					parser -> token = token_in.terminal;
 					/** Dealloc the stack */
@@ -1016,6 +1015,8 @@ int analyze_bottom_up(parser_t *parser){
 					error_message("Parser", ERR_SYNTAX,  "EOF while processing the expression"); 
 					return ERR_SYNTAX;
 			}
+			/** If the generated token is a function id, return read token
+			  	and control to recursive descent parser */
 			if(token_in.terminal->type == TOKEN_ID){
 				symtable_item_t *id = symtable_search(parser->global_symtable, token_in.terminal->attribute->string);
 				if ((id != NULL) && (id -> function != NULL) ){
@@ -1077,7 +1078,7 @@ int analyze_bottom_up(parser_t *parser){
 					PA_stack_destroy(&stack);
 					return ERR_INTERNAL;
 				}
-				int reduction_result = reduce_terminal(&stack,SYMTAB_L);
+				int reduction_result = reduce_terminal(&stack,parser,SYMTAB_L);
 				if(reduction_result == ERR_REDUCTION ){
 					destroy_token(token_in.terminal);
 					PA_stack_destroy(&stack);
@@ -1110,6 +1111,11 @@ int analyze_bottom_up(parser_t *parser){
 				return EXIT_EMPTY_EXPR; 
 			case END:
 				parser -> token = token_in.terminal;
+				/** Send the final type of the expression to parser */
+				PA_item_t reduced_expr;
+				PA_stack_top(&stack,&reduced_expr);
+				if ( reduced_expr.item_type == 0 ){
+					parser -> curr_expr_type = reduced_expr.non_terminal.dtype; }
 				/** Dealloc the stack */
 				PA_stack_destroy(&stack);
 				return EXIT_OK;
@@ -1118,6 +1124,12 @@ int analyze_bottom_up(parser_t *parser){
 	
 	/** Check if the PA was successful */
 	if((top_terminal.terminal->type == TOKEN_EOF) && (token_in.terminal->type == TOKEN_EOF)){
+		/** Send the final type of the expression to parser */
+		PA_item_t reduced_expr;
+		PA_stack_top(&stack,&reduced_expr);
+		if ( reduced_expr.item_type == 0 ){
+			parser -> curr_expr_type = reduced_expr.non_terminal.dtype; }
+
 		destroy_token(top_terminal.terminal);
 		destroy_token(token_in.terminal);
 	}

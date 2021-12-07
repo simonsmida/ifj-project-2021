@@ -17,9 +17,11 @@ typedef struct parser {
     FILE *src;
     int curr_arg_count;
     int curr_ret_val_count;
-    int block_temp_id;
+    int curr_expr_type;
+	int block_temp_id;
     int curr_block_id;
     int curr_block_depth;
+    bool is_in_return;
     bool inside_func_def;
     bool inside_func_dec;
 	bool inside_while;

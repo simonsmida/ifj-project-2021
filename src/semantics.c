@@ -40,12 +40,12 @@ int dtype_token(parser_t *parser)
     return DTYPE_UNKNOWN;
 }
 
-bool is_term_type_valid(int term_type, int expected_type)
+bool is_expr_type_valid(int expr_type, int expected_type)
 {
     if (expected_type == DTYPE_NUMBER) {
-        return (term_type == DTYPE_INT || term_type == DTYPE_NUMBER);
+        return (expr_type == DTYPE_INT || expr_type == DTYPE_NUMBER);
     } 
-    return (term_type == expected_type);
+    return (expr_type == expected_type);
 }
 
 
@@ -78,7 +78,7 @@ int check_arg_type_literal(parser_t *parser)
    
     // Check variable type
     int expected_type = parser->curr_rhs->function->type_params[parser->curr_arg_count];
-    if (!is_term_type_valid(dtype_token(parser), expected_type)) {
+    if (!is_expr_type_valid(dtype_token(parser), expected_type)) {
         error_message("Parser", ERR_SEMANTIC_PROG, "invalid argument type");
         return ERR_SEMANTIC_PROG;
     }
@@ -112,9 +112,9 @@ int check_arg_type_id(parser_t *parser)
 
 
     // Check variable type
-    int term_type = parser->curr_item->const_var->type;
+    int expr_type = parser->curr_item->const_var->type;
     int expected_type = parser->curr_rhs->function->type_params[parser->curr_arg_count];
-    if (!is_term_type_valid(term_type, expected_type)) {
+    if (!is_expr_type_valid(expr_type, expected_type)) {
         error_message("Pariiser", ERR_SEMANTIC_PROG, "invalid argument type");
         return ERR_SEMANTIC_PROG;
     }
@@ -355,8 +355,7 @@ int check_ret_val_count(parser_t *parser)
     }
 
     if (parser->curr_func->function == NULL) {
-        printf("this is bad\n\n");
-        return 69;
+        return ERR_INTERNAL;
     }
     int expected = parser->curr_func->function->num_ret_types;
     if (parser->curr_ret_val_count > expected) {
@@ -365,6 +364,29 @@ int check_ret_val_count(parser_t *parser)
         fprintf(stderr, "expected: %d, is: %d\n", expected, parser->curr_ret_val_count);
         return ERR_SEMANTIC_PROG; 
     }
+    return EXIT_OK;
+}
+
+int check_ret_val_type(parser_t *parser)
+{
+    if (parser->curr_func == NULL) {
+        return ERR_INTERNAL;
+    }
+    
+    if (parser->curr_func->function == NULL) {
+        return ERR_INTERNAL;
+    }
+
+    int index = parser->curr_ret_val_count-1;
+    int expected = parser->curr_func->function->ret_types[index];
+
+    // Expression is here considered to be a term
+    if (!is_expr_type_valid(parser->curr_expr_type, expected)) {
+        error_message("Parser", ERR_SEMANTIC_PROG, "invalid return value type");
+        fprintf(stderr, "expected: %d, is: %d\n", expected, parser->curr_expr_type);
+        return ERR_SEMANTIC_PROG;
+    }
+
     return EXIT_OK;
 }
 
