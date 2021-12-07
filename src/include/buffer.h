@@ -37,6 +37,9 @@ void destroy_buffer(string_t *buffer);
  */
 void append_character(string_t *buffer, int c);
 
+
+void append_string(string_t *buffer, char *string_to_be_appended);
+
 #define BASIC_ALLOC_SIZE 20
 
 #endif

@@ -51,6 +51,14 @@ void append_character(string_t *buffer, int c)
     buffer->current_index = buffer->current_index + 1;
 }
 
+void append_string(string_t *buffer, char *string_to_be_appended){
+	for (int i = 0; i != '\0'; i++){
+		append_character(buffer, string_to_be_appended[i]);
+	}
+
+	return;
+}
+
 
 /**
  * @brief Deallocate the buffer
