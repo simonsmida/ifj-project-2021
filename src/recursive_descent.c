@@ -776,7 +776,10 @@ int ret_type_list(parser_t *parser)
             if (!FUNC_ITEM->defined) {// TODO: check this
                 symtable_insert_new_function_ret_type(SYMTAB_G, dtype_keyword(TOKEN_KW_T), parser->curr_item->key);  
             }
-        } 
+        } else if ((parser->curr_func != NULL) && (CURR_FUNC != NULL)) {
+            // Function is not declared - store return value info
+            symtable_insert_new_function_ret_type(SYMTAB_G, dtype_keyword(TOKEN_KW_T), parser->curr_func->key);  
+        }
 
         // Continue parsing
         // <ret_type_list_n>
@@ -875,7 +878,11 @@ int ret_type_list_n(parser_t *parser)
             if (!FUNC_ITEM->defined) { // TODO: check this
                 symtable_insert_new_function_ret_type(SYMTAB_G, dtype_keyword(TOKEN_KW_T), parser->curr_item->key);  
             }
-        } 
+        } else if ((parser->curr_func != NULL) && (CURR_FUNC != NULL)) {
+            // Function is not declared - store return value info
+            symtable_insert_new_function_ret_type(SYMTAB_G, dtype_keyword(TOKEN_KW_T), parser->curr_func->key);  
+        }
+        
         ret_type_index++;     
 
         PARSER_EAT();
@@ -1124,6 +1131,8 @@ int stat(parser_t *parser)
                 if ((result != EXIT_EMPTY_EXPR) && (result != EXIT_OK)) {
                     return result; 
                 }
+                parser->curr_ret_val_count += 1;
+
                 // CHECK_RESULT_VALUE(result, EXIT_OK); 
 
                 // Currently we either parsed expression, or the expression was
@@ -1135,7 +1144,9 @@ int stat(parser_t *parser)
                 // <expr_list>
                 result = expr_list(parser);
                 CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
-                 
+
+                // Reset curr return value count
+                parser->curr_ret_val_count = 0;
                 return EXIT_OK;
 
             default: break;
@@ -1414,7 +1425,6 @@ int id_n(parser_t *parser)
 int expr_list(parser_t *parser)
 {
     int result;
-
     if (TOKEN_T == TOKEN_KEYWORD) {
         switch (TOKEN_KW_T)
         {
@@ -1426,7 +1436,8 @@ int expr_list(parser_t *parser)
             case KEYWORD_ELSE: 
 
                 // RULE 38: <expr_list> → ε
-                
+                SEMANTIC_ACTION(check_ret_val_count, parser);
+                printf("curr function %s\n", parser->curr_func->key);
                 return EXIT_OK;
 
             default: break;
@@ -1442,12 +1453,14 @@ int expr_list(parser_t *parser)
             return result; 
         }
         
+        parser->curr_ret_val_count += 1; 
         return expr_list(parser);
     
     } else if (TOKEN_T == TOKEN_ID) {
 
         // RULE 38: <expr_list> → ε
         
+        parser->curr_ret_val_count += 1; 
         return EXIT_OK;
     }
 
