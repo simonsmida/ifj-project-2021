@@ -76,6 +76,7 @@ void parser_destroy(parser_t *parser);
 
 #define IS_NIL(_ttype) (((_ttype) == TOKEN_KEYWORD) && (TOKEN_KW_T == KEYWORD_NIL))
 
+
 #define GET_TOKEN() do {                                                   \
     destroy_token(parser->token);                                          \
     if (parser == NULL) return ERR_INTERNAL;                               \
@@ -155,6 +156,18 @@ void parser_destroy(parser_t *parser);
             return ERR_INTERNAL;                                                                \
         }                                                                                       \
     } /* if item not found */                                                                   \
+} while(0)
+
+#define SET_PARAM_INFO() do {                                               \
+    if (parser->curr_item == NULL) return ERR_INTERNAL;                     \
+    if (parser->curr_item->const_var == NULL) return ERR_INTERNAL;          \
+    /* Store useful data about current parameter */                         \
+    parser->curr_item->const_var->is_var   = true;                          \
+    parser->curr_item->const_var->declared = true;                          \
+    parser->curr_item->const_var->defined  = true;                          \
+    parser->curr_item->const_var->block_depth = parser->curr_block_depth;   \
+    parser->curr_item->const_var->block_id = parser->curr_block_id;         \
+    parser->curr_item->const_var->type = dtype_keyword(TOKEN_KW_T);         \
 } while(0)
 
 /********************SEMANTICS*************************/
