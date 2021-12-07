@@ -1132,10 +1132,15 @@ int stat(parser_t *parser)
 
                 // Current token is  'return'
                 result = analyze_bottom_up(parser);
-                if ((result != EXIT_EMPTY_EXPR) && (result != EXIT_OK)) {
-                    return result; 
-                }
-                parser->curr_ret_val_count += 1;
+                switch (result)  {
+                    case EXIT_EMPTY_EXPR: 
+                        break;
+                    case EXIT_OK: 
+                        parser->curr_ret_val_count += 1; 
+                        break;
+                    default:
+                        return result;
+                } // switch
 
                 // CHECK_RESULT_VALUE(result, EXIT_OK); 
 
@@ -1148,6 +1153,7 @@ int stat(parser_t *parser)
                 // <expr_list>
                 result = expr_list(parser);
                 CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
+                SEMANTIC_ACTION(check_ret_val_count, parser);
 
                 // Reset curr return value count
                 parser->curr_ret_val_count = 0;
@@ -1440,8 +1446,6 @@ int expr_list(parser_t *parser)
             case KEYWORD_ELSE: 
 
                 // RULE 38: <expr_list> → ε
-                SEMANTIC_ACTION(check_ret_val_count, parser);
-                printf("curr function %s\n", parser->curr_func->key);
                 return EXIT_OK;
 
             default: break;
@@ -1453,18 +1457,22 @@ int expr_list(parser_t *parser)
 
         // Current token is ','
         result = analyze_bottom_up(parser);
-        if ((result != EXIT_EMPTY_EXPR) && (result != EXIT_OK)) {
-            return result; 
-        }
-        
-        parser->curr_ret_val_count += 1; 
+        switch (result)  {
+            case EXIT_EMPTY_EXPR: 
+                break;
+            case EXIT_OK: 
+                parser->curr_ret_val_count += 1; 
+                break;
+            default:
+                return result;
+        } // switch
+
         return expr_list(parser);
     
     } else if (TOKEN_T == TOKEN_ID) {
 
         // RULE 38: <expr_list> → ε
         
-        parser->curr_ret_val_count += 1; 
         return EXIT_OK;
     }
 
