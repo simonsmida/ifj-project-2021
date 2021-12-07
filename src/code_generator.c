@@ -12,7 +12,7 @@ void CODE(const char *fmt, ...) {
    	printf("\n");
 }
 
-void generate_built_in_write( token_t *token, char *function_id, int depth){
+void generate_built_in_write( token_t *token, char *function_id, int depth, int *array_depth){
 	
 	if ( token->type == TOKEN_ID ){
 		// We have to make sure to not start printing WRITE if the token string is "write"
@@ -21,7 +21,7 @@ void generate_built_in_write( token_t *token, char *function_id, int depth){
 			return;
 		}
 		else {
-			CODE("WRITE LF@%s$%s$%d", token->attribute->string, function_id, depth);
+			CODE("WRITE LF@%s$%s$%d$%d", token->attribute->string, function_id, depth, array_depth[depth]);
 		}
 	}
 	else if (token->type == TOKEN_STR_LIT){
@@ -37,27 +37,29 @@ void generate_built_in_write( token_t *token, char *function_id, int depth){
 
 void generate_head(){
 	CODE(".IFJcode21");
-	CODE("DEFVAR GF@temp1");
-	CODE("DEFVAR GF@temp2");
-	CODE("DEFVAR GF@temp3\n");
+	CODE("DEFVAR GF@tmp1");
+	CODE("DEFVAR GF@tmp2");
+	CODE("DEFVAR GF@tmp3");
+	CODE("DEFVAR GF@tmp4");
+	CODE("DEFVAR GF@tmp5");
 	CODE("\nJUMP $MAIN");
 }
 
 void generate_built_in_reads(){
 	CODE("LABEL READS");
-	CODE("READ GF@temp1 string");
+	CODE("READ GF@tmp1 string");
 	CODE("RETURN\n");
 }
 
 void generate_built_in_readi(){
 	CODE("LABEL READI");
-	CODE("READ GF@temp1 int");
+	CODE("READ GF@tmp1 int");
 	CODE("RETURN\n");
 }
 
 void generate_built_in_readn(){
 	CODE("LABEL READN");
-	CODE("READ GF@temp1 float");
+	CODE("READ GF@tmp1 float");
 	CODE("RETURN\n");
 }
 
@@ -69,6 +71,7 @@ void generate_built_in_functions(){
 	generate_built_in_substr();
 	generate_built_in_ord();
 	generate_built_in_chr();
+	generate_if_body();
 }
 
 void generate_main(){
@@ -88,8 +91,7 @@ void generate_end(){
 void check_nil_builtin(){
 
 	CODE("LABEL $checknil");
-	CODE("DEFVAR GF@tmp4");
-	CODE("DEFVAR GF@tmp5");
+	
 
 	CODE("POPS GF@tmp4");
 
@@ -110,7 +112,7 @@ void generate_built_in_substr(){
 	CODE("LABEL SUBSTR");
 	CODE("CREATEFRAME");
 	CODE("PUSHFRAME");
-	CODE("DEFVAR LF@temp_char");
+	CODE("DEFVAR LF@tmp_char");
 	CODE("DEFVAR LF@ret_string");
 	CODE("MOVE LF@ret_string string@");
 	CODE("DEFVAR LF@str_len");
@@ -118,24 +120,24 @@ void generate_built_in_substr(){
 	CODE("MOVE LF@bool_var bool@true");
 
 	CODE("CALL $checknil"); 
-	CODE("POPS GF@temp3");		// This is the stop byte
+	CODE("POPS GF@tmp3");		// This is the stop byte
 
 	CODE("CALL $checknil"); 	
-	CODE("POPS GF@temp2");		// This is start byte
+	CODE("POPS GF@tmp2");		// This is start byte
 
 	CODE("CALL $checnil"); 		
-	CODE("POPS GF@temp1"); 		// This is the string
+	CODE("POPS GF@tmp1"); 		// This is the string
 
-	CODE("SUB GF@temp2 GF@temp2 int@1");
-	CODE("SUB GF@temp3 GF@temp3 int@1");
-	CODE("STRLEN LF@str_len GF@temp1");
+	CODE("SUB GF@tmp2 GF@tmp2 int@1");
+	CODE("SUB GF@tmp3 GF@tmp3 int@1");
+	CODE("STRLEN LF@str_len GF@tmp1");
 	// Check if j > strlen
 	CODE("CLEARS");
 
-	CODE("GT LF@bool_var LF@str_len GF@temp3");
+	CODE("GT LF@bool_var LF@str_len GF@tmp3");
 	CODE("JUMPIFEQ RETURN_EMPTY LF@bool_var bool@false\n");
 
-	CODE("GT LF@bool_var GF@temp2 GF@temp3");
+	CODE("GT LF@bool_var GF@tmp2 GF@tmp3");
 
 	CODE("JUMPIFEQ RETURN_EMPTY LF@bool_var bool@true\n");
 	CODE("JUMP REPEAT_OK\n");
@@ -143,25 +145,25 @@ void generate_built_in_substr(){
 
 
 	CODE("LABEL REPEAT_OK");
-	CODE("GETCHAR LF@temp_char GF@temp1 GF@temp2");
-	CODE("CONCAT LF@ret_string LF@ret_string LF@temp_char");
-	CODE("ADD GF@temp2 GF@temp2 int@1");
+	CODE("GETCHAR LF@tmp_char GF@tmp1 GF@tmp2");
+	CODE("CONCAT LF@ret_string LF@ret_string LF@tmp_char");
+	CODE("ADD GF@tmp2 GF@tmp2 int@1");
 
-	CODE("GT LF@bool_var GF@temp2 GF@temp3");
+	CODE("GT LF@bool_var GF@tmp2 GF@tmp3");
 
 	CODE("JUMPIFEQ END_OK LF@bool_var bool@true");
 	CODE("JUMP REPEAT_OK\n");
 
 	CODE("LABEL END_OK");
 	CODE("CLEARS");
-	CODE("MOVE GF@temp1 LF@ret_string");
+	CODE("MOVE GF@tmp1 LF@ret_string");
 	CODE("POPFRAME");
 	CODE("RETURN\n"); // idk
 
 	CODE("LABEL RETURN_EMPTY");
 	CODE("CLEARS");
 	CODE("POPFRAME");
-	CODE("MOVE GF@temp1 string@");
+	CODE("MOVE GF@tmp1 string@");
 	CODE("RETURN\n"); // idk
 
 }
@@ -172,11 +174,11 @@ void generate_built_in_ord(){
 	//  TODO Dat sem straze
 	CODE("LABEL ORD");
 	CODE("CALL $checknil");
-	CODE("POPS GF@temp2");
+	CODE("POPS GF@tmp2");
 	CODE("CALL $checknil"); 	// Toto bude ten int
-	CODE("POPS GF@temp1"); 	// Toto bude string
-	CODE("SUB GF@temp2 GF@temp2 int@1");
-	CODE("STRI2INT GF@temp3 GF@temp1 GF@temp2");
+	CODE("POPS GF@tmp1"); 	// Toto bude string
+	CODE("SUB GF@tmp2 GF@tmp2 int@1");
+	CODE("STRI2INT GF@tmp3 GF@tmp1 GF@tmp2");
 	CODE("RETURN\n");
 }
 
@@ -184,8 +186,8 @@ void generate_built_in_chr(){
 	// chr ( int ) : string
 	CODE("LABEL CHR");
 	CODE("CALL $checknil");
-	CODE("POPS GF@temp2");
-	CODE("INT2CHAR GF@temp1 GF@temp2");
+	CODE("POPS GF@tmp2");
+	CODE("INT2CHAR GF@tmp1 GF@tmp2");
 	CODE("RETURN\n");
 }
 
@@ -265,10 +267,13 @@ void generate_createframe(){
 	return;
 }
 
-void generate_pass_param_to_function(token_t *token, int param_index){
+void generate_pass_param_to_function(token_t *token,  char *function_name, int depth, int *array_depth, int param_index){
 	
 	printf("DEFVAR TF@%c%d\n", '%', param_index);
 	printf("MOVE TF@%c%d ", '%', param_index);
+	if ( depth < 0 ){
+		depth = 0;
+	}
 	if (token != NULL){
 		switch ( token->type ){
 			case TOKEN_INT_LIT:
@@ -282,7 +287,7 @@ void generate_pass_param_to_function(token_t *token, int param_index){
 				printf("string@%s\n", token->attribute->string);
 				break;
 			case TOKEN_ID:
-				printf("LF@%s\n", token->attribute->string);
+				printf("LF@%s$%s$%d$%d", token->attribute->string, function_name, depth, array_depth[depth]);
 				break;
 		
 			default:
@@ -325,7 +330,6 @@ void generate_return_params(token_t *token, int param_index){
 void check_nil_op(){
 
 	static int i = 0;
-	CODE("DEFVAR GF@tmp4");
 	CODE("POPS GF@tmp1");
 	CODE("POPS GF@tmp2");
 
@@ -491,6 +495,7 @@ void generate_label_if_end(char *function_name, int *pole_zanoreni, int depth){
 }
 
 void generate_if_body(){//nazov labelov sa bude odvijat od nazvu funkcie a hlbky
+	CODE("LABEL $if");
 	CODE("MOVE GF@tmp1 bool@false");
 	CODE("POPS GF@tmp2");
 	CODE("PUSHS GF@tmp2");
@@ -512,6 +517,9 @@ void generate_start_of_program(){
 
 
 void generate_var_declaration_function(char *var_name, char *function_id, int depth, int *array_depth, int num_param){
+	if ( depth < 0 ){
+		depth = 0;
+	}
 	printf("DEFVAR LF@%s$%s$%d$%d\n", var_name, function_id, depth, array_depth[depth]);
 	printf("MOVE LF@%s$%s$%d$%d LF@%c%d\n", var_name, function_id, depth, array_depth[depth], '%',  num_param);
 
@@ -531,6 +539,7 @@ void generate_while_end_label(char *func_id, int depth, int *array_depth, string
 	printf("JUMP %s$while$%d$%d\n",  func_id, depth, array_depth[depth]);
 	printf("LABEL %s$define_vars$%d$%d\n", func_id, depth, array_depth[depth]);
 	printf("%s", buffer->string);
+	printf("JUMP %s$while$%d$%d\n",  func_id, depth, array_depth[depth]);
 	printf("LABEL %s$while_end$%d$%d\n", func_id, depth, array_depth[depth] );
 }
 
@@ -538,7 +547,7 @@ void generate_while_end_label(char *func_id, int depth, int *array_depth, string
 // Use this after then if inside_while == true 
 void generate_jump_while_end(char *func_id, int depth, int *array_depth){
 	printf("CALL $if\n");
-	printf("JUMPIFEQ %s$while_end$%d$%d GF@temp1 bool@false\n",func_id, depth, array_depth[depth] );
+	printf("JUMPIFEQ %s$while_end$%d$%d GF@tmp1 bool@false\n",func_id, depth, array_depth[depth] );
 
 	return;
 }
