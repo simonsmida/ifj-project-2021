@@ -26,6 +26,7 @@ int prog(parser_t *parser)
 
     // Check End Of File
     CHECK_TOKEN_TYPE(TOKEN_EOF);
+    SEMANTIC_ACTION(check_declared_function_defined, parser); 
 
     // TODO: generate instruction for program end
     
@@ -136,7 +137,7 @@ int seq(parser_t *parser)
         case TOKEN_EOF:
             
             // RULE 6: <func_dec> → ε
-            
+            SEMANTIC_ACTION(check_declared_function_defined, parser);
             return EXIT_OK;
 
         default: break; 
@@ -211,7 +212,7 @@ int func_dec(parser_t *parser)
         case TOKEN_EOF: 
             
             // RULE 4: <func_dec> → ε
-            
+            SEMANTIC_ACTION(check_declared_function_defined, parser); 
             return EXIT_OK;
         
         default: break;
@@ -801,9 +802,9 @@ int ret_type_list(parser_t *parser)
     } else if (TOKEN_T == TOKEN_EOF) { // RULE 27: <ret_type_list> → ε
         
         if (parser->curr_func != NULL) { // check for declared functions
-            SEMANTIC_ACTION(check_no_return_values, parser);
-        
+            SEMANTIC_ACTION(check_no_return_values, parser); 
         }
+        SEMANTIC_ACTION(check_declared_function_defined, parser); 
         return EXIT_OK;
     }
 
@@ -876,6 +877,7 @@ int ret_type_list_n(parser_t *parser)
     } else if (TOKEN_T == TOKEN_EOF) { // RULE 29: <ret_type_list_n> → ε
         
         SEMANTIC_ACTION(check_return_value_count, parser, ret_type_index); 
+        SEMANTIC_ACTION(check_declared_function_defined, parser); 
         // Reset static variable
         ret_type_index = 1; 
         return EXIT_OK;
