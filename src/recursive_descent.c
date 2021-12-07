@@ -556,7 +556,6 @@ int param_fdef(parser_t *parser)
             // If function not declared - insert this parameter 
             if (parser->curr_func != NULL) {
                 if (!CURR_FUNC->declared) {
-                    fprintf(stderr, "inserting\n\n");
                     symtable_insert_new_function_param(SYMTAB_G, dtype_keyword(TOKEN_KW_T), CURR_F_KEY);  
                 }
             }
@@ -634,7 +633,6 @@ int param_fdef_n(parser_t *parser)
             // Insert param into symtable(s) only if not declared
             if (parser->curr_func != NULL) {
                 if (!CURR_FUNC->declared) {
-                    fprintf(stderr, "inserting\n\n");
                     symtable_insert_new_function_param(SYMTAB_G, dtype_keyword(TOKEN_KW_T), CURR_F_KEY);  
                 }
             }
