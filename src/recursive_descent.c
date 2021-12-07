@@ -6,6 +6,7 @@
 bool is_write = false;
 
 
+
 /**
  * @brief Starting nonterminal <prog>
  * @param parser pointer to the parser structure
@@ -284,12 +285,14 @@ int func_call(parser_t *parser)
         SEMANTIC_ACTION(check_function_call, parser);
 
 
+
         
         strcpy(func_id, parser->token->attribute->string);
-		if (!strcmp(func_id, "write")){
-			is_write = true;
-		}
+	    	if (!strcmp(func_id, "write")){
+		  	is_write = true;
+	    	}
         PARSER_EAT(); /* '(' */
+
 
         CHECK_TOKEN_TYPE(TOKEN_L_PAR); 
         
@@ -422,7 +425,6 @@ int arg_n(parser_t *parser)
 int term(parser_t *parser, int num_param)
 {
     if (TOKEN_T == TOKEN_ID) { // RULE 12: <term> → 'id'
-
         
         SEMANTIC_ACTION(check_undefined_arg, parser); 
         SEMANTIC_ACTION(check_arg_count, parser);
@@ -433,6 +435,7 @@ int term(parser_t *parser, int num_param)
 		    else {
         	generate_pass_param_to_function(parser->token , num_param);
 		    }
+
 
         // Keep track of arguments
         parser->curr_arg_count += 1;
@@ -446,6 +449,7 @@ int term(parser_t *parser, int num_param)
 	   	else {
         		generate_pass_param_to_function(parser->token , num_param);
 		  }
+
 
         // RULE 15: <term> → 'literal' ... 'literal' = str_lit|int_lit|num_lit
         // RULE 16: <term> → 'nil'
@@ -539,12 +543,12 @@ int param_fdef(parser_t *parser)
             SEMANTIC_ACTION(check_param_redeclaration, parser); 
 
 
+
             // Insert current variable ID into newly created item in local symtable
             if ((parser->curr_item = symtable_insert_const_var(SYMTAB_L, TOKEN_REPR)) == NULL) {
                 return ERR_INTERNAL;
             }
             
-
             // Continue parsing 
             PARSER_EAT(); /* : */
             CHECK_TOKEN_TYPE(TOKEN_COLON);
@@ -616,6 +620,7 @@ int param_fdef_n(parser_t *parser)
 	    	    generate_var_declaration_function( TOKEN_REPR, parser->curr_func->key, parser->curr_block_depth, parser->array_depth,  param_index + 1);
 	          param_index++;
 
+
             
             SEMANTIC_ACTION(check_invalid_variable_name, parser);
             SEMANTIC_ACTION(check_param_redeclaration, parser); 
@@ -624,6 +629,7 @@ int param_fdef_n(parser_t *parser)
             if ((parser->curr_item = symtable_insert_const_var(SYMTAB_L, TOKEN_REPR)) == NULL) {
                 return ERR_INTERNAL;
             }
+
 
             PARSER_EAT(); /* ':' */
             CHECK_TOKEN_TYPE(TOKEN_COLON);
@@ -1107,15 +1113,15 @@ int stat(parser_t *parser)
 
                 CHECK_TOKEN_TYPE(TOKEN_KEYWORD); // 'end'
                 CHECK_KEYWORD(KEYWORD_END);
-				generate_while_end_label(parser->curr_func->key, parser->curr_block_depth, parser->array_depth, parser->buffer);
-				// We now get rid of this buffer, as it is no longer needed
-				// But we will need it again in the future so we init it again
-				destroy_buffer(parser->buffer);
-				parser->buffer = init_buffer();
+				        generate_while_end_label(parser->curr_func->key, parser->curr_block_depth, parser->array_depth, parser->buffer);
+			        	// We now get rid of this buffer, as it is no longer needed
+			        	// But we will need it again in the future so we init it again
+			        	destroy_buffer(parser->buffer);
+			        	parser->buffer = init_buffer();
                 
                 // Leaving this block -> decrement depth
                 parser->curr_block_depth -= 1;
-				parser->inside_while = false;
+			        	parser->inside_while = false;
 
                 PARSER_EAT(); // to get next statement 
                 return EXIT_OK;

@@ -136,54 +136,44 @@ bool would_be_var_redeclared(symtable_t *s, const char *key, int block_id)
     return false;
 }
 
+/**
+ * @brief Variable is visible if it is declared in the current block (same depth and id) or 
+ *        if its from one of the blocks above it
+ */
+bool is_visible(const_var_t *var, int block_id, int block_depth)
+{
+    return ((var->block_depth == block_depth && var->block_id == block_id) || (var->block_depth != block_depth));
+}
+
 symtable_item_t *most_recent_var(symtable_t *s, const char *key, int block_id, int block_depth, bool must_be_defined) 
 {
     symtable_item_t *item = symtable_search(s, key);
-
-    int i = 0;
-    int current_depth;
     symtable_item_t *closest_item = NULL;
-    // TODO: check this!! je 5AM sou..
-    int closest_depth_above = -1;
-	
+    
+    int current_depth;
+    int closest_depth_above = -1; // lowest level
+    	
     while (item != NULL) {
 		if (!strcmp(item->key, key)) { // variable ID found
             const_var_t *var = item->const_var;
+            if (var == NULL) return NULL;
             current_depth = var->block_depth; 
             // Return variable with the same ID which is the closest from above
-            if (i == 0) { // First match
-			    if (current_depth <= block_depth) {
-                    if (must_be_defined && (var != NULL && var->defined)) {
+            if ((current_depth <= block_depth) && (current_depth > closest_depth_above)) {
+                if (is_visible(var, block_id, block_depth)) {
+                    if (must_be_defined && var->defined) {
                         closest_depth_above = current_depth;
                         closest_item = item;
-                    } else if (!must_be_defined && (var != NULL && var->declared)) {
+                    } else if (!must_be_defined && var->declared) {
                         closest_depth_above = current_depth;
                         closest_item = item;
                     }
                 }
-            } else { // Not first match
-			    if ((current_depth <= block_depth) && (current_depth > closest_depth_above)) {
-                    if (must_be_defined && (var != NULL && var->defined)) {
-                        closest_depth_above = current_depth;
-                        closest_item = item;
-                    } else if (!must_be_defined && (var != NULL && var->declared)) {
-                        closest_depth_above = current_depth;
-                        closest_item = item;
-                    }
-                } 
-            }
-            i++;
-		}
+            } 
+		} // if var id found
 		item = item->next;
 	} // while
     
-    // Sanity check
-    if(closest_item == NULL) return NULL; 
-    // Handle special case - variable has same depth, but different block id -> its not visible
-    if ((closest_item->const_var->block_depth == block_depth) && 
-        (closest_item->const_var->block_id != block_id)) {
-        return NULL;
-    }
     return closest_item;    
 }
 

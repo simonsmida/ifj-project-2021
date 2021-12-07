@@ -1,0 +1,11 @@
+require "ifj21"
+function cry()
+    local vysl : integer = 0
+    local robo : string
+end
+cry()
+
+function cry(integer, string) : string, integer
+    local vysl : integer = 0
+    local robo : string
+end

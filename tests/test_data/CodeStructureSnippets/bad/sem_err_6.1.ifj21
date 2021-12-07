@@ -1,0 +1,10 @@
+require "ifj21"
+
+function foo() : integer
+  local i : integer = 1
+  local j : string = "papa"
+  i = i + "papa"
+
+  return i
+end
+foo()

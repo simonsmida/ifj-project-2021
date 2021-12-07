@@ -1,0 +1,10 @@
+require "ifj21"
+
+function main()
+    local vysl : integer = 1
+    local b : integer = 2
+    local b : string
+    vysl = vysl + b
+    write("peepee: ", vysl)
+end
+main()

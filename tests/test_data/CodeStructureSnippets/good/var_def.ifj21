@@ -1,0 +1,6 @@
+require "ifj21"
+function main()
+    local vysl : integer = 0
+    local x:integer=1local y:string="ahoj"
+end
+main()

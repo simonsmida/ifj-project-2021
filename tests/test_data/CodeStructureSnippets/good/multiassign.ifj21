@@ -1,0 +1,13 @@
+require "ifj21"
+function foo()
+  local i : integer = x
+  local j : integer = (y + 2) * 3
+  i, j = j+1, i+1  -- vyhodnocuj zprava a priraduj pozdìji
+end
+
+function cry()
+    local vysl : integer = 0
+    local robo : string
+    foo()
+end
+cry()

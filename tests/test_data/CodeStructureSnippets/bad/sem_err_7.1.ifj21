@@ -1,0 +1,8 @@
+require "ifj21"
+function main()
+    local vysl : integer
+    local papa : integer
+    vysl, papa = 1,2,3 --okay
+    vysl, papa = 1     --not okay, sem_err7?
+end
+main()

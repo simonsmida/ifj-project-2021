@@ -1061,9 +1061,27 @@ void TEST_checkWholeExampleFactRec(void){
     fclose(srcfile);
 }
 
+void TEST_dojeb(void){
+    token_t *token;
+    FILE *srcfile = fopen("tests/test_data/CodeStructureSnippets/good/snipWrite.ifj21", "r");
+    
+    token = get_next_token(srcfile);
+
+    while(token->type != TOKEN_EOF){
+        print_token(token);
+        destroy_token(token);
+        token = get_next_token(srcfile);
+    }
+    print_token(token);
+    destroy_token(token);
+
+    fclose(srcfile);
+}
+
 int main(void)
 {
     UNITY_BEGIN();
+    RUN_TEST(TEST_dojeb);
     RUN_TEST(TEST_blockCom);
     RUN_TEST(TEST_EOF);
     RUN_TEST(TEST_op_id_comment);

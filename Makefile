@@ -32,6 +32,7 @@ test: $(PATHB) $(BIN_TESTS)
 	$(PATHB)scanner_test
 	$(PATHB)symtable_test
 	$(PATHB)generator_test
+	$(PATHB)parser_test
 
 $(PATHB)scanner_test: $(PATHT)scanner_test.c $(PATHS)scanner.c $(PATHS)buffer.c
 	$(CC) $(TEST_FLAGS) $^ -o $@
@@ -40,6 +41,9 @@ $(PATHB)symtable_test: $(PATHT)symtable_test.c $(PATHS)symtable.c $(PATHS)buffer
 	$(CC) $(TEST_FLAGS) $^ -o $@
 
 $(PATHB)generator_test: $(PATHT)generator_test.c $(PATHS)code_generator.c  $(PATHS)scanner.c  $(PATHS)buffer.c
+	$(CC) $(TEST_FLAGS) $^ -o $@
+
+$(PATHB)parser_test: $(PATHT)parser_test.c $(PATHS)bottom_up_sa.c $(PATHS)semantics.c $(PATHS)scanner.c  $(PATHS)buffer.c $(PATHS)PA_STACK.c $(PATHS)code_generator.c $(PATHS)symtable.c $(PATHS)parser.c $(PATHS)error.c $(PATHS)recursive_descent.c
 	$(CC) $(TEST_FLAGS) $^ -o $@
 # ----------------------------------------------------------------------------------
 
