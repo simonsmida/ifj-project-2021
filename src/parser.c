@@ -38,6 +38,12 @@ parser_t *parser_init(FILE *src)
     parser->curr_func = NULL;
     parser->curr_item = NULL;
     parser->curr_rhs = NULL;
+
+	for (int i = 0; i < ARRAY_DEPTH_NUM; i++){
+		parser->array_depth[i] = 0;
+	}
+	parser->inside_while = false;
+	parser->buffer = init_buffer();
     
     return parser;
 }
@@ -50,14 +56,14 @@ parser_t *parser_init(FILE *src)
 int parser_parse(FILE *src)
 {
     if (src == NULL) { 
-        error_message("FATAL", -69, "input source filed is NULL");
-        return -69;
+        error_message("FATAL", ERR_INTERNAL, "input source file is NULL");
+        return ERR_INTERNAL;
     }
     
     parser_t *parser = parser_init(src);
     if (parser == NULL) {
-        error_message("FATAL", -69, "parser initialization failed");
-        return -69;
+        error_message("FATAL", ERR_INTERNAL, "parser initialization failed");
+        return ERR_INTERNAL;
     }
     if ((parser->token = get_next_token(parser->src)) == NULL) {
         error_message("Scanner", ERR_LEX, "token returned NULL");
@@ -134,13 +140,13 @@ int create_builtin_function(parser_t *parser, char *func_id)
  */
 int define_every_builtin_function(parser_t *parser)
 {
-    if ((define_ord(parser, "ord")             == EXIT_OK) &&
-        (define_chr(parser, "chr")             == EXIT_OK) &&
-        (define_reads(parser, "reads")         == EXIT_OK) &&
-        (define_readi(parser, "readi")         == EXIT_OK) &&
-        (define_readn(parser, "readn")         == EXIT_OK) &&
-        (define_write(parser, "write")         == EXIT_OK) &&
-        (define_substr(parser, "substr")       == EXIT_OK) &&
+    if ((define_ord(      parser, "ord"      ) == EXIT_OK) &&
+        (define_chr(      parser, "chr"      ) == EXIT_OK) &&
+        (define_reads(    parser, "reads"    ) == EXIT_OK) &&
+        (define_readi(    parser, "readi"    ) == EXIT_OK) &&
+        (define_readn(    parser, "readn"    ) == EXIT_OK) &&
+        (define_write(    parser, "write"    ) == EXIT_OK) &&
+        (define_substr(   parser, "substr"   ) == EXIT_OK) &&
         (define_tointeger(parser, "tointeger") == EXIT_OK)) {
         return EXIT_OK;
     }

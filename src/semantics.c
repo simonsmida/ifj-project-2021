@@ -115,7 +115,6 @@ int check_arg_type_id(parser_t *parser)
     int term_type = parser->curr_item->const_var->type;
     int expected_type = parser->curr_rhs->function->type_params[parser->curr_arg_count];
     if (!is_term_type_valid(term_type, expected_type)) {
-        fprintf(stderr, "[%s(%s)] ->Expected: %d, is: %d\n\n", parser->curr_rhs->key, parser->curr_item->key,expected_type, dtype_token(parser));
         error_message("Pariiser", ERR_SEMANTIC_PROG, "invalid argument type");
         return ERR_SEMANTIC_PROG;
     }
@@ -192,7 +191,6 @@ int check_function_call_arg_count(parser_t *parser)
     if (num_params != parser->curr_arg_count) {
         error_message("Parser", ERR_SEMANTIC_PROG, "invalid number of arguments "
                       "in function '%s'", parser->curr_rhs->key);
-        fprintf(stderr, "expected: %d, has: %d\n", parser->curr_arg_count, num_params);
         return ERR_SEMANTIC_PROG;
     }
     return EXIT_OK;
@@ -240,7 +238,6 @@ int check_param_mismatch(parser_t *parser, int param_index)
         
         if (param_index+1 > CURR_FUNC->num_params) {
             error_message("Parser", ERR_SEMANTIC_PROG, "param count mismatch");
-            fprintf(stderr, "Expected: %d, is: %d", CURR_FUNC->num_params, param_index+1);
             return ERR_SEMANTIC_PROG;                
         }
         
@@ -264,10 +261,6 @@ int check_param_count_mismatch(parser_t *parser)
 
 int check_no_return_values(parser_t *parser)
 {
-    if (parser->curr_func == NULL) {
-        return ERR_INTERNAL;
-    }
-
     if (CURR_FUNC->num_ret_types != 0) {
         error_message("Parser", ERR_SEMANTIC_PROG, "expected 0 return values");
         return ERR_SEMANTIC_PROG;
@@ -322,6 +315,36 @@ int check_undeclared_var_or_func(parser_t *parser, symtable_item_t *item_dec)
         error_message("Parser", ERR_SEMANTIC_DEF, "undeclared variable/function '%s'", TOKEN_REPR);
         return ERR_SEMANTIC_DEF;
     } 
+    return EXIT_OK;
+}
+
+int check_invalid_variable_name(parser_t *parser)
+{
+    /** SEMANTIC ACTION - check invalid variable name **/
+    if (symtable_search(SYMTAB_G, TOKEN_REPR)) {
+        error_message("Parser", ERR_SEMANTIC_DEF, "invalid variable name '%s'", TOKEN_REPR);
+        return ERR_SEMANTIC_DEF; // TODO: check this, chyba 3?
+    }
+    return EXIT_OK;
+}
+
+int check_declared_function_defined(parser_t *parser)
+{
+    symtable_item_t *item;
+    // Traverse Global Symtable and check if every declared function was defined
+    for (int i = 0; i < SYMTAB_G->items_size; i++) {
+        item = SYMTAB_G->items[i];
+        while (item != NULL) {
+            if (item->function != NULL) {
+                if (item->function->declared && !item->function->defined) {
+                    error_message("Parser", ERR_SEMANTIC_DEF, "declared function '%s' "
+                                  "was never defined", item->key);
+                    return ERR_SEMANTIC_DEF;
+                }
+            } // if function
+            item = item->next;
+        } // while
+    } // for
     return EXIT_OK;
 }
 

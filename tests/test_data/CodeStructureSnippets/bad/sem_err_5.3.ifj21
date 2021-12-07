@@ -1,5 +1,5 @@
 require "ifj21"
-global foo : function(integer) : string, integer
+global foo : function(integer, string, string) : string, integer
 function foo(x : integer, y : string) : string, integer
   local i : integer = 1
   local j : string = "papa"

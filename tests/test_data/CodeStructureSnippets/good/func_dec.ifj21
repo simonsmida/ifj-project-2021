@@ -1,4 +1,5 @@
 require "ifj21"
+global concat : function(string,string): string, integer
 function concat (x : string, y : string) : string, integer
     return x .. y, 0 
 end

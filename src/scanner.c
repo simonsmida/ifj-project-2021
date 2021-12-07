@@ -490,6 +490,7 @@ token_t *generate_token(string_t *buffer,  int type)
 	token->type = TOKEN_ERROR;
 	token->attribute->integer = 0;
 	token->attribute->number = 0.0f;
+
 	//token->attribute->string = NULL;
     append_character(buffer, '\0');
     token->attribute->string = malloc(strlen(buffer->string) + 1);
@@ -500,6 +501,7 @@ token_t *generate_token(string_t *buffer,  int type)
     strcpy(token->attribute->string,buffer->string);
 	token->attribute->keyword_type = -1;
 	
+
 	
     switch (type) 
     {
@@ -668,7 +670,7 @@ bool is_keyword(char *string) {
 
 /** 
  * @brief Determines whether a given string is a variable type
- * aka "integer" or "double" etc
+ * aka "integer" or "number" etc
  * 
  * @param string String from which to be determined whether it is a variable type
  * 
