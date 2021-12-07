@@ -154,6 +154,16 @@ void parser_destroy(parser_t *parser);
     } /* if item not found */                                                                   \
 } while(0)
 
+/********************SEMANTICS*************************/
+
+#define SEMANTIC_ACTION(_function_name, ...) do { \
+    int result = _function_name(__VA_ARGS__);     \
+    if (result != EXIT_OK) {                      \
+        return result;                            \
+    }                                             \
+} while(0)
+
+
 /**
  * @brief Check if given function id is built in function
  */
