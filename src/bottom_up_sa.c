@@ -149,7 +149,6 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 			int first_op  = items[0].non_terminal.dtype; //first operand data type
 			if ( first_op  == DTYPE_STRING ){
 					reduced_terminal.non_terminal.dtype = DTYPE_INT;
-					printf("Tu som\n");
 					//everything ok call generator
 			}
 			else if (first_op == DTYPE_NIL){
@@ -544,7 +543,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 			int first_op  = items[2].non_terminal.dtype; //first operand data type
 			int second_op = items[0].non_terminal.dtype; //second operand data type
 			if ( (first_op  == DTYPE_STRING) && (first_op  == DTYPE_STRING) ){
-					reduced_terminal.non_terminal.dtype = DTYPE_INT;
+					reduced_terminal.non_terminal.dtype = DTYPE_STRING;
 					//call generator
 			}
 			else if (first_op == DTYPE_NIL || second_op == DTYPE_NIL){
