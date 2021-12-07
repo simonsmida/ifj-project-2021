@@ -23,9 +23,9 @@ void write_1(void)
     main()
     */
 
-    FILE *srcfile = fopen("tests/test_data/CodeStructureSnippets/good/snipWrite.ifj21", "r");
-    TEST_ASSERT_EQUAL_INT32(EXIT_OK, parser_parse(srcfile));
-    fclose(srcfile);
+    FILE *srcfily = fopen("tests/test_data/CodeStructureSnippets/good/snipWrite.ifj21", "r");
+    TEST_ASSERT_EQUAL_INT32(EXIT_OK, parser_parse(srcfily));
+    fclose(srcfily);
 }
 
 void err_sem_3(void)

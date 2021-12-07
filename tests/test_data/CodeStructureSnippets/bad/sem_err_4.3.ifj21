@@ -1,0 +1,5 @@
+require "ifj21"
+function main()
+    local vysl : string = 1
+end
+main()

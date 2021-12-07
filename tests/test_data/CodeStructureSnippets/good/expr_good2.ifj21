@@ -1,0 +1,7 @@
+require "ifj21"
+function main()
+    local strlen : integer = #"papa"
+    local vysl : number = strlen
+    write("dlzka papa je: ", vysl)
+end
+main()

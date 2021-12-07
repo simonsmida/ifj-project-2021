@@ -32,11 +32,11 @@ int main(int argc, char *argv[])
         //     return ERR_INTERNAL;
         // }
         int i = 0;
-        const char *filename;
-        while(i<22){
+        while(i<30){
             switch (i)
             {
             case 0 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_3.1.ifj21", "r");
+                     printf("3.1\n");
                 break;
             case 1 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_3.2.ifj21", "r");
                 break;
@@ -53,6 +53,7 @@ int main(int argc, char *argv[])
             case 7 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_3.8.ifj21", "r");
                 break;
             case 8 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_5.1.ifj21", "r");
+                     printf("5.1\n");
                 break;
             case 9 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_5.2.ifj21", "r");
                 break;
@@ -74,22 +75,40 @@ int main(int argc, char *argv[])
                 break;
             case 18 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_6.1.ifj21", "r");
                 break;
-            // case 19 : //f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_7.1.ifj21", "r");
-            //     printf("\nsegfault\n");
+            // case 19 : //f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_7.1.ifj21", "r"); //seg
+            //     printf("\nsegfault\n");.1
             //     break;
             case 19 : f = fopen("tests/test_data/CodeStructureSnippets/bad/var_dec_syn_err.ifj21", "r");
                 break;
             case 20 : f = fopen("tests/test_data/CodeStructureSnippets/good/func_dec.ifj21", "r");
                 break;
-            // case 21 : f = fopen("tests/test_data/CodeStructureSnippets/good/multiassign.ifj21", "r");
+            // case 21 : f = fopen("tests/test_data/CodeStructureSnippets/good/multiassign.ifj21", "r");    //seg
             //     break;
             case 21 : f = fopen("tests/test_data/CodeStructureSnippets/good/var_def.ifj21", "r");
+                break;
+            case 22 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_4.1.ifj21", "r");
+                      printf("4.1\n");
+                break;
+            case 23 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_4.2.ifj21", "r");
+                break;
+            case 24 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_4.3.ifj21", "r");
+                break;
+            case 25 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_4.4.ifj21", "r");
+                break;
+            case 26 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_4.5.ifj21", "r");
+                break;
+            case 27 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_4.6.ifj21", "r");
+                break;
+            case 28 : f = fopen("tests/test_data/CodeStructureSnippets/good/visibility.ifj21", "r");
+                break;
+            case 29 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_3.9.ifj21", "r");
                 break;
             default:
                 break;
             }
             printf("----------------------------------\n");
             static int three = 1;
+            static int four = 1;
             static int five = 1;
             int a = parser_parse(f);
             printf("%d\n", a);
@@ -101,14 +120,18 @@ int main(int argc, char *argv[])
                 five ++;
                 printf("\n5.%d\n",five);
             }
+            if(a == 4){
+                four ++;
+                printf("\n5.%d\n",four);
+            }
             
             if(a == 0){
-                printf("subor %d je EXIT_OK\n",i+1);
+                printf("subor %d je EXIT_OK\n",i);
             }
             
             //fclose(f);
             i++;
-            printf("----------------------------------\n");
+           // printf("----------------------------------\n");
         }
             
 

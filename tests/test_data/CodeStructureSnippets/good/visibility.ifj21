@@ -1,0 +1,11 @@
+require "ifj21"
+function program()
+  local y : integer = 20
+  if 1 == 1 then
+    y = 10
+    write(y)
+  else
+    write(y)
+  end
+end
+program()
