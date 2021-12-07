@@ -430,9 +430,10 @@ int term(parser_t *parser, int num_param)
         if (is_write) {
 		    generate_built_in_write(parser->token, 
                                     parser->curr_func->key, 
-                                    parser->curr_block_depth);
+                                    parser->curr_block_depth,
+									parser->array_depth);
 		} else {
-            generate_pass_param_to_function(parser->token, num_param);
+            generate_pass_param_to_function(parser->token,parser->curr_func->key, parser->curr_block_depth, parser->array_depth, num_param);
 		}
 
         // Keep track of arguments
@@ -444,9 +445,10 @@ int term(parser_t *parser, int num_param)
       	if (is_write) {
 		    generate_built_in_write(parser->token, 
                                     parser->curr_func->key, 
-                                    parser->curr_block_depth);
+                                    parser->curr_block_depth,
+									parser->array_depth);
 		} else {
-            generate_pass_param_to_function(parser->token , num_param);
+            generate_pass_param_to_function(parser->token,parser->curr_func->key, parser->curr_block_depth, parser->array_depth, num_param);
 		}
 
         // RULE 15: <term> → 'literal' ... 'literal' = str_lit|int_lit|num_lit
