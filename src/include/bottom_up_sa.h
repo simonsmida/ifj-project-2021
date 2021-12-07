@@ -38,10 +38,11 @@ int get_index(token_t *token);
  *	@brief Function reduces terminal on the top of the stack,
  *		   according to given rules
  *	@param stack Stack filled with terminals and non-terminals
+ *	@param parser Structure passed from parser 
  *	@param local_symtab Local symtable of the current function 
  *	@return 1 if reduction was successful, elsewhere 0
  */
-int reduce_terminal(PA_stack *stack,symtable_t *local_symtab);
+int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab);
 
 /**
  *	@brief Function returns 1 if the given token
