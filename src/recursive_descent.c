@@ -554,10 +554,10 @@ int param_fdef(parser_t *parser)
             
             SEMANTIC_ACTION(check_param_mismatch, parser, 0);
             // If function not declared - insert this parameter 
-            if ((parser->curr_func != NULL) && !(CURR_FUNC->declared)) {
-                // Insert param into symtable(s) only if not declared
-                if (parser->curr_func == NULL) return ERR_INTERNAL; // TODO: FIX THIS + wtbt local
-                symtable_insert_new_function_param(SYMTAB_G, dtype_keyword(TOKEN_KW_T), CURR_F_KEY);  
+            if (parser->curr_func != NULL) {
+                if (!CURR_FUNC->declared) {
+                    symtable_insert_new_function_param(SYMTAB_G, dtype_keyword(TOKEN_KW_T), CURR_F_KEY);  
+                }
             }
             
             // Store useful data about current parameter
@@ -611,7 +611,6 @@ int param_fdef_n(parser_t *parser)
             CHECK_TOKEN_TYPE(TOKEN_ID); 
 	    	generate_var_declaration_function(TOKEN_REPR, parser->curr_func->key, parser->curr_block_depth, parser->array_depth,  param_index + 1);
 	        
-            param_index++;
             
             SEMANTIC_ACTION(check_invalid_variable_name, parser);
             SEMANTIC_ACTION(check_param_redeclaration, parser); 
@@ -632,9 +631,10 @@ int param_fdef_n(parser_t *parser)
             SEMANTIC_ACTION(check_param_mismatch, parser, param_index);
             
             // Insert param into symtable(s) only if not declared
-            if ((parser->curr_func != NULL) && !(CURR_FUNC->declared)) {
-                if (parser->curr_func == NULL) return ERR_INTERNAL; // TODO: FIX THIS
-                symtable_insert_new_function_param(SYMTAB_G, dtype_keyword(TOKEN_KW_T), CURR_F_KEY);  
+            if (parser->curr_func != NULL) {
+                if (!CURR_FUNC->declared) {
+                    symtable_insert_new_function_param(SYMTAB_G, dtype_keyword(TOKEN_KW_T), CURR_F_KEY);  
+                }
             }
             
             // Store useful data about current parameter
@@ -642,18 +642,18 @@ int param_fdef_n(parser_t *parser)
             parser->curr_item->const_var->declared = true;
             parser->curr_item->const_var->defined  = true;
             parser->curr_item->const_var->block_depth = parser->curr_block_depth;
-            parser->curr_item->const_var->block_id    = parser->curr_block_id;
+            parser->curr_item->const_var->block_id = parser->curr_block_id;
             parser->curr_item->const_var->type = dtype_keyword(TOKEN_KW_T);
             
             // Keep track of new parameters
-
+            param_index++;
             PARSER_EAT();
             return param_fdef_n(parser); // calls itself
 
         case TOKEN_R_PAR: // RULE 19: <param_fdef_n> → ε
 
             /** SEMANTIC ACTION - check if function declaration has more params **/
-            if (CURR_FUNC->num_params > param_index) {
+            if (CURR_FUNC->num_params > param_index+1) {
                 error_message("Parser", ERR_SEMANTIC_PROG, "param count mismatch");
                 return ERR_SEMANTIC_PROG;
             }
@@ -776,7 +776,12 @@ int ret_type_list(parser_t *parser)
             if (!FUNC_ITEM->defined) {// TODO: check this
                 symtable_insert_new_function_ret_type(SYMTAB_G, dtype_keyword(TOKEN_KW_T), parser->curr_item->key);  
             }
-        } 
+        } else if ((parser->curr_func != NULL) && (CURR_FUNC != NULL)) {
+            if (!CURR_FUNC->declared) {
+                // Function is not declared - store return value info
+                symtable_insert_new_function_ret_type(SYMTAB_G, dtype_keyword(TOKEN_KW_T), parser->curr_func->key); 
+            } 
+        }
 
         // Continue parsing
         // <ret_type_list_n>
@@ -875,7 +880,13 @@ int ret_type_list_n(parser_t *parser)
             if (!FUNC_ITEM->defined) { // TODO: check this
                 symtable_insert_new_function_ret_type(SYMTAB_G, dtype_keyword(TOKEN_KW_T), parser->curr_item->key);  
             }
-        } 
+        } else if ((parser->curr_func != NULL) && (CURR_FUNC != NULL)) {
+            if (!CURR_FUNC->declared) {
+                // Function is not declared - store return value info
+                symtable_insert_new_function_ret_type(SYMTAB_G, dtype_keyword(TOKEN_KW_T), parser->curr_func->key);  
+            }
+        }
+        
         ret_type_index++;     
 
         PARSER_EAT();
@@ -1121,9 +1132,16 @@ int stat(parser_t *parser)
 
                 // Current token is  'return'
                 result = analyze_bottom_up(parser);
-                if ((result != EXIT_EMPTY_EXPR) && (result != EXIT_OK)) {
-                    return result; 
-                }
+                switch (result)  {
+                    case EXIT_EMPTY_EXPR: 
+                        break;
+                    case EXIT_OK: 
+                        parser->curr_ret_val_count += 1; 
+                        break;
+                    default:
+                        return result;
+                } // switch
+
                 // CHECK_RESULT_VALUE(result, EXIT_OK); 
 
                 // Currently we either parsed expression, or the expression was
@@ -1135,7 +1153,10 @@ int stat(parser_t *parser)
                 // <expr_list>
                 result = expr_list(parser);
                 CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
-                 
+                SEMANTIC_ACTION(check_ret_val_count, parser);
+
+                // Reset curr return value count
+                parser->curr_ret_val_count = 0;
                 return EXIT_OK;
 
             default: break;
@@ -1414,7 +1435,6 @@ int id_n(parser_t *parser)
 int expr_list(parser_t *parser)
 {
     int result;
-
     if (TOKEN_T == TOKEN_KEYWORD) {
         switch (TOKEN_KW_T)
         {
@@ -1426,7 +1446,6 @@ int expr_list(parser_t *parser)
             case KEYWORD_ELSE: 
 
                 // RULE 38: <expr_list> → ε
-                
                 return EXIT_OK;
 
             default: break;
@@ -1438,10 +1457,16 @@ int expr_list(parser_t *parser)
 
         // Current token is ','
         result = analyze_bottom_up(parser);
-        if ((result != EXIT_EMPTY_EXPR) && (result != EXIT_OK)) {
-            return result; 
-        }
-        
+        switch (result)  {
+            case EXIT_EMPTY_EXPR: 
+                break;
+            case EXIT_OK: 
+                parser->curr_ret_val_count += 1; 
+                break;
+            default:
+                return result;
+        } // switch
+
         return expr_list(parser);
     
     } else if (TOKEN_T == TOKEN_ID) {

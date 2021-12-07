@@ -348,6 +348,26 @@ int check_declared_function_defined(parser_t *parser)
     return EXIT_OK;
 }
 
+int check_ret_val_count(parser_t *parser)
+{
+    if (parser->curr_func == NULL) {
+        return ERR_INTERNAL;
+    }
+
+    if (parser->curr_func->function == NULL) {
+        printf("this is bad\n\n");
+        return 69;
+    }
+    int expected = parser->curr_func->function->num_ret_types;
+    if (parser->curr_ret_val_count > expected) {
+        error_message("Parser", ERR_SEMANTIC_PROG, "too many return values in "
+                      "function '%s'", parser->curr_func->key);
+        fprintf(stderr, "expected: %d, is: %d\n", expected, parser->curr_ret_val_count);
+        return ERR_SEMANTIC_PROG; 
+    }
+    return EXIT_OK;
+}
+
 // TODO: solve error output
 
 
