@@ -1028,7 +1028,7 @@ int analyze_bottom_up(parser_t *parser){
 			/** If the generated token has not supported type, transfrom it as $,
 			 	and return read token and control to recursive descent parser */	
 			else if(switch_context(token_in.terminal)){
-				printf("Switchujem context pri narazeni na %d\n", token_in.terminal->type);
+				//printf("Switchujem context pri narazeni na %d\n", token_in.terminal->type);
 				parser->token = copy_token(token_in.terminal);
 				token_in.terminal -> type = TOKEN_EOF;
 				reduction = 1;

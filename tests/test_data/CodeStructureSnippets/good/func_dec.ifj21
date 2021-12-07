@@ -9,4 +9,3 @@ function main()
     x, ret = concat("ahoj", "svete")
 end
 main()
-
