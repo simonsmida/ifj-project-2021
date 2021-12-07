@@ -7,9 +7,11 @@
 void CODE(const char *fmt, ...) {
    	va_list args;
    	va_start(args, fmt);
-   	vprintf(fmt, args);
+	FILE *out = fopen("output.txt","w");
+   	vfprintf(out,fmt, args);
    	va_end(args);
-   	printf("\n");
+   	fprintf(out,"\n");
+	fclose(out);
 }
 
 void generate_built_in_write( token_t *token, char *function_id, int depth){

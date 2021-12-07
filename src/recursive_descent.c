@@ -1030,9 +1030,9 @@ int stat(parser_t *parser)
                 result = dtype(parser);
                 CHECK_RESULT_VALUE(result, EXIT_OK); 
                
-                printf("function id: %s\n", parser->curr_func->key); 
-                printf("Curr id: %s\n", parser->curr_item->key);
-                printf("Curr block: id [%d], depth: %d\n\n", parser->curr_block_id, parser->curr_block_depth);
+                // printf("function id: %s\n", parser->curr_func->key); 
+                // printf("Curr id: %s\n", parser->curr_item->key);
+                // printf("Curr block: id [%d], depth: %d\n\n", parser->curr_block_id, parser->curr_block_depth);
 
                 // Store useful data about current parameter
                 parser->curr_item->const_var->is_var = true;

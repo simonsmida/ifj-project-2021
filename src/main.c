@@ -9,23 +9,7 @@
 int main(int argc, char *argv[])
 {
     /* This code demonstrates the scanners work */
-#if 0
-    token_t *token;
-    while ((token=get_next_token(stdin)) != NULL) {
-        if (token->type == TOKEN_EOF) {
-            break;
-        } else if (token->type == TOKEN_ERROR) {
-            PRINT_ERROR; 
-            return ERR_LEX;
-        }
-        // Continue scanning
-        printf("Calling scanner...\n");
-        sleep(1);
-        print_token(token);
-    }
-    sleep(2);
-    printf("\nSource file read successfully\n");
-#endif
+#if 1
     FILE *f;
         // if ((f = fopen(argv[1], "r")) == NULL) {
         //     fprintf(stderr, "Failed to open file '%s'\n", argv[1]);
@@ -133,7 +117,15 @@ int main(int argc, char *argv[])
             i++;
            // printf("----------------------------------\n");
         }
-            
-
-    return 0;
+#endif
+#if 0
+    FILE *f = stdin;
+    if (argc > 1) {
+        if ((f = fopen(argv[1], "r")) == NULL) {
+            fprintf(stderr, "Failed to open file '%s'\n", argv[1]);
+            return ERR_INTERNAL;
+        }
+    }
+    return parser_parse(f);
+#endif
 }
