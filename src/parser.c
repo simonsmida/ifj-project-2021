@@ -56,7 +56,7 @@ parser_t *parser_init(FILE *src)
 int parser_parse(FILE *src)
 {
     if (src == NULL) { 
-        error_message("FATAL", ERR_INTERNAL, "input source filed is NULL");
+        error_message("FATAL", ERR_INTERNAL, "input source file is NULL");
         return ERR_INTERNAL;
     }
     

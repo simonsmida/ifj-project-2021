@@ -26,6 +26,12 @@ int main(int argc, char *argv[])
     sleep(2);
     printf("\nSource file read successfully\n");
 #endif
-
-    return parser_parse(stdin);
+    FILE *f = stdin;
+    if (argc > 1) {
+        if ((f = fopen(argv[1], "r")) == NULL) {
+            fprintf(stderr, "Failed to open file '%s'\n", argv[1]);
+            return ERR_INTERNAL;
+        }
+    }
+    return parser_parse(f);
 }
