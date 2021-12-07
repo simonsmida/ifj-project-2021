@@ -84,7 +84,7 @@ int check_arg_type_literal(parser_t *parser)
     }
     return EXIT_OK;
 }
-
+// TODO: MAYBE USELESS
 int check_undefined_arg(parser_t *parser)
 {
     if ((parser->curr_item = symtable_search(SYMTAB_L, TOKEN_REPR)) == NULL) {
@@ -110,12 +110,11 @@ int check_arg_type_id(parser_t *parser)
         return EXIT_OK;
     }
 
-
     // Check variable type
     int expr_type = parser->curr_item->const_var->type;
     int expected_type = parser->curr_rhs->function->type_params[parser->curr_arg_count];
     if (!is_expr_type_valid(expr_type, expected_type)) {
-        error_message("Pariiser", ERR_SEMANTIC_PROG, "invalid argument type");
+        error_message("Parser", ERR_SEMANTIC_PROG, "invalid argument type");
         return ERR_SEMANTIC_PROG;
     }
     return EXIT_OK;
@@ -307,14 +306,15 @@ int check_variable_redeclaration(parser_t *parser)
     return EXIT_OK;
 }
 
-int check_undeclared_var_or_func(parser_t *parser, symtable_item_t *item_dec)
+int check_undeclared_var_or_func(parser_t *parser, bool must_be_defined)
 {
     int b_id = parser->curr_block_id;
     int b_depth = parser->curr_block_depth;
-    if (!(item_dec = most_recent_var(SYMTAB_L, TOKEN_REPR, b_id, b_depth, false))) {
+    parser->curr_item = most_recent_var(SYMTAB_L, TOKEN_REPR, b_id, b_depth, must_be_defined);
+    if (parser->curr_item == NULL) {
         error_message("Parser", ERR_SEMANTIC_DEF, "undeclared variable/function '%s'", TOKEN_REPR);
         return ERR_SEMANTIC_DEF;
-    } 
+    }
     return EXIT_OK;
 }
 
@@ -380,7 +380,6 @@ int check_ret_val_type(parser_t *parser)
     int index = parser->curr_ret_val_count-1;
     int expected = parser->curr_func->function->ret_types[index];
 
-    // Expression is here considered to be a term
     if (!is_expr_type_valid(parser->curr_expr_type, expected)) {
         error_message("Parser", ERR_SEMANTIC_PROG, "invalid return value type");
         fprintf(stderr, "expected: %d, is: %d\n", expected, parser->curr_expr_type);
@@ -390,6 +389,15 @@ int check_ret_val_type(parser_t *parser)
     return EXIT_OK;
 }
 
+int check_expr_type_compat(parser_t *parser, int expected)
+{
+    if (!is_expr_type_valid(parser->curr_expr_type, expected)) {
+        error_message("Parser", ERR_SEMANTIC_ASSIGN, "expression type incompatible");
+        fprintf(stderr, "[%s]: expected: %d, is: %d\n", parser->curr_item->key, expected, parser->curr_expr_type);
+        return ERR_SEMANTIC_ASSIGN;
+    }
+    return EXIT_OK;
+}
 // TODO: solve error output
 
 
