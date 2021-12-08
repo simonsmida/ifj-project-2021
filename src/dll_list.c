@@ -12,20 +12,20 @@
 
 void print_elements_of_list(DLList TL) 
 {
-	DLList TempList = TL;
-	int CurrListLength = 0;
-	printf("-----------------");
-	while ((TempList.firstElement != NULL) && (CurrListLength < MAXLEN))
-	{
-		printf("\n \t%s (%d)", TempList.firstElement->item->key, TempList.firstElement->item->const_var->type);
-		if ((TempList.firstElement == TL.activeElement) && (TL.activeElement != NULL))
-			printf("\t <= active element");
-		TempList.firstElement = TempList.firstElement->nextElement;
-		CurrListLength++;
-	}
-	if (CurrListLength >= MAXLEN)
-		printf("\nList exceeded maximum length!");
-	printf("\n-----------------\n");
+	// DLList TempList = TL;
+	// int CurrListLength = 0;
+	// printf("-----------------");
+	// while ((TempList.firstElement != NULL) && (CurrListLength < MAXLEN))
+	// {
+	// 	printf("\n \t%s (%d)", TempList.firstElement->item->key, TempList.firstElement->item->const_var->type);
+	// 	if ((TempList.firstElement == TL.activeElement) && (TL.activeElement != NULL))
+	// 		printf("\t <= active element");
+	// 	TempList.firstElement = TempList.firstElement->nextElement;
+	// 	CurrListLength++;
+	// }
+	// if (CurrListLength >= MAXLEN)
+	// 	printf("\nList exceeded maximum length!");
+	// printf("\n-----------------\n");
 }
 
 /**

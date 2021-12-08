@@ -1017,8 +1017,8 @@ int stat(parser_t *parser)
                     parser->curr_item->const_var->block_id = parser->curr_block_id;
                 }
                 //parser->curr_item->const_var->block_id = parser->curr_block_id;
-                fprintf(stderr, "(%s) -> [%d]: %d\n", parser->curr_item->key, parser->curr_item->const_var->block_id,
-                                                      parser->curr_item->const_var->block_depth); 
+                //fprintf(stderr, "(%s) -> [%d]: %d\n", parser->curr_item->key, parser->curr_item->const_var->block_id,
+                  //                                    parser->curr_item->const_var->block_depth); 
                 
                 
                 strcpy(id_name, TOKEN_REPR);

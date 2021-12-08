@@ -1,20 +1,18 @@
 require "ifj21"
 function foo()
     local x : integer = 2
-    if true then
+    if(1)then
         local x : integer = 3
         write(x)
     else
         local x : integer = 9
     end
 
-    if false then
+    if (0) then
         local x : integer = 5
         write(x)
     else
         local x : integer = 10
     end
-
-
 end
 foo()

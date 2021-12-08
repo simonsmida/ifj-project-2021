@@ -41,7 +41,7 @@ void append_character(string_t *buffer, int c)
     if (buffer->current_index >= buffer->size - 1) {
 		char *temp = realloc(buffer->string, buffer->size * 2);
         if (temp == NULL) {
-            fprintf(stderr, "Intern reallo problem in lexer\n");
+            fprintf(stderr, "Intern realloc problem in lexer\n");
             exit(1);
         }
         buffer->size = buffer->size * 2;
