@@ -51,7 +51,7 @@
 #define SIZE_STRING 5
 
 #define NUM_OF_KEYWORDS 12
-#define NUM_OF_VAR_TYPE 5
+#define NUM_OF_VAR_TYPE 4
 #define NUM_OF_OPERATORS 9
 
 

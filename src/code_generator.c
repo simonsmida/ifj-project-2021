@@ -1,8 +1,18 @@
 
-// TODO code_gen.h move to the include file
+/**
+ * @file  scanner.c
+ * @brief Scanner implementation
+ * 
+ * @authors  Krištof Šiška - xsiska16
+ *           Daniel Chudy  
+ * @date  1.10.2021
+ *
+ * Compiled : gcc version 9.3.0
+ */
 #include "include/code_generator.h"
 #include "include/parser.h"
 #include<stdarg.h>
+
 
 #if TESTING
 void CODE(const char *fmt, ...) {
@@ -213,9 +223,7 @@ void generate_function_label(const char *func_name){
 void generate_var_declaration(char *var_name, char *function_id, int *array_depth,  int depth){
 	//printf("DEFVAR LF@%s$%s$%d$%d\n", var_name, function_id, depth, array_depth[depth]);
 
-	return;
-	
-}
+
 
 void generate_function_call(const char *func_name){
 	CODE("CALL %s", func_name);
@@ -575,6 +583,7 @@ void CODE(const char *fmt, ...) {
    	va_end(args);
    	printf("\n");
 	//fclose(out);
+
 }
 
 void generate_built_in_write( token_t *token, char *function_id, int depth, int *array_depth){
@@ -586,17 +595,22 @@ void generate_built_in_write( token_t *token, char *function_id, int depth, int 
 			return;
 		}
 		else {
-			CODE("WRITE LF@%s$%s$%d$%d", token->attribute->string, function_id, depth, array_depth[depth]);
+			
+			CODE("PUSHS LF@%s$%s$%d$%d", token->attribute->string, function_id, depth, array_depth[depth]);
+			CODE("CALL check_nil_write");
 		}
 	}
 	else if (token->type == TOKEN_STR_LIT){
-		CODE("WRITE string@%s", token->attribute->string);
+		CODE("PUSHS string@%s", token->attribute->string);
+		CODE("CALL check_nil_write");
 	}
 	else if (token->type == TOKEN_INT_LIT){
-		CODE("WRITE int@%d", token->attribute->integer);
+		CODE("PUSHS int@%d", token->attribute->integer);
+		CODE("CALL check_nil_write");
 	}
 	else if (token->type == TOKEN_NUM_LIT){
-		CODE("WRITE float@%a", token->attribute->number);
+		CODE("PUSHS float@%a", token->attribute->number);
+		CODE("CALL check_nil_write");
 	}
 }
 
@@ -635,6 +649,7 @@ void generate_built_in_readn(){
 }
 
 void generate_built_in_functions(){
+	check_nil_write();
 	check_nil_builtin();
 	generate_built_in_readi();
 	generate_built_in_reads();
@@ -680,8 +695,7 @@ void check_nil_builtin(){
 
 void generate_built_in_substr(){
 	// substr ( string, int_start, int_stop )
-	CODE("LABEL SUBSTR");
-	CODE("CREATEFRAME");
+	CODE("LABEL substr");
 	CODE("PUSHFRAME");
 	CODE("DEFVAR LF@tmp_char");
 	CODE("DEFVAR LF@ret_string");
@@ -689,6 +703,13 @@ void generate_built_in_substr(){
 	CODE("DEFVAR LF@str_len");
 	CODE("DEFVAR LF@bool_var");
 	CODE("MOVE LF@bool_var bool@true");
+	CODE("MOVE GF@tmp1 LF@%c1", '%');
+	CODE("MOVE GF@tmp2 LF@%c2", '%');
+	CODE("MOVE GF@tmp3 LF@%c3", '%');
+	CODE("PUSHS GF@tmp1");
+	CODE("PUSHS GF@tmp2");
+	CODE("PUSHS GF@tmp3");
+
 
 	CODE("CALL $checknil"); 
 	CODE("POPS GF@tmp3");		// This is the stop byte
@@ -696,7 +717,7 @@ void generate_built_in_substr(){
 	CODE("CALL $checknil"); 	
 	CODE("POPS GF@tmp2");		// This is start byte
 
-	CODE("CALL $checnil"); 		
+	CODE("CALL $checknil"); 		
 	CODE("POPS GF@tmp1"); 		// This is the string
 
 	CODE("SUB GF@tmp2 GF@tmp2 int@1");
@@ -728,6 +749,7 @@ void generate_built_in_substr(){
 	CODE("LABEL END_OK");
 	CODE("CLEARS");
 	CODE("MOVE GF@tmp1 LF@ret_string");
+	CODE("PUSHS GF@tmp1");
 	CODE("POPFRAME");
 	CODE("RETURN\n"); // idk
 
@@ -735,6 +757,7 @@ void generate_built_in_substr(){
 	CODE("CLEARS");
 	CODE("POPFRAME");
 	CODE("MOVE GF@tmp1 string@");
+	CODE("PUSHS GF@tmp1");
 	CODE("RETURN\n"); // idk
 
 }
@@ -743,22 +766,30 @@ void generate_built_in_ord(){
 	// ord ( string, int ) : int
 	// Vrati ordinalnu hodnotu ASCII znaku stringu na pozicii int
 	//  TODO Dat sem straze
-	CODE("LABEL ORD");
+	CODE("LABEL ord");
+	CODE("PUSHFRAME");
+	CODE("PUSHS LF@%c1", '%');
+	CODE("PUSHS LF@%c2", '%');
 	CODE("CALL $checknil");
 	CODE("POPS GF@tmp2");
 	CODE("CALL $checknil"); 	// Toto bude ten int
 	CODE("POPS GF@tmp1"); 	// Toto bude string
 	CODE("SUB GF@tmp2 GF@tmp2 int@1");
 	CODE("STRI2INT GF@tmp3 GF@tmp1 GF@tmp2");
+	CODE("PUSHS GF@tmp3");
+	CODE("POPFRAME");
 	CODE("RETURN\n");
 }
 
 void generate_built_in_chr(){
 	// chr ( int ) : string
-	CODE("LABEL CHR");
+	CODE("LABEL chr");
+	CODE("PUSHFRAME");
+	CODE("PUSHS LF@%c1", '%');
 	CODE("CALL $checknil");
 	CODE("POPS GF@tmp2");
 	CODE("INT2CHAR GF@tmp1 GF@tmp2");
+	CODE("PUSHS GF@tmp1");
 	CODE("RETURN\n");
 }
 
@@ -870,7 +901,7 @@ void generate_pass_param_to_function(token_t *token,  char *function_name, int d
 
 
 
-void generate_pass_param_to_operation(token_t *token, char *function_name, int depth, int *array_depth){
+void generate_pass_param_to_operation(token_t *token, char *function_name, int depth, int array_depth){
 	if (token != NULL){
 		switch ( token->type ){
 			case TOKEN_INT_LIT:
@@ -883,7 +914,7 @@ void generate_pass_param_to_operation(token_t *token, char *function_name, int d
 				CODE("PUSHS string@%s", token->attribute->string);
 				break;
 			case TOKEN_ID:
-				CODE("PUSHS LF@%s$%s$%d$%d", token->attribute->string, function_name, depth, array_depth[depth]);
+				CODE("PUSHS LF@%s$%s$%d$%d", token->attribute->string, function_name, depth, array_depth);
 				break;
 			default:
 				break;
@@ -1082,8 +1113,8 @@ void generate_if_body(){//nazov labelov sa bude odvijat od nazvu funkcie a hlbky
 	CODE("RETURN");
 }
 
-void generate_pop_stack_to_var(char *var_id, char *function_id, int *array_depth, int depth){
-	CODE("POPS LF@%s$%s$%d$%d", var_id, function_id, depth, array_depth[depth]);
+void generate_pop_stack_to_var(char *var_id, char *function_id, int array_depth, int depth){
+	CODE("POPS LF@%s$%s$%d$%d", var_id, function_id, depth, array_depth);
 
 	return;
 }
@@ -1139,4 +1170,17 @@ void generate_main_scope(){
 	return;
 
 }
-#endif
+
+
+void check_nil_write(){
+	CODE("LABEL check_nil_write");
+	CODE("POPS GF@tmp1");
+	CODE("JUMPIFEQ write_nil GF@tmp1 nil@nil");
+	CODE("WRITE GF@tmp1");
+	CODE("RETURN");
+	CODE("LABEL write_nil");
+	CODE("WRITE string@nil");
+	CODE("RETURN");
+}
+  
+  #endif
