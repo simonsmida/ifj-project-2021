@@ -1,3 +1,14 @@
+/**
+ * @file  scanner.c
+ * @brief Scanner implementation
+ * 
+ * @authors  Šimon Šmída   - xsmida03
+ * 			 Krištof Šiška - xsiska16
+ * @date  1.10.2021
+ *
+ * Compiled : gcc version 9.3.0
+ */
+
 #include <stdbool.h>
 #include <string.h>
 #include "include/recursive_descent.h"
@@ -465,11 +476,10 @@ int term(parser_t *parser, int num_param)
                                     parser->curr_block_depth,
 			  												parser->array_depth);
 					}
-		} else { // TODO: segfault curr_func
+		} else { 
 			if (parser->curr_func != NULL){
             	generate_pass_param_to_function(parser->token, parser->curr_func->key, parser->curr_block_depth, parser->array_depth, num_param);
 			}
-		
 		}
 
         // RULE 15: <term> → 'literal' ... 'literal' = str_lit|int_lit|num_lit
@@ -577,7 +587,6 @@ int param_fdef(parser_t *parser)
             parser->curr_item->const_var->block_depth = -1;
             parser->curr_item->const_var->declared = true;
             parser->curr_item->const_var->defined = true;
-
             // Continue parsing 
             PARSER_EAT(); /* : */
             CHECK_TOKEN_TYPE(TOKEN_COLON);
@@ -1044,6 +1053,11 @@ int stat(parser_t *parser)
                 char *key = parser->curr_func->key; //TODO: REMOVEME
                 int depth = parser->curr_block_depth; // TODO: REMOVE
                 int adp = parser->array_depth[depth]; // TODO: REMOVE
+
+				parser->curr_item->const_var->depth_array_number = parser->array_depth[depth];
+				parser->curr_item->const_var->block_depth = parser->curr_block_depth; 
+				
+
 				if (parser->inside_while == false) {
                 	generate_var_declaration(id_name, key, parser->array_depth , depth);
 				} else {
@@ -1051,7 +1065,8 @@ int stat(parser_t *parser)
 					sprintf(some_string,"DEFVAR LF@%s$%s$%d$%d\n", id_name, key, adp, depth);
 					append_string(parser->buffer, some_string);
 				}
-
+				
+			
                 PARSER_EAT(); /* ':' */
                 CHECK_TOKEN_TYPE(TOKEN_COLON);
                 
@@ -1068,6 +1083,8 @@ int stat(parser_t *parser)
                 parser->curr_item->const_var->is_var = true;
                 parser->curr_item->const_var->declared = true; //TODO: definition
                 parser->curr_item->const_var->type = dtype_keyword(TOKEN_KW_T);
+
+				
                 
                 // <var_def>
                 PARSER_EAT();
@@ -1261,6 +1278,14 @@ int stat(parser_t *parser)
         
         // *ATTENTION* - nondeterminism handling - func id vs var id
         result = analyze_bottom_up(parser);
+		int b_id = parser->curr_block_id;
+		int b_depth = parser->curr_block_depth;
+
+		parser->curr_item = most_recent_var(SYMTAB_L, id_name, b_id, b_depth, false);
+
+		if (parser->curr_item == NULL){
+			printf("BAD\n");
+		}
 
         switch (result) 
         { 
@@ -1268,8 +1293,8 @@ int stat(parser_t *parser)
                 generate_pop_stack_to_var(
                         id_name, 
                         parser->curr_func->key, 
-                        parser->array_depth, 
-                        parser->curr_block_depth);
+                        parser->curr_item->const_var->depth_array_number, 
+                        parser->curr_item->const_var->block_depth);
 
                 DLL_First(&(parser->list)); 
                 DLL_GetValue(&(parser->list), &(parser->curr_item));
@@ -1288,11 +1313,11 @@ int stat(parser_t *parser)
                 
                 // Semantic check handled by func_call()
                 result = func_call(parser);
-		generate_pop_stack_to_var(
+		  generate_pop_stack_to_var(
                         id_name, 
                         parser->curr_func->key, 
-                        parser->array_depth, 
-                        parser->curr_block_depth);
+                        parser->curr_item->const_var->depth_array_number, 
+                        parser->curr_item->const_var->block_depth);
 
                 CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
                 PARSER_EAT();
@@ -1410,6 +1435,11 @@ int var_def(parser_t *parser, char *id_name)
 
         // *ATTENTION* - nondeterminism handling - func id vs var id
         result = analyze_bottom_up(parser);
+
+		int b_id = parser->curr_block_id;
+		int b_depth = parser->curr_block_depth;
+
+		parser->curr_item = most_recent_var(SYMTAB_L, id_name, b_id, b_depth, false);
 	
 
         switch (result) 
@@ -1418,12 +1448,11 @@ int var_def(parser_t *parser, char *id_name)
                 /*** Check type compatibility between left and right hand side ***/
                 SEMANTIC_ACTION(check_expr_type_compat, parser, parser->curr_item->const_var->type);
 		
-       			generate_pop_stack_to_var(
+       			  generate_pop_stack_to_var(
                         id_name, 
                         parser->curr_func->key, 
-                        parser->array_depth, 
-                        parser->curr_block_depth);
-
+                        parser->curr_item->const_var->depth_array_number, 
+                        parser->curr_item->const_var->block_depth);
                 result = expr_list(parser);
                 CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
                 parser->curr_item->const_var->defined = true;
@@ -1432,11 +1461,11 @@ int var_def(parser_t *parser, char *id_name)
             case EXIT_FUNC_ID:
                 // Semantic check handled by func_call()
                 result = func_call(parser);
-				generate_pop_stack_to_var(
+				  generate_pop_stack_to_var(
                         id_name, 
                         parser->curr_func->key, 
-                        parser->array_depth, 
-                        parser->curr_block_depth);
+                        parser->curr_item->const_var->depth_array_number, 
+                        parser->curr_item->const_var->block_depth);
                 CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
                 parser->curr_item->const_var->defined = true;
                 PARSER_EAT();
