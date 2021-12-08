@@ -68,14 +68,15 @@ int prolog(parser_t *parser)
                 return ERR_SYNTAX;
             }
 	        generate_head();
+			generate_built_in_functions();
+
             
             // Define built-in functions
             if ((result = define_every_builtin_function(parser)) != EXIT_OK) {
                 error_message("FATAL", ERR_INTERNAL, "failed to load built-in functions");
                 return result;
             }
-	        generate_built_in_functions();
-
+	        
             PARSER_EAT();
             return EXIT_OK;
 
@@ -451,12 +452,22 @@ int term(parser_t *parser, int num_param)
     } else if (IS_LITERAL(TOKEN_T) || IS_NIL(TOKEN_T)) {
 
       	if (is_write) {
-		    generate_built_in_write(parser->token, 
-                                    parser->curr_func->key, 
+			  if(parser->curr_func == NULL){
+				   generate_built_in_write(parser->token, 
+                                    NULL, 
                                     parser->curr_block_depth,
 									parser->array_depth);
+			  }
+			  else{
+				    generate_built_in_write(parser->token, 
+                                    parser->curr_func->key, 
+                                    parser->curr_block_depth,
+			  												parser->array_depth);
+					}
 		} else { // TODO: segfault curr_func
-            //generate_pass_param_to_function(parser->token,parser->curr_func->key, parser->curr_block_depth, parser->array_depth, num_param);
+			if (parser->curr_func != NULL){
+            	generate_pass_param_to_function(parser->token, parser->curr_func->key, parser->curr_block_depth, parser->array_depth, num_param);
+		
 		}
 
         // RULE 15: <term> → 'literal' ... 'literal' = str_lit|int_lit|num_lit
@@ -1121,10 +1132,13 @@ int stat(parser_t *parser)
                 generate_while_repeat_label(parser->curr_func->key, 
                                             parser->curr_block_depth, 
                                             parser->array_depth);
+
+											 parser->curr_block_depth -= 1;
                 
                 // Current token is 'while' - switch context
                 result = analyze_bottom_up(parser);
                 CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
+				parser->curr_block_depth += 1;
 
 				generate_jump_while_end(parser->curr_func->key, 
                                         parser->curr_block_depth, 
@@ -1219,7 +1233,7 @@ int stat(parser_t *parser)
                 result = func_call(parser);
                 CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
 
-				// generate_pop_stack_to_var(id_name, parser->curr_func->key, parser->curr_block_depth);
+				// generate_pop_stack_to_var(id_name, parser->curr_func->key, parser->array_depth, parser->curr_block_depth);
 
                 PARSER_EAT();
                 return EXIT_OK;
@@ -1394,23 +1408,19 @@ int var_def(parser_t *parser, char *id_name)
 
         // *ATTENTION* - nondeterminism handling - func id vs var id
         result = analyze_bottom_up(parser);
-	generate_pop_stack_to_var(
-                        id_name, 
-                        parser->curr_func->key, 
-                        parser->array_depth, 
-                        parser->curr_block_depth);
+	
 
         switch (result) 
         {
             case EXIT_OK:
                 /*** Check type compatibility between left and right hand side ***/
                 SEMANTIC_ACTION(check_expr_type_compat, parser, parser->curr_item->const_var->type);
-		/*
+		
        			generate_pop_stack_to_var(
                         id_name, 
                         parser->curr_func->key, 
                         parser->array_depth, 
-                        parser->curr_block_depth);*/
+                        parser->curr_block_depth);
 
                 result = expr_list(parser);
                 CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
@@ -1420,6 +1430,11 @@ int var_def(parser_t *parser, char *id_name)
             case EXIT_FUNC_ID:
                 // Semantic check handled by func_call()
                 result = func_call(parser);
+				generate_pop_stack_to_var(
+                        id_name, 
+                        parser->curr_func->key, 
+                        parser->array_depth, 
+                        parser->curr_block_depth);
                 CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
                 parser->curr_item->const_var->defined = true;
                 PARSER_EAT();

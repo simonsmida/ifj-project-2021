@@ -198,7 +198,7 @@ token_t *get_next_token(FILE *file)
                 }
 				else {
 					fprintf(stderr, "Error, there has to be a digit after '.' in number sequence\n " );
-					return generate_token(buffer, state);
+					return generate_token(buffer, STATE_ERROR);
 				}
                 break;
 
@@ -233,7 +233,7 @@ token_t *get_next_token(FILE *file)
                 else {
 					
 					fprintf(stderr, "After 'e' in number sequence, there has to be digit or '+' or '-'\n");
-					return generate_token(buffer, state);
+					return generate_token(buffer, STATE_ERROR);
 				}
                 break;
 
@@ -258,7 +258,7 @@ token_t *get_next_token(FILE *file)
                 else {
 					// TODO : Exit program
 					fprintf(stderr, "After 'e-' 'e+' in number sequence, there has to be digit\n");
-					return generate_token(buffer, state);
+					return generate_token(buffer, STATE_ERROR);
 				}
                 break;
 
@@ -402,7 +402,7 @@ token_t *get_next_token(FILE *file)
                 }
                 else {
                     fprintf(stderr, "Invalid escape sequence in string literal\n");
-					return generate_token(buffer, state);
+					return generate_token(buffer, STATE_ERROR);
                    
                 }
 				break;
@@ -414,7 +414,7 @@ token_t *get_next_token(FILE *file)
                     if (character > 255) {
                         fprintf(stderr, "Escape character value cannot be higher than 255\n");
 
-						return generate_token(buffer, state);
+						return generate_token(buffer, STATE_ERROR);
                     }
                     if (isprint(character)) {
                         append_character(buffer, character);
@@ -451,7 +451,7 @@ token_t *get_next_token(FILE *file)
 			ungetc(c, file);
 			if (state == DOUBLE_E_SEQUENCE || state == DOUBLE_DOT_SEQUENCE || state == DOUBLE_E_PLUS_MINUS_SEQUENCE){
 				fprintf(stderr, "There has to be non-empty digit after '.' or 'e' or 'e+/-'\n");
-				return generate_token(buffer, state);
+				return generate_token(buffer, STATE_ERROR);
 			}
             return generate_token(buffer, state);
         }
@@ -490,6 +490,10 @@ token_t *generate_token(string_t *buffer,  int type)
 	token->type = TOKEN_ERROR;
 	token->attribute->integer = 0;
 	token->attribute->number = 0.0f;
+
+	if ( type == TOKEN_ERROR){
+		return token;
+	}
 
 	//token->attribute->string = NULL;
     append_character(buffer, '\0');

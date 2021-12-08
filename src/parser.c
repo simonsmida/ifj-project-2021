@@ -72,14 +72,20 @@ int parser_parse(FILE *src)
     }
     if ((parser->token = get_next_token(parser->src)) == NULL) {
         error_message("Scanner", ERR_LEX, "token returned NULL");
-        return ERR_LEX;
+        return ERR_INTERNAL;
     }
     
     int result = parser->token->type;
+
     if (result != TOKEN_ERROR) {
         // Starting recursive descent
         result = prog(parser); 
     }
+	else{
+		parser_destroy(parser);
+		error_message("Scanner", ERR_LEX, "token returned TOKEN_ERROR");
+		return ERR_LEX;
+	}
 
     // Parsing finished
     parser_destroy(parser);
