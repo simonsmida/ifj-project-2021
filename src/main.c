@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
     int failed = 0;
     FILE *f;
     int i = 0;
-    int all = 37;
+    int all = 42;
         while(i<43){
             printf("\n");
             switch (i)
