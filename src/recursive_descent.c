@@ -1314,7 +1314,7 @@ int stat(parser_t *parser)
                 
                 // Semantic check handled by func_call()
                 result = func_call(parser);
-
+				generate_pop_stack_to_var(
                         id_name, 
                         parser->curr_func->key, 
                         parser->curr_item->const_var->depth_array_number, 

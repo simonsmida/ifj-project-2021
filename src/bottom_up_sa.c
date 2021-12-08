@@ -119,8 +119,15 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 			}
 			/*------------------------------------------------------------------------*/
 			/** 4. Send instruction for generating the code with token				  */
-			generate_pass_param_to_operation(items[0].terminal, parser->curr_func->key, parser->curr_block_depth, parser->array_depth);
-			
+			int b_id = parser->curr_block_id;
+			int b_depth = parser->curr_block_depth;
+			symtable_item_t *item = most_recent_var(SYMTAB_L, items[0].terminal->attribute->string, b_id, b_depth, false );
+			if (item != NULL){
+				generate_pass_param_to_operation(items[0].terminal, parser->curr_func->key, item->const_var->block_depth , item->const_var->depth_array_number);
+			}
+			else {
+				generate_pass_param_to_operation(items[0].terminal, parser->curr_func->key, parser->curr_block_depth, parser->array_depth);
+			}
 			destroy_token(items[operands_count-1].terminal);
 			reduced_terminal.non_terminal.expr_type = EXPR;
 			PA_stack_push(stack,reduced_terminal,0);
