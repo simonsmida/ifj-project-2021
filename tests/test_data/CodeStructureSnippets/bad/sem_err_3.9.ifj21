@@ -1,0 +1,14 @@
+require "ifj21"
+
+function main()
+    local x : integer = 1
+    local z : integer = 2
+    if z > 1 then
+        local i : integer
+    else
+        local i : integer    
+    end
+    local x : string
+    -- local str : string = "str"
+end
+main()

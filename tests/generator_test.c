@@ -24,7 +24,7 @@ void test1(void)
     
     while(token->type != TOKEN_EOF){
         //print_token(token);
-        generate_built_in_write(0,token);
+        //generate_built_in_write(0,token);
         destroy_token(token);
         token = get_next_token(srcfile);
     }
@@ -95,7 +95,7 @@ int main(void)
 {
     UNITY_BEGIN();
     
-    RUN_TEST(test1);
+    //RUN_TEST(test1);
 
     return UNITY_END();
 }

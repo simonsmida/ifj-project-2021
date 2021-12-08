@@ -1,0 +1,7 @@
+require "ifj21"
+function main()
+    local x : integer = 4
+    local y : number = 100.90
+    local vysl : number = (10*(y/x))*(y/x)*1564564.898789
+end
+main()

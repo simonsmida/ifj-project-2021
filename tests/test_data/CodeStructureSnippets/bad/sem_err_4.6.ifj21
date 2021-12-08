@@ -1,0 +1,7 @@
+require "ifj21"
+function main()
+    local x : integer = 1
+    local y : integer = 2
+    local vysl : string = x + y
+end
+main()
