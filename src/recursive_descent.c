@@ -1038,9 +1038,6 @@ int stat(parser_t *parser)
                 } else {
                     parser->curr_item->const_var->block_id = parser->curr_block_id;
                 }
-                //fprintf(stderr, "(%s) -> [%d]: %d\n", parser->curr_item->key, parser->curr_item->const_var->block_id,
-                //parser->curr_item->const_var->block_depth); 
-                
                  
                 strcpy(id_name, TOKEN_REPR);
                 char *key = parser->curr_func->key; //TODO: REMOVEME
@@ -1062,10 +1059,6 @@ int stat(parser_t *parser)
                 result = dtype(parser);
                 CHECK_RESULT_VALUE(result, EXIT_OK); 
                
-                //printf("function id: %s\n", parser->curr_func->key); 
-                //printf("Curr id: %s\n", parser->curr_item->key);
-                //printf("Curr block: id [%d], depth: %d\n\n", parser->curr_block_id, parser->curr_block_depth);
-
                 // Store useful data about current parameter
                 parser->curr_item->const_var->is_var = true;
                 parser->curr_item->const_var->declared = true; //TODO: definition
@@ -1129,8 +1122,10 @@ int stat(parser_t *parser)
 
 				// We update block_depth before bottom_up analysis because of the need to print labels now
                 parser->array_depth[parser->curr_block_depth]++;
+                //parser->curr_block_depth += 1;
                 // TODO: Kristof check this 
-                // moju depth by si tu nemal upravovat 
+                // moju depth by si tu nemal upravovat - potom sa kazi
+                // semantika nizsie 
 
                 parser->inside_while = true;
                 generate_while_repeat_label(parser->curr_func->key, 
@@ -1234,9 +1229,6 @@ int stat(parser_t *parser)
             if ((FUNC_ITEM != NULL) && (FUNC_ITEM->declared)) {
                 result = func_call(parser);
                 CHECK_RESULT_VALUE_SILENT(result, EXIT_OK); 
-
-				// generate_pop_stack_to_var(id_name, parser->curr_func->key, parser->array_depth, parser->curr_block_depth);
-
                 PARSER_EAT();
                 return EXIT_OK;
             }
