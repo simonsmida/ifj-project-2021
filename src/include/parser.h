@@ -4,6 +4,7 @@
 #include "symtable.h"
 #include "scanner.h"
 #include "dll_list.h"
+
 #define ARRAY_DEPTH_NUM 10
 #define TESTING 1           //set TESTING to 1 and NORMAL 0 when testing AND MAKE CLEAN AFTER
 #define NORMAL 0            //set TESTING to 0 and NORMAL to 1 when prekladacing AND MAKE CLEAN AFTER
