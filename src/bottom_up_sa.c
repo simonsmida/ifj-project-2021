@@ -62,7 +62,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 			PA_stack_pop(stack);
 		}
 	}
-	//printf("Operands count: %d\n ",operands_count);
+	//fprintf(stderr,"Operands count: %d\n",operands_count);
 	/*Reduce terminal 
 	  E -> id
 	  E -> int
@@ -1078,10 +1078,13 @@ int analyze_bottom_up(parser_t *parser){
 			if(token_in.terminal->type == TOKEN_ID){
 				symtable_item_t *id = symtable_search(parser->global_symtable, token_in.terminal->attribute->string);
 				if ((id != NULL) && (id -> function != NULL) ){
-					parser -> token = token_in.terminal;
+					parser->token = copy_token(token_in.terminal);
+					token_in.terminal -> type = TOKEN_EOF;
+					reduction = 1;
+					//parser -> token = token_in.terminal;
 					/** Dealloc the stack */
-					PA_stack_destroy(&stack);
-					return EXIT_FUNC_ID;
+					//PA_stack_destroy(&stack);
+					//return EXIT_FUNC_ID;
 				}
 			}
 			/** If the generated token has not supported type, transfrom it as $,
