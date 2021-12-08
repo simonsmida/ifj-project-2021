@@ -8,8 +8,11 @@
 void CODE(const char *fmt, ...) {
    	va_list args;
    	va_start(args, fmt);
-	FILE *out = fopen("output.txt","w");
-   	vfprintf(out,fmt, args);
+	FILE *out = fopen("output.txt","wa");
+	if(out == NULL){
+		printf("drblo\n");
+	}
+   	fprintf(out,fmt, args);
    	va_end(args);
    	fprintf(out,"\n");
 	fclose(out);
@@ -392,7 +395,7 @@ void generate_idiv(){
 }
 
 void generate_stack_operation(token_t *token){
-	if(token->type != TOKEN_STRLEN || token->type != TOKEN_EQ || token->type != TOKEN_NOT_EQ)
+	if((token->type != TOKEN_STRLEN) && (token->type != TOKEN_EQ) && (token->type != TOKEN_NOT_EQ))
 		check_nil_op();
 
 	if (token != NULL){
@@ -567,11 +570,11 @@ void generate_main_scope(){
 void CODE(const char *fmt, ...) {
    	va_list args;
    	va_start(args, fmt);
-	FILE *out = fopen("output.txt","w");
-   	vfprintf(out,fmt, args);
+	//FILE *out = fopen("output.txt","w");
+   	vprintf(fmt, args);
    	va_end(args);
-   	fprintf(out,"\n");
-	fclose(out);
+   	printf("\n");
+	//fclose(out);
 }
 
 void generate_built_in_write( token_t *token, char *function_id, int depth, int *array_depth){

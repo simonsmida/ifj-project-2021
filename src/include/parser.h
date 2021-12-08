@@ -5,8 +5,8 @@
 #include "scanner.h"
 #include "dll_list.h"
 #define ARRAY_DEPTH_NUM 10
-#define TESTING 1           //set TESTING to 1 and NORMAL 0 when testing
-#define NORMAL 0            //set TESTING to 0 and NORMAL to 1 when prekladacing
+#define TESTING 1           //set TESTING to 1 and NORMAL 0 when testing AND MAKE CLEAN AFTER
+#define NORMAL 0            //set TESTING to 0 and NORMAL to 1 when prekladacing AND MAKE CLEAN AFTER
 typedef struct parser {
     symtable_t *global_symtable;
     symtable_item_t *curr_item;
