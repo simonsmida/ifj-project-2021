@@ -454,7 +454,10 @@ int term(parser_t *parser, int num_param)
                                     parser->curr_block_depth,
 									parser->array_depth);
 		} else {
-            generate_pass_param_to_function(parser->token,parser->curr_func->key, parser->curr_block_depth, parser->array_depth, num_param);
+            generate_pass_param_to_function(parser->token,
+                    parser->curr_func->key, 
+                    parser->curr_block_depth, 
+                    parser->array_depth, num_param);
 		}
 
         // Keep track of arguments
@@ -1044,11 +1047,10 @@ int stat(parser_t *parser)
                 } else {
                     parser->curr_item->const_var->block_id = parser->curr_block_id;
                 }
-                //parser->curr_item->const_var->block_id = parser->curr_block_id;
                 //fprintf(stderr, "(%s) -> [%d]: %d\n", parser->curr_item->key, parser->curr_item->const_var->block_id,
-                  //                                    parser->curr_item->const_var->block_depth); 
+                //parser->curr_item->const_var->block_depth); 
                 
-                
+                 
                 strcpy(id_name, TOKEN_REPR);
                 char *key = parser->curr_func->key; //TODO: REMOVEME
                 int depth = parser->curr_block_depth; // TODO: REMOVE
@@ -1143,22 +1145,20 @@ int stat(parser_t *parser)
             case KEYWORD_WHILE: // RULE 34: <stat> → 'while' 'expr' 'do' <stat_list> 'end'
 
 				// We update block_depth before bottom_up analysis because of the need to print labels now
-                parser->curr_block_depth += 1;
-                parser->curr_block_id += 1;
                 parser->array_depth[parser->curr_block_depth]++;
+                // TODO: Kristof check this 
+                // moju depth by si tu nemal upravovat 
 
                 parser->inside_while = true;
                 generate_while_repeat_label(parser->curr_func->key, 
                                             parser->curr_block_depth, 
                                             parser->array_depth);
 
-											 parser->curr_block_depth -= 1;
                 
                 // Current token is 'while' - switch context
                 result = analyze_bottom_up(parser);
                 CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
-				parser->curr_block_depth += 1;
-
+                
 				generate_jump_while_end(parser->curr_func->key, 
                                         parser->curr_block_depth, 
                                         parser->array_depth);
@@ -1167,14 +1167,14 @@ int stat(parser_t *parser)
                 CHECK_TOKEN_TYPE(TOKEN_KEYWORD); 
                 CHECK_KEYWORD(KEYWORD_DO);
                 
-                /*
                 // Keep track of current block info
                 if (parser->curr_block_id == 1 && parser->curr_block_depth == 0) {
                     parser->curr_block_id = parser->block_temp_id + 1;
                 } else {
                     parser->curr_block_id += 1;
-                }*/
-
+                }
+                parser->curr_block_depth += 1;
+                
                 // <stat_list>
                 PARSER_EAT(); 
                 result = stat_list(parser);
@@ -1195,7 +1195,7 @@ int stat(parser_t *parser)
                 // Leaving this block -> decrement depth
                 parser->curr_block_depth -= 1;
                 CHECK_MAIN_BLOCK();
-		parser->inside_while = false;
+		        parser->inside_while = false;
 
                 PARSER_EAT(); // to get next statement 
                 return EXIT_OK;
@@ -1321,7 +1321,8 @@ int stat(parser_t *parser)
                         parser->curr_item->const_var->block_depth);
 
                 CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
-                SEMANTIC_ACTION(check_multiassign_count, parser);
+                SEMANTIC_ACTION(check_assign_type_func, parser);
+                //SEMANTIC_ACTION(check_multiassign_count, parser); // TODO: redun?
                 PARSER_EAT();
                 DLL_Dispose(&parser->list);
                 return EXIT_OK;
