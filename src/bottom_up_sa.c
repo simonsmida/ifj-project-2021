@@ -80,6 +80,8 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 			(items[0].terminal->type == TOKEN_KEYWORD  &&
 			(items[0].terminal->attribute->keyword_type == KEYWORD_NIL))
 			)){
+			
+			//fprintf(stderr,"Redukujem vyraz\n");
 			/** Semantic action */
 			/*------------------------------------------------------------------------*/
 			/**	1. Check the item type -> whether it's a variable or literal */
@@ -88,6 +90,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 			/*	1.1 Assign the type of the item to the newly created non-terminal */
 				int literal_dtype = get_data_type(items[0].terminal);
 				reduced_terminal.non_terminal.dtype = literal_dtype;
+				reduced_terminal.non_terminal.reduction_order = 0;
 				/** If literal is int, assign int value to nonterminal */
 				if (literal_dtype == 1){
 					reduced_terminal.non_terminal.int_value    = items[0].terminal->attribute->integer;
@@ -112,6 +115,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 					 *	Assign the type of the variable to the non-terminal */
 					else{
 						reduced_terminal.non_terminal.dtype = search->const_var->type;
+						reduced_terminal.non_terminal.reduction_order = 1;
 					}
 			}
 			/*------------------------------------------------------------------------*/
@@ -183,6 +187,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 			/*------------------------------------------------------------------------*/
 			destroy_token(items[1].terminal);
 			reduced_terminal.non_terminal.expr_type = EXPR;
+			reduced_terminal.non_terminal.reduction_order = ++items[0].non_terminal.reduction_order;
 			PA_stack_push(stack,reduced_terminal,0);
 			return 1;
 		}
@@ -264,6 +269,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 			/*------------------------------------------------------------------------*/
 			
 			reduced_terminal.non_terminal.expr_type = EXPR;
+			reduced_terminal.non_terminal.reduction_order = ++items[0].non_terminal.reduction_order;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[1].terminal);
 			return 1;
@@ -334,6 +340,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 			/** END of Semantic action */
 			/*------------------------------------------------------------------------*/
 			reduced_terminal.non_terminal.expr_type = EXPR;
+			reduced_terminal.non_terminal.reduction_order = ++items[0].non_terminal.reduction_order;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[1].terminal);
 			return 1;
@@ -404,6 +411,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 			/** END of Semantic action */
 			/*------------------------------------------------------------------------*/
 			reduced_terminal.non_terminal.expr_type = EXPR;
+			reduced_terminal.non_terminal.reduction_order = ++items[0].non_terminal.reduction_order;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[1].terminal);
 			return 1;
@@ -415,61 +423,70 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 			/** Semantic action */
 			/*------------------------------------------------------------------------*/
 			/**	1. Check the non-terminal type */
+			
+			/** Reduction order is important to determine whether is static control 
+			  	of zero division possible -> it's possible only when zero is reduced
+			 	to non-terminal. */
+			int reduction_order = items[0].non_terminal.reduction_order;
+			
 			/** Attention first and second operand may seem in reverse order 
 			 *	but they are not because of the stack */
 			int first_op  = items[2].non_terminal.dtype; //first operand data type
 			int second_op = items[0].non_terminal.dtype; //second operand data type
 			non_terminal_t divisor = items[0].non_terminal; //divisor
+
 			if ( (first_op  == DTYPE_INT || first_op  == DTYPE_NUMBER) &&
 				 (second_op == DTYPE_INT || second_op == DTYPE_NUMBER)){
 					
 				if(first_op == second_op){
 					if(first_op == DTYPE_INT){
-						if(divisor.int_value != 0){
-							reduced_terminal.non_terminal.dtype = DTYPE_INT;
+						if( reduction_order == 0 ){
+							//Zero division control
+							if(divisor.int_value == 0){
+								goto zero_division_error;
+							}
+						}
+							reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
 							//call generator for INT_DIV
 							generate_type_conversion(1);
 							generate_type_conversion(2);
 							generate_stack_operation(items[1].terminal);
-						}
-						else{
-							goto zero_division_error;
-						}
 					}
 					else if(first_op == DTYPE_NUMBER){
-						if(divisor.double_value != 0){
-							reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
-							//call generator for DIV
-							generate_stack_operation(items[1].terminal);
+						if( reduction_order == 0 ){
+							//Zero division control
+							if(divisor.double_value == 0.0){
+								goto zero_division_error;
+							}
 						}
-						else{
-							goto zero_division_error;
-						}
+						reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
+						//call generator for DIV
+						generate_stack_operation(items[1].terminal);
 					}
 				}
 				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
-					if(divisor.double_value != 0){
-						reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
-						//convert first
-						generate_type_conversion(1);
-						//call generator
-						generate_stack_operation(items[1].terminal);
+					if( reduction_order == 0 ){
+						if(divisor.double_value == 0){
+							goto zero_division_error;
+						}
 					}
-					else{
-						goto zero_division_error;
-					}
+					reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
+					//convert first
+					generate_type_conversion(1);
+					//call generator
+					generate_stack_operation(items[1].terminal);
 				}
 				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
-					if(divisor.int_value != 0){
-						reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
-						//convert second
-						generate_type_conversion(2);
-						//call generator
-						generate_stack_operation(items[1].terminal);
+					if( reduction_order == 0 ){
+						if(divisor.int_value == 0){
+							goto zero_division_error;
+						}
 					}
-					else{
-						goto zero_division_error;
-					}
+					reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
+					//convert second
+					generate_type_conversion(2);
+					//call generator
+					generate_stack_operation(items[1].terminal);
 				}
 			}
 			else if (first_op == DTYPE_NIL || second_op == DTYPE_NIL){
@@ -488,7 +505,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 
 			 /*	2. Only accepted types in operation
 			 *	Allowed types in operations:
-			 *		int / int -> int
+			 *		int / int -> num
 			 *		num / num -> num
 			 *		num / int -> num
 			 *    		   |---> inttofloat -> send instruction for converting the data type
@@ -501,6 +518,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 			/** END of Semantic action */
 			/*------------------------------------------------------------------------*/
 			reduced_terminal.non_terminal.expr_type = EXPR;
+			reduced_terminal.non_terminal.reduction_order = ++items[0].non_terminal.reduction_order;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[1].terminal);
 			return 1;
@@ -513,20 +531,24 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 			/** Semantic action */
 			/*------------------------------------------------------------------------*/
 			/**	1. Check the non-terminal type */
+			/** Reduction order is important to determine whether is static control 
+			  	of zero division possible -> it's possible only when zero is reduced
+			 	to non-terminal. */
+			int reduction_order = items[0].non_terminal.reduction_order;
 			/** Attention first and second operand may seem in reverse order 
 			 *	but they are not because of the stack */
 			int first_op  = items[2].non_terminal.dtype; //first operand data type
 			int second_op = items[0].non_terminal.dtype; //second operand data type
 			non_terminal_t divisor = items[0].non_terminal; //divisor
 			if ( (first_op  == DTYPE_INT) && (first_op  == DTYPE_INT) ){
-				if (divisor.int_value != 0){
-					reduced_terminal.non_terminal.dtype = DTYPE_INT;
-					//call generator
-					generate_stack_operation(items[1].terminal);
+				if(reduction_order == 0){
+					if (divisor.int_value == 0){
+						goto zero_division_error;
+					}
 				}
-				else{
-					goto zero_division_error;
-				}
+				reduced_terminal.non_terminal.dtype = DTYPE_INT;
+				//call generator
+				generate_stack_operation(items[1].terminal);
 			}
 			else if (first_op == DTYPE_NIL || second_op == DTYPE_NIL){
 				/** Runtime error, operation / with nil*/
@@ -552,6 +574,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 			/** END of Semantic action */
 			/*------------------------------------------------------------------------*/
 			reduced_terminal.non_terminal.expr_type = EXPR;
+			reduced_terminal.non_terminal.reduction_order = ++items[0].non_terminal.reduction_order;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[1].terminal);
 			return 1;
@@ -560,7 +583,8 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 		else if( (items[0].item_type == 0) &&
 			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_CONCAT)) &&
 			(items[2].item_type == 0) ){
-			
+		
+			//fprintf(stderr,"Redukujem concat\n");
 			/** Semantic action */
 			/*------------------------------------------------------------------------*/
 			/**	1. Check the non-terminal type */
@@ -597,6 +621,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 			/** END of Semantic action */
 			/*------------------------------------------------------------------------*/
 			reduced_terminal.non_terminal.expr_type = EXPR;
+			reduced_terminal.non_terminal.reduction_order = ++items[0].non_terminal.reduction_order;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[1].terminal);
 			return 1;
@@ -663,6 +688,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 			/*------------------------------------------------------------------------*/
 			
 			reduced_terminal.non_terminal.expr_type = EXPR;
+			reduced_terminal.non_terminal.reduction_order = ++items[0].non_terminal.reduction_order;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[1].terminal);
 			return 1;
@@ -728,6 +754,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 			/** END of Semantic action */
 			/*------------------------------------------------------------------------*/
 			reduced_terminal.non_terminal.expr_type = EXPR;
+			reduced_terminal.non_terminal.reduction_order = ++items[0].non_terminal.reduction_order;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[1].terminal);
 			return 1;
@@ -793,6 +820,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 			/** END of Semantic action */
 			/*------------------------------------------------------------------------*/
 			reduced_terminal.non_terminal.expr_type = EXPR;
+			reduced_terminal.non_terminal.reduction_order = ++items[0].non_terminal.reduction_order;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[1].terminal);
 			return 1;
@@ -858,6 +886,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 			/** END of Semantic action */
 			/*------------------------------------------------------------------------*/
 			reduced_terminal.non_terminal.expr_type = EXPR;
+			reduced_terminal.non_terminal.reduction_order = ++items[0].non_terminal.reduction_order;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[1].terminal);
 			return 1;
@@ -928,6 +957,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 			/** END of Semantic action */
 			/*------------------------------------------------------------------------*/
 			reduced_terminal.non_terminal.expr_type = EXPR;
+			reduced_terminal.non_terminal.reduction_order = ++items[0].non_terminal.reduction_order;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[1].terminal);
 			return 1;
@@ -999,6 +1029,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 			/** END of Semantic action */
 			/*------------------------------------------------------------------------*/
 			reduced_terminal.non_terminal.expr_type = EXPR;
+			reduced_terminal.non_terminal.reduction_order = ++items[0].non_terminal.reduction_order;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[1].terminal);
 			return 1;
@@ -1012,6 +1043,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 				
 			reduced_terminal.non_terminal.dtype = items[1].non_terminal.dtype;
 			reduced_terminal.non_terminal.expr_type = EXPR;
+			reduced_terminal.non_terminal.reduction_order = ++items[0].non_terminal.reduction_order;
 			PA_stack_push(stack,reduced_terminal,0);
 			destroy_token(items[0].terminal);
 			destroy_token(items[2].terminal);
@@ -1050,7 +1082,7 @@ int analyze_bottom_up(parser_t *parser){
 	/** 3.2 Push $ on the top of the stack */
 	PA_stack_push(&stack, item, 1);
 
-
+	int func_id   = 0;
 	int reduction = 0; //Variable determines, whether to get next token
 	do{
 		/** 4. Get terminal from the top of the stack and from the input */
@@ -1074,16 +1106,20 @@ int analyze_bottom_up(parser_t *parser){
 					return ERR_SYNTAX;
 			}
 			/** If the generated token is a function id, return read token
-			  	and control to recursive descent parser */
+			  	and control to recursive descent parser but finish processing
+			 	of expression */
 			if(token_in.terminal->type == TOKEN_ID){
 				symtable_item_t *id = symtable_search(parser->global_symtable, token_in.terminal->attribute->string);
 				if ((id != NULL) && (id -> function != NULL) ){
+					//fprintf(stderr,"NARAZIL SOM NA FUNKCIU\n");
 					parser->token = copy_token(token_in.terminal);
 					token_in.terminal -> type = TOKEN_EOF;
 					reduction = 1;
+					func_id	  = 1;
 					//parser -> token = token_in.terminal;
 					/** Dealloc the stack */
 					//PA_stack_destroy(&stack);
+					//destroy_token(token_in.terminal);
 					//return EXIT_FUNC_ID;
 				}
 			}
@@ -1151,10 +1187,20 @@ int analyze_bottom_up(parser_t *parser){
 					PA_stack_destroy(&stack);
 					return ERR_SEMANTIC_TC;
 				}
+				else if(reduction_result == ERR_SEMANTIC_DEF ){
+					destroy_token(token_in.terminal);
+					PA_stack_destroy(&stack);
+					return ERR_SEMANTIC_DEF;
+				}
 				else if(reduction_result == ERR_RUNTIME_NIL ){
 					destroy_token(token_in.terminal);
 					PA_stack_destroy(&stack);
 					return ERR_RUNTIME_NIL;
+				}
+				else if(reduction_result == ERR_RUNTIME_ZERODIV ){
+					destroy_token(token_in.terminal);
+					PA_stack_destroy(&stack);
+					return ERR_RUNTIME_ZERODIV;
 				}
 				reduction = 1;
 				
@@ -1167,8 +1213,11 @@ int analyze_bottom_up(parser_t *parser){
 				(error_message("Parser", ERR_SYNTAX,  "Missing operator."),ERR_SYNTAX);
 			case EPT:
 				/** Dealloc the stack */
+				//fprintf(stderr,"Vyraz pred funkciou je prazdny\n");
 				destroy_token(token_in.terminal);
 				PA_stack_destroy(&stack);
+				if( func_id ){
+					return EXIT_FUNC_ID; } 
 				return EXIT_EMPTY_EXPR; 
 			case END:
 				parser -> token = token_in.terminal;
@@ -1184,6 +1233,7 @@ int analyze_bottom_up(parser_t *parser){
 				parser->token = copy_token(token_in.terminal);
 				token_in.terminal -> type = TOKEN_EOF;
 				reduction = 1;
+				break;
 		}
 	}while(((top_terminal.terminal->type != TOKEN_EOF) || (token_in.terminal->type != TOKEN_EOF)));
 	
@@ -1194,7 +1244,7 @@ int analyze_bottom_up(parser_t *parser){
 		PA_stack_top(&stack,&reduced_expr);
 		if ( reduced_expr.item_type == 0 ){
 			parser -> curr_expr_type = reduced_expr.non_terminal.dtype; }
-
+		//fprintf(stderr,"Uspech\n");
 		destroy_token(top_terminal.terminal);
 		destroy_token(token_in.terminal);
 	}

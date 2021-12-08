@@ -4,6 +4,7 @@
 
 
 bool is_write = false;
+bool first_used_function = true;
 
 
 /**
@@ -286,6 +287,13 @@ int func_call(parser_t *parser)
         
         strcpy(func_id, TOKEN_REPR);
         if (!strcmp(func_id, "write")) {is_write = true;}
+
+		if (parser->curr_func == NULL){
+			if (first_used_function == true){
+				generate_main_scope();
+				first_used_function = false;
+			}
+		}
         
         PARSER_EAT(); /* '(' */
         CHECK_TOKEN_TYPE(TOKEN_L_PAR); 
@@ -447,7 +455,7 @@ int term(parser_t *parser, int num_param)
                                     parser->curr_func->key, 
                                     parser->curr_block_depth,
 									parser->array_depth);
-		} else {
+		} else { // TODO: segfault curr_func
             generate_pass_param_to_function(parser->token,parser->curr_func->key, parser->curr_block_depth, parser->array_depth, num_param);
 		}
 
@@ -994,7 +1002,6 @@ int stat(parser_t *parser)
                 SEMANTIC_ACTION(check_invalid_variable_name, parser);
                 SEMANTIC_ACTION(check_variable_redeclaration, parser); 
 
-                //symtable_item_t *item;
                 // Insert current variable ID into newly created item in local symtable
                 if (!(parser->curr_item = symtable_insert_const_var(SYMTAB_L, TOKEN_REPR))) {
                     return ERR_INTERNAL;
@@ -1002,17 +1009,16 @@ int stat(parser_t *parser)
                             
                 // Check if block depth is 0 -> then block_id must be set to 1
                 CHECK_MAIN_BLOCK();
-
-
-                //parser->curr_item->const_var->block_depth = parser->curr_block_depth;
-                
+                parser->curr_item->const_var->block_depth = parser->curr_block_depth;
                 // Set current block info
-                if (parser->curr_block_id == 1 && parser->curr_block_depth == 0) {
+                if (parser->curr_block_id == 1) {
                     parser->curr_item->const_var->block_id = parser->block_temp_id;
                 } else {
                     parser->curr_item->const_var->block_id = parser->curr_block_id;
                 }
-                parser->curr_item->const_var->block_id = parser->curr_block_id;
+                //parser->curr_item->const_var->block_id = parser->curr_block_id;
+                fprintf(stderr, "(%s) -> [%d]: %d\n", parser->curr_item->key, parser->curr_item->const_var->block_id,
+                                                      parser->curr_item->const_var->block_depth); 
                 
                 
                 strcpy(id_name, TOKEN_REPR);
@@ -1035,9 +1041,9 @@ int stat(parser_t *parser)
                 result = dtype(parser);
                 CHECK_RESULT_VALUE(result, EXIT_OK); 
                
-                // printf("function id: %s\n", parser->curr_func->key); 
-                // printf("Curr id: %s\n", parser->curr_item->key);
-                // printf("Curr block: id [%d], depth: %d\n\n", parser->curr_block_id, parser->curr_block_depth);
+                //printf("function id: %s\n", parser->curr_func->key); 
+                //printf("Curr id: %s\n", parser->curr_item->key);
+                //printf("Curr block: id [%d], depth: %d\n\n", parser->curr_block_id, parser->curr_block_depth);
 
                 // Store useful data about current parameter
                 parser->curr_item->const_var->is_var = true;
@@ -1093,7 +1099,8 @@ int stat(parser_t *parser)
 
                 // Leaving this block -> decrement depth
                 parser->curr_block_depth -= 1;
-                
+                CHECK_MAIN_BLOCK();
+
                 PARSER_EAT(); // to get next statement 
                 return EXIT_OK;
             
@@ -1101,6 +1108,7 @@ int stat(parser_t *parser)
 
 				// We update block_depth before bottom_up analysis because of the need to print labels now
                 parser->curr_block_depth += 1;
+                parser->curr_block_id += 1;
                 parser->array_depth[parser->curr_block_depth]++;
 
                 parser->inside_while = true;
@@ -1120,12 +1128,13 @@ int stat(parser_t *parser)
                 CHECK_TOKEN_TYPE(TOKEN_KEYWORD); 
                 CHECK_KEYWORD(KEYWORD_DO);
                 
+                /*
                 // Keep track of current block info
                 if (parser->curr_block_id == 1 && parser->curr_block_depth == 0) {
                     parser->curr_block_id = parser->block_temp_id + 1;
                 } else {
                     parser->curr_block_id += 1;
-                }
+                }*/
 
                 // <stat_list>
                 PARSER_EAT(); 
@@ -1146,7 +1155,8 @@ int stat(parser_t *parser)
                 
                 // Leaving this block -> decrement depth
                 parser->curr_block_depth -= 1;
-			    parser->inside_while = false;
+                CHECK_MAIN_BLOCK();
+		parser->inside_while = false;
 
                 PARSER_EAT(); // to get next statement 
                 return EXIT_OK;
@@ -1212,6 +1222,11 @@ int stat(parser_t *parser)
         
         // Current ID is variable id
         SEMANTIC_ACTION(check_undeclared_var_or_func, parser, false);
+         
+        // Create doubly linked list to store list of IDs 
+        DLL_Init(&parser->list);
+        DLL_InsertLast(&parser->list, parser->curr_item);
+        DLL_Last(&parser->list);
 
         // <id_n> 
 	    strcpy(id_name, TOKEN_REPR);
@@ -1234,17 +1249,32 @@ int stat(parser_t *parser)
                         parser->array_depth, 
                         parser->curr_block_depth);
 
+                DLL_First(&(parser->list)); 
+                DLL_GetValue(&(parser->list), &(parser->curr_item));
+                /*** Check type compatibility between left and right hand side ***/
+                SEMANTIC_ACTION(check_expr_type_compat, parser, parser->curr_item->const_var->type);
+                parser->curr_item->const_var->defined = true;
+                DLL_Next(&(parser->list));
+                
                 result = expr_list(parser);
-
                 CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
+
+                DLL_Dispose(&parser->list);
                 return EXIT_OK;
 
             case EXIT_FUNC_ID:
                 
                 // Semantic check handled by func_call()
                 result = func_call(parser);
+		generate_pop_stack_to_var(
+                        id_name, 
+                        parser->curr_func->key, 
+                        parser->array_depth, 
+                        parser->curr_block_depth);
+
                 CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
                 PARSER_EAT();
+                DLL_Dispose(&parser->list);
                 return EXIT_OK;
 
             case EXIT_ID_BEFORE:
@@ -1260,12 +1290,15 @@ int stat(parser_t *parser)
                     // we dont need to eat, ')' is current token
                     CHECK_TOKEN_TYPE(TOKEN_R_PAR); 
                     error_message("Parser", ERR_SEMANTIC_DEF, "called function not previously declared nor defined");
+                    DLL_Dispose(&parser->list);
                     return ERR_SEMANTIC_DEF; 
                 }
+                DLL_Dispose(&parser->list);
                 error_message("Parser", ERR_SYNTAX, "expression parsing failed");
                 return ERR_SYNTAX; // missing or invalid  expression
 
             default: // other errors
+                DLL_Dispose(&parser->list);
                 return result;
         } // switch
     }
@@ -1291,11 +1324,12 @@ int else_nt(parser_t *parser)
                 // RULE 39: <else> → 'else' <stat_list>
 
                 // Keep track of current block info
+                parser->curr_block_id += 1;
+                /*
                 if (parser->curr_block_id == 1 && parser->curr_block_depth == 0) {
                     parser->curr_block_id = parser->block_temp_id + 1;
                 } else {
-                    parser->curr_block_id += 1;
-                }
+                }*/
 				
                 generate_label_else(parser->curr_func->key, parser->array_depth, parser->curr_block_depth);
 
@@ -1354,17 +1388,23 @@ int var_def(parser_t *parser, char *id_name)
 
         // *ATTENTION* - nondeterminism handling - func id vs var id
         result = analyze_bottom_up(parser);
-        //printf("curr expr type: %d\n", parser->curr_expr_type);
-        switch (result) 
-        {
-            case EXIT_OK:
-                SEMANTIC_ACTION(check_expr_type_compat, parser, parser->curr_item->const_var->type);
-
-       			generate_pop_stack_to_var(
+	generate_pop_stack_to_var(
                         id_name, 
                         parser->curr_func->key, 
                         parser->array_depth, 
                         parser->curr_block_depth);
+
+        switch (result) 
+        {
+            case EXIT_OK:
+                /*** Check type compatibility between left and right hand side ***/
+                SEMANTIC_ACTION(check_expr_type_compat, parser, parser->curr_item->const_var->type);
+		/*
+       			generate_pop_stack_to_var(
+                        id_name, 
+                        parser->curr_func->key, 
+                        parser->array_depth, 
+                        parser->curr_block_depth);*/
 
                 result = expr_list(parser);
                 CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
@@ -1430,6 +1470,9 @@ int id_n(parser_t *parser)
             PARSER_EAT();
             CHECK_TOKEN_TYPE(TOKEN_ID); // 'id' 
             SEMANTIC_ACTION(check_undeclared_var_or_func, parser, false);
+
+            DLL_InsertLast(&parser->list, parser->curr_item);
+            DLL_Last(&parser->list);
 
             PARSER_EAT(); // TODO: has to be here
             return id_n(parser);
@@ -1501,7 +1544,11 @@ int expr_list(parser_t *parser)
                     SEMANTIC_ACTION(check_ret_val_count, parser);
                     SEMANTIC_ACTION(check_ret_val_type, parser); 
                 } else {
+                    DLL_GetValue(&(parser->list), &(parser->curr_item));
+                    /*** Check type compatibility between left and right hand side ***/
                     SEMANTIC_ACTION(check_expr_type_compat, parser, parser->curr_item->const_var->type);
+                    parser->curr_item->const_var->defined = true;
+                    DLL_Next(&(parser->list));
                 }
                 break;
             default:

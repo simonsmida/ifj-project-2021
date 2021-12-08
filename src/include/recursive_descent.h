@@ -8,6 +8,7 @@
 #include "PA_stack.h"
 #include "code_generator.h"
 #include "semantics.h"
+#include "dll_list.h"
 
 int prog(parser_t *parser);
 int prolog(parser_t *parser);
