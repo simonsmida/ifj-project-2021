@@ -38,13 +38,16 @@ void generate_built_in_write( token_t *token, char *function_id, int depth, int 
 		}
 	}
 	else if (token->type == TOKEN_STR_LIT){
-		CODE("WRITE string@%s", token->attribute->string);
+		CODE("PUSHS string@%s", token->attribute->string);
+		CODE("CALL check_nil_write");
 	}
 	else if (token->type == TOKEN_INT_LIT){
-		CODE("WRITE int@%d", token->attribute->integer);
+		CODE("PUSHS int@%d", token->attribute->integer);
+		CODE("CALL check_nil_write");
 	}
 	else if (token->type == TOKEN_NUM_LIT){
-		CODE("WRITE float@%a", token->attribute->number);
+		CODE("PUSHS float@%a", token->attribute->number);
+		CODE("CALL check_nil_write");
 	}
 }
 
@@ -614,6 +617,5 @@ void check_nil_write(){
 	CODE("RETURN");
 	CODE("LABEL write_nil");
 	CODE("WRITE string@nil");
-	CODE("PUSHS bool@false");
 	CODE("RETURN");
 }
