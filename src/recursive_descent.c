@@ -1272,7 +1272,8 @@ int stat(parser_t *parser)
                         parser->curr_block_depth);
 
                 DLL_First(&(parser->list)); 
-                DLL_GetValue(&(parser->list), &(parser->curr_item));
+                result = DLL_GetValue(&(parser->list), &(parser->curr_item));
+                if (result != EXIT_OK) return result;
                 /*** Check type compatibility between left and right hand side ***/
                 SEMANTIC_ACTION(check_expr_type_compat, parser, parser->curr_item->const_var->type);
                 parser->curr_item->const_var->defined = true;
@@ -1288,13 +1289,14 @@ int stat(parser_t *parser)
                 
                 // Semantic check handled by func_call()
                 result = func_call(parser);
-		generate_pop_stack_to_var(
+		        generate_pop_stack_to_var(
                         id_name, 
                         parser->curr_func->key, 
                         parser->array_depth, 
                         parser->curr_block_depth);
 
                 CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
+                SEMANTIC_ACTION(check_multiassign_count, parser);
                 PARSER_EAT();
                 DLL_Dispose(&parser->list);
                 return EXIT_OK;
@@ -1318,6 +1320,10 @@ int stat(parser_t *parser)
                 DLL_Dispose(&parser->list);
                 error_message("Parser", ERR_SYNTAX, "expression parsing failed");
                 return ERR_SYNTAX; // missing or invalid  expression
+            
+            case EXIT_EMPTY_EXPR:
+                error_message("Parser", ERR_SYNTAX, "empty expression not allowed");
+                return ERR_SYNTAX;
 
             default: // other errors
                 DLL_Dispose(&parser->list);
@@ -1458,6 +1464,10 @@ int var_def(parser_t *parser, char *id_name)
                 }
                 error_message("Parser", ERR_SYNTAX, "expression parsing failed");
                 return ERR_SYNTAX; // missing or invalid  expression
+            
+            case EXIT_EMPTY_EXPR:
+                error_message("Parser", ERR_SYNTAX, "empty expression not allowed");
+                return ERR_SYNTAX;
 
             default: // other errors
                 return result;
@@ -1567,7 +1577,8 @@ int expr_list(parser_t *parser)
                     SEMANTIC_ACTION(check_ret_val_count, parser);
                     SEMANTIC_ACTION(check_ret_val_type, parser); 
                 } else {
-                    DLL_GetValue(&(parser->list), &(parser->curr_item));
+                    result = DLL_GetValue(&(parser->list), &(parser->curr_item));
+                    if (result != EXIT_OK) return result;
                     /*** Check type compatibility between left and right hand side ***/
                     SEMANTIC_ACTION(check_expr_type_compat, parser, parser->curr_item->const_var->type);
                     parser->curr_item->const_var->defined = true;
