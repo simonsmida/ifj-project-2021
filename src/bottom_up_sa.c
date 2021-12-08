@@ -1182,6 +1182,11 @@ int analyze_bottom_up(parser_t *parser){
 					PA_stack_destroy(&stack);
 					return ERR_SEMANTIC_TC;
 				}
+				else if(reduction_result == ERR_SEMANTIC_DEF ){
+					destroy_token(token_in.terminal);
+					PA_stack_destroy(&stack);
+					return ERR_SEMANTIC_DEF;
+				}
 				else if(reduction_result == ERR_RUNTIME_NIL ){
 					destroy_token(token_in.terminal);
 					PA_stack_destroy(&stack);
