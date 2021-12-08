@@ -27,6 +27,8 @@ parser_t *parser_init(FILE *src)
         return NULL;
     }  
     
+    DLL_Init(&(parser->list));
+
     parser->curr_block_id = 0; 
     parser->curr_block_depth = -1;
     parser->block_temp_id = 0;
@@ -92,6 +94,7 @@ int parser_parse(FILE *src)
  */
 void parser_destroy(parser_t *parser)
 {
+    DLL_Dispose(&(parser->list));
     destroy_token(parser->token);
     parser->curr_func = NULL;
     parser->curr_item = NULL;
