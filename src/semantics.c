@@ -199,7 +199,7 @@ int check_arg_def(parser_t *parser)
 {
     int b_id = parser->curr_block_id;
     int b_depth = parser->curr_block_depth;
-    if ((parser->curr_item = most_recent_var(SYMTAB_L, TOKEN_REPR, b_id, b_depth, true)) == NULL) {
+    if ((parser->curr_item = most_recent_var(SYMTAB_L, TOKEN_REPR, b_id, b_depth, false)) == NULL) {
         error_message("Parser", ERR_SEMANTIC_DEF, "variable '%s' is not defined here", TOKEN_REPR);
         return ERR_SEMANTIC_DEF;    
     }
@@ -313,6 +313,7 @@ int check_undeclared_var_or_func(parser_t *parser, bool must_be_defined)
     parser->curr_item = most_recent_var(SYMTAB_L, TOKEN_REPR, b_id, b_depth, must_be_defined);
     if (parser->curr_item == NULL) {
         error_message("Parser", ERR_SEMANTIC_DEF, "undeclared variable/function '%s'", TOKEN_REPR);
+        fprintf(stderr, "Current block: [%d]: %d\n\n", b_id, b_depth);
         return ERR_SEMANTIC_DEF;
     }
     return EXIT_OK;
