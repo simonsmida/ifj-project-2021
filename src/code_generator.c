@@ -49,20 +49,23 @@ void generate_head(){
 }
 
 void generate_built_in_reads(){
-	CODE("LABEL READS");
+	CODE("LABEL reads");
 	CODE("READ GF@tmp1 string");
+	CODE("PUSHS GF@tmp1");
 	CODE("RETURN\n");
 }
 
 void generate_built_in_readi(){
-	CODE("LABEL READI");
+	CODE("LABEL readi");
 	CODE("READ GF@tmp1 int");
+	CODE("PUSHS GF@tmp1");
 	CODE("RETURN\n");
 }
 
 void generate_built_in_readn(){
-	CODE("LABEL READN");
+	CODE("LABEL readn");
 	CODE("READ GF@tmp1 float");
+	CODE("PUSHS GF@tmp1");
 	CODE("RETURN\n");
 }
 
@@ -206,6 +209,7 @@ void generate_function_label(const char *func_name){
 
 void generate_var_declaration(char *var_name, char *function_id, int *array_depth,  int depth){
 	printf("DEFVAR LF@%s$%s$%d$%d\n", var_name, function_id, depth, array_depth[depth]);
+	printf("MOVE LF@%s$%s$%d$%d nil@nil\n", var_name, function_id, depth, array_depth[depth]);
 
 	return;
 	
@@ -284,13 +288,13 @@ void generate_pass_param_to_function(token_t *token,  char *function_name, int d
 				printf("int@%d\n", token->attribute->integer);
 				break;
 			case TOKEN_NUM_LIT  :
-				printf("number@%f\n", token->attribute->number);
+				printf("float@%a\n", token->attribute->number);
 				break;
 			case TOKEN_STR_LIT:
 				printf("string@%s\n", token->attribute->string);
 				break;
 			case TOKEN_ID:
-				printf("LF@%s$%s$%d$%d", token->attribute->string, function_name, depth, array_depth[depth]);
+				printf("LF@%s$%s$%d$%d\n", token->attribute->string, function_name, depth, array_depth[depth]);
 				break;
 		
 			default:
@@ -310,7 +314,7 @@ void generate_pass_param_to_operation(token_t *token, char *function_name, int d
 				CODE("PUSHS int@%d", token->attribute->integer);
 				break;
 			case TOKEN_NUM_LIT  :
-				CODE("PUSHS number@%f", token->attribute->number);
+				CODE("PUSHS float@%a", token->attribute->number);
 				break;
 			case TOKEN_STR_LIT:
 				CODE("PUSHS string@%s", token->attribute->string);
@@ -392,30 +396,35 @@ void generate_idiv(){
 }
 
 void generate_stack_operation(token_t *token){
-	if(token->type != TOKEN_STRLEN || token->type != TOKEN_EQ || token->type != TOKEN_NOT_EQ)
-		check_nil_op();
 
 	if (token != NULL){
 		switch(token->type){
 			case TOKEN_PLUS:
+				check_nil_op();
 				CODE("ADDS");
 				break;
 			case TOKEN_MINUS:
+				check_nil_op();
 				CODE("SUBS");
 				break;
 			case TOKEN_MUL:
+				check_nil_op();
 				CODE("MULS");
 				break;
 			case TOKEN_DIV:
+				check_nil_op();
 				generate_div();
 				break;
 			case TOKEN_INT_DIV:
+				check_nil_op();
 				generate_idiv();
 				break;
 			case TOKEN_LT:
+				check_nil_op();
 				CODE("LTS");
 				break;
 			case TOKEN_LE:
+				check_nil_op();
 				CODE("POPS GF@tmp1");
 				CODE("POPS GF@tmp2");
 				CODE("PUSHS GF@tmp2");
@@ -430,6 +439,7 @@ void generate_stack_operation(token_t *token){
 				CODE("EQS");
 				break;
 			case TOKEN_GE:
+				check_nil_op();
 				CODE("POPS GF@tmp1");
 				CODE("POPS GF@tmp2");
 				CODE("PUSHS GF@tmp2");
@@ -441,6 +451,7 @@ void generate_stack_operation(token_t *token){
 				CODE("ORS");
 				break;
 			case TOKEN_GT:
+				check_nil_op();
 				CODE("GTS");
 				break;
 			case TOKEN_NOT_EQ:
@@ -448,6 +459,7 @@ void generate_stack_operation(token_t *token){
 				CODE("NOTS");
 				break;
 			case TOKEN_CONCAT:
+				check_nil_op();
 				CODE("POPS GF@tmp1");
 				CODE("POPS GF@tmp2");
 				CODE("CONCAT GF@tmp3 GF@tmp2 GF@tmp1");
@@ -466,7 +478,7 @@ void generate_type_conversion(int op){//konverzia bude vzdy len z int na number?
 
 	//a + b ... a is the first operand, b is the second operand
 	//converting a 
-	check_nil_op();
+ 	check_nil_op();
 	if(op == 1){													
 		CODE("POPS GF@tmp2");	// 	 stack 
 		CODE("POPS GF@tmp1");	//   +----------+
@@ -475,7 +487,8 @@ void generate_type_conversion(int op){//konverzia bude vzdy len z int na number?
 		CODE("PUSHS GF@tmp2");	//   |    a     |
 								//   +----------+ 
 	}
-	else{						//converting b
+	else{	
+							//converting b
 		CODE("INT2FLOATS");
 	}	
 }
@@ -541,7 +554,9 @@ void generate_while_repeat_label(char *func_id, int depth, int *array_depth){
 void generate_while_end_label(char *func_id, int depth, int *array_depth, string_t *buffer){
 	printf("JUMP %s$while$%d$%d\n",  func_id, depth, array_depth[depth]);
 	printf("LABEL %s$define_vars$%d$%d\n", func_id, depth, array_depth[depth]);
-	printf("%s", buffer->string);
+	if (buffer->string != NULL){
+		printf("%s", buffer->string);
+	}
 	printf("JUMP %s$while$%d$%d\n",  func_id, depth, array_depth[depth]);
 	printf("LABEL %s$while_end$%d$%d\n", func_id, depth, array_depth[depth] );
 }
@@ -550,7 +565,7 @@ void generate_while_end_label(char *func_id, int depth, int *array_depth, string
 // Use this after then if inside_while == true 
 void generate_jump_while_end(char *func_id, int depth, int *array_depth){
 	printf("CALL $if\n");
-	printf("JUMPIFEQ %s$while_end$%d$%d GF@tmp1 bool@false\n",func_id, depth, array_depth[depth] );
+	printf("JUMPIFEQ %s$while_end$%d$%d GF@tmp1 bool@true\n",func_id, depth, array_depth[depth] );
 
 	return;
 }
