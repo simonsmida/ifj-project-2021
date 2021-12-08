@@ -81,6 +81,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 			(items[0].terminal->attribute->keyword_type == KEYWORD_NIL))
 			)){
 			
+			//fprintf(stderr,"Redukujem vyraz\n");
 			/** Semantic action */
 			/*------------------------------------------------------------------------*/
 			/**	1. Check the item type -> whether it's a variable or literal */
@@ -582,7 +583,8 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 		else if( (items[0].item_type == 0) &&
 			((items[1].item_type == 1) && (items[1].terminal->type == TOKEN_CONCAT)) &&
 			(items[2].item_type == 0) ){
-			
+		
+			//fprintf(stderr,"Redukujem concat\n");
 			/** Semantic action */
 			/*------------------------------------------------------------------------*/
 			/**	1. Check the non-terminal type */
@@ -1080,7 +1082,7 @@ int analyze_bottom_up(parser_t *parser){
 	/** 3.2 Push $ on the top of the stack */
 	PA_stack_push(&stack, item, 1);
 
-
+	int func_id   = 0;
 	int reduction = 0; //Variable determines, whether to get next token
 	do{
 		/** 4. Get terminal from the top of the stack and from the input */
@@ -1109,14 +1111,16 @@ int analyze_bottom_up(parser_t *parser){
 			if(token_in.terminal->type == TOKEN_ID){
 				symtable_item_t *id = symtable_search(parser->global_symtable, token_in.terminal->attribute->string);
 				if ((id != NULL) && (id -> function != NULL) ){
+					//fprintf(stderr,"NARAZIL SOM NA FUNKCIU\n");
 					parser->token = copy_token(token_in.terminal);
-					//token_in.terminal -> type = TOKEN_EOF;
-					//reduction = 1;
+					token_in.terminal -> type = TOKEN_EOF;
+					reduction = 1;
+					func_id	  = 1;
 					//parser -> token = token_in.terminal;
 					/** Dealloc the stack */
-					PA_stack_destroy(&stack);
-					destroy_token(token_in.terminal);
-					return EXIT_FUNC_ID;
+					//PA_stack_destroy(&stack);
+					//destroy_token(token_in.terminal);
+					//return EXIT_FUNC_ID;
 				}
 			}
 			/** If the generated token has not supported type, transfrom it as $,
@@ -1209,8 +1213,11 @@ int analyze_bottom_up(parser_t *parser){
 				(error_message("Parser", ERR_SYNTAX,  "Missing operator."),ERR_SYNTAX);
 			case EPT:
 				/** Dealloc the stack */
+				//fprintf(stderr,"Vyraz pred funkciou je prazdny\n");
 				destroy_token(token_in.terminal);
 				PA_stack_destroy(&stack);
+				if( func_id ){
+					return EXIT_FUNC_ID; } 
 				return EXIT_EMPTY_EXPR; 
 			case END:
 				parser -> token = token_in.terminal;
@@ -1226,6 +1233,7 @@ int analyze_bottom_up(parser_t *parser){
 				parser->token = copy_token(token_in.terminal);
 				token_in.terminal -> type = TOKEN_EOF;
 				reduction = 1;
+				break;
 		}
 	}while(((top_terminal.terminal->type != TOKEN_EOF) || (token_in.terminal->type != TOKEN_EOF)));
 	
@@ -1236,7 +1244,7 @@ int analyze_bottom_up(parser_t *parser){
 		PA_stack_top(&stack,&reduced_expr);
 		if ( reduced_expr.item_type == 0 ){
 			parser -> curr_expr_type = reduced_expr.non_terminal.dtype; }
-
+		//fprintf(stderr,"Uspech\n");
 		destroy_token(top_terminal.terminal);
 		destroy_token(token_in.terminal);
 	}
