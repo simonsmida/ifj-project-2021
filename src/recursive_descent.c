@@ -4,6 +4,7 @@
 
 
 bool is_write = false;
+bool first_used_function = true;
 
 
 /**
@@ -286,9 +287,18 @@ int func_call(parser_t *parser)
         
         strcpy(func_id, TOKEN_REPR);
         if (!strcmp(func_id, "write")) {is_write = true;}
+
+		if (parser->curr_func == NULL){
+			if (first_used_function == true){
+				generate_main_scope();
+				first_used_function = false;
+			}
+		}
         
         PARSER_EAT(); /* '(' */
         CHECK_TOKEN_TYPE(TOKEN_L_PAR); 
+
+		
         
         // <arg>
         PARSER_EAT();
@@ -1035,9 +1045,7 @@ int stat(parser_t *parser)
                 result = dtype(parser);
                 CHECK_RESULT_VALUE(result, EXIT_OK); 
                
-                printf("function id: %s\n", parser->curr_func->key); 
-                printf("Curr id: %s\n", parser->curr_item->key);
-                printf("Curr block: id [%d], depth: %d\n\n", parser->curr_block_id, parser->curr_block_depth);
+              
 
                 // Store useful data about current parameter
                 parser->curr_item->const_var->is_var = true;
@@ -1224,17 +1232,19 @@ int stat(parser_t *parser)
         
         // *ATTENTION* - nondeterminism handling - func id vs var id
         result = analyze_bottom_up(parser);
-
+		 
+		
         switch (result) 
         { 
             case EXIT_OK:
-                generate_pop_stack_to_var(
+               
+
+                result = expr_list(parser);
+				 generate_pop_stack_to_var(
                         id_name, 
                         parser->curr_func->key, 
                         parser->array_depth, 
                         parser->curr_block_depth);
-
-                result = expr_list(parser);
 
                 CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
                 return EXIT_OK;
@@ -1243,6 +1253,12 @@ int stat(parser_t *parser)
                 
                 // Semantic check handled by func_call()
                 result = func_call(parser);
+				 generate_pop_stack_to_var(
+                        id_name, 
+                        parser->curr_func->key, 
+                        parser->array_depth, 
+                        parser->curr_block_depth);
+
                 CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
                 PARSER_EAT();
                 return EXIT_OK;
@@ -1354,17 +1370,18 @@ int var_def(parser_t *parser, char *id_name)
 
         // *ATTENTION* - nondeterminism handling - func id vs var id
         result = analyze_bottom_up(parser);
-        printf("curr expr type: %d\n", parser->curr_expr_type);
+		generate_pop_stack_to_var(
+                        id_name, 
+                        parser->curr_func->key, 
+                        parser->array_depth, 
+                        parser->curr_block_depth);
+
         switch (result) 
         {
             case EXIT_OK:
                 SEMANTIC_ACTION(check_expr_type_compat, parser, parser->curr_item->const_var->type);
 
-       			generate_pop_stack_to_var(
-                        id_name, 
-                        parser->curr_func->key, 
-                        parser->array_depth, 
-                        parser->curr_block_depth);
+       			
 
                 result = expr_list(parser);
                 CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
@@ -1399,7 +1416,7 @@ int var_def(parser_t *parser, char *id_name)
             default: // other errors
                 return result;
         } // switch
-
+		
     } else if (TOKEN_T == TOKEN_ID) {
         
         // RULE 42: <var_def> → ε
