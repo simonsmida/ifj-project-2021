@@ -25,6 +25,7 @@
 #define ERR '0'
 #define END '1'
 #define EPT '2'
+#define  ID '3'
 
 /**
  *	@brief Function return index to the precedence table,
