@@ -159,7 +159,7 @@ symtable_item_t *most_recent_var(symtable_t *s, const char *key, int block_id, i
             if (var == NULL) return NULL;
             current_depth = var->block_depth; 
             // Return variable with the same ID which is the closest from above
-            if ((current_depth <= block_depth) && (current_depth > closest_depth_above)) {
+            if ((current_depth <= block_depth) && (current_depth >= closest_depth_above)) {
                 if (is_visible(var, block_id, block_depth)) {
                     if (must_be_defined && var->defined) {
                         closest_depth_above = current_depth;
