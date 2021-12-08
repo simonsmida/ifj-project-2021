@@ -416,3 +416,35 @@ int check_multiassign_count(parser_t *parser)
     }
     return EXIT_OK;
 }
+
+int check_assign_type_func(parser_t *parser)
+{
+    if (parser->curr_rhs == NULL) return ERR_INTERNAL;
+    if (parser->curr_rhs->function == NULL) return ERR_INTERNAL;
+    DLList temp = parser->list;
+    
+    int result;
+    int i = 0;
+    DLL_First(&parser->list);
+    // Traverse linked list and check data types
+    while (temp.firstElement != NULL) {
+        if (i+1 > parser->curr_rhs->function->num_ret_types) { 
+            error_message("Parser", ERR_SEMANTIC_PROG, 
+            "not enough return values for '%s'", parser->curr_rhs->key);
+            return ERR_SEMANTIC_PROG;
+        }
+        int retval_type = parser->curr_rhs->function->ret_types[i];
+        result = DLL_GetValue(&parser->list, &(parser->curr_item));
+        DLL_Next(&(parser->list));
+        if (result != EXIT_OK) return result;
+        int id_type = parser->curr_item->const_var->type;
+        if (!is_expr_type_valid(retval_type, id_type)) {
+            error_message("Parser", ERR_SEMANTIC_ASSIGN, "assignment type incompatibility");
+            //fprintf(stderr, "id(%s): %d, retval[%d]: %d\n\n", parser->curr_item->key, id_type, i, retval_type);
+            return ERR_SEMANTIC_ASSIGN;
+        }
+        i++;
+        temp.firstElement = temp.firstElement->nextElement;
+    }
+    return EXIT_OK;
+}
