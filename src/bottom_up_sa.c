@@ -228,14 +228,14 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
 					reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
 					//convert first
-					generate_type_conversion(1);
+					generate_type_conversion(2);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
 				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
 					reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
 					//convert second
-					generate_type_conversion(2);
+					generate_type_conversion(1);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
@@ -300,14 +300,14 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
 					reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
 					//convert first
-					generate_type_conversion(1);
+					generate_type_conversion(2);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
 				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
 					reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
 					//convert second
-					generate_type_conversion(2);
+					generate_type_conversion(1);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
@@ -371,14 +371,14 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
 					reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
 					//convert first
-					generate_type_conversion(1);
+					generate_type_conversion(2);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
 				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
 					reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
 					//convert second
-					generate_type_conversion(2);
+					generate_type_conversion(1);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
@@ -472,7 +472,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 					}
 					reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
 					//convert first
-					generate_type_conversion(1);
+					generate_type_conversion(2);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
@@ -484,7 +484,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 					}
 					reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
 					//convert second
-					generate_type_conversion(2);
+					generate_type_conversion(1);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
@@ -647,14 +647,14 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
 					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
 					//convert first
-					generate_type_conversion(1);
+					generate_type_conversion(2);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
 				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
 					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
 					//convert second
-					generate_type_conversion(2);
+					generate_type_conversion(1);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
@@ -714,14 +714,14 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
 					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
 					//convert first
-					generate_type_conversion(1);
+					generate_type_conversion(2);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
 				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
 					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
 					//convert second
-					generate_type_conversion(2);
+					generate_type_conversion(1);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
@@ -780,14 +780,14 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
 					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
 					//convert first
-					generate_type_conversion(1);
+					generate_type_conversion(2);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
 				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
 					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
 					//convert second
-					generate_type_conversion(2);
+					generate_type_conversion(1);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
@@ -846,14 +846,14 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
 					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
 					//convert first
-					generate_type_conversion(1);
+					generate_type_conversion(2);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
 				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
 					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
 					//convert second
-					generate_type_conversion(2);
+					generate_type_conversion(1);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
@@ -917,14 +917,14 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
 					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
 					//convert first
-					generate_type_conversion(1);
+					generate_type_conversion(2);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
 				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
 					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
 					//convert second
-					generate_type_conversion(2);
+					generate_type_conversion(1);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
@@ -973,30 +973,25 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 			/**	1. Check the non-terminal type */
 			int first_op  = items[0].non_terminal.dtype; //first operand data type
 			int second_op = items[2].non_terminal.dtype; //second operand data type
-			if ( (first_op  == DTYPE_INT || first_op  == DTYPE_NUMBER) &&
-				 (second_op == DTYPE_INT || second_op == DTYPE_NUMBER)){
+			if ( (first_op  == DTYPE_INT || first_op  == DTYPE_NUMBER || first_op == DTYPE_STRING) &&
+				 (second_op == DTYPE_INT || second_op == DTYPE_NUMBER || second_op == DTYPE_STRING)){
 				
 				if(first_op == second_op){
-					if (first_op == DTYPE_INT ){
-						reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
-					}
-					else{
-						reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
-					}
+					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
 					//everything ok call generator
 					generate_stack_operation(items[1].terminal);
 				}
 				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
 					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
 					//convert first
-					generate_type_conversion(1);
+					generate_type_conversion(2);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
 				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
 					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
 					//convert second
-					generate_type_conversion(2);
+					generate_type_conversion(1);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
@@ -1063,7 +1058,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 int analyze_bottom_up(parser_t *parser){
 	//Dealloc the read token from recursive descent
 	destroy_token(parser->token);
-	
+	fprintf(stderr,"Vstupujem do analyzy\n");
 	/** 1. Create stack */
 	//Static allocation
 	PA_stack stack;
@@ -1097,6 +1092,15 @@ int analyze_bottom_up(parser_t *parser){
             }
 			
 			token_in.terminal = get_next_token(parser -> src);
+			if (token_in.terminal == NULL) {                                           
+				PA_stack_destroy(&stack);
+				error_message("Fatal", ERR_INTERNAL, "INTERNAL INTERPRET ERROR!"); 
+				return ERR_INTERNAL;                                               
+			}                                                                      
+			if (token_in.terminal->type == TOKEN_ERROR) {                                            
+				error_message("Scanner", ERR_LEX, "unknown token '%s'", TOKEN_REPR); 
+				return ERR_LEX; /* scanner handles error message */                  
+			}                                                                        
 			
 			if(token_in.terminal->type == TOKEN_EOF){
 					parser -> token = token_in.terminal;
