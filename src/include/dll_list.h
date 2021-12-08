@@ -16,6 +16,7 @@ typedef struct {
 } DLList;
 
 void print_elements_of_list(DLList TL);
+int dll_item_count(DLList TL);
 
 /**
  * @brief Notifies user about invalid doubly linked list operation
@@ -95,7 +96,7 @@ void DLL_InsertBefore(DLList *list, symtable_item_t *item);
 /**
  * @brief via parameter data returns value of the active element
  */
-void DLL_GetValue( DLList *list, symtable_item_t **item); 
+int DLL_GetValue( DLList *list, symtable_item_t **item); 
 
 /**
  * @breif Set value of the active element
