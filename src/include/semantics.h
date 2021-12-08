@@ -31,5 +31,6 @@ int check_declared_function_defined(parser_t *parser);
 int check_ret_val_count(parser_t *parser);
 int check_ret_val_type(parser_t *parser);
 int check_expr_type_compat(parser_t *parser, int expected);
+int check_multiassign_count(parser_t *parser);
 
 #endif
