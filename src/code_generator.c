@@ -223,7 +223,7 @@ void generate_function_label(const char *func_name){
 void generate_var_declaration(char *var_name, char *function_id, int *array_depth,  int depth){
 	//printf("DEFVAR LF@%s$%s$%d$%d\n", var_name, function_id, depth, array_depth[depth]);
 
-
+}
 
 void generate_function_call(const char *func_name){
 	CODE("CALL %s", func_name);
@@ -314,20 +314,20 @@ void generate_pass_param_to_function(token_t *token,  char *function_name, int d
 
 
 
-void generate_pass_param_to_operation(token_t *token, char *function_name, int depth, int *array_depth){
+void generate_pass_param_to_operation(token_t *token, char *function_name, int depth, int array_depth){
 	if (token != NULL){
 		switch ( token->type ){
 			case TOKEN_INT_LIT:
 				CODE("PUSHS int@%d", token->attribute->integer);
 				break;
 			case TOKEN_NUM_LIT  :
-				CODE("PUSHS number@%f", token->attribute->number);
+				CODE("PUSHS float@%a", token->attribute->number);
 				break;
 			case TOKEN_STR_LIT:
 				CODE("PUSHS string@%s", token->attribute->string);
 				break;
 			case TOKEN_ID:
-				CODE("PUSHS LF@%s$%s$%d$%d", token->attribute->string, function_name, depth, array_depth[depth]);
+				CODE("PUSHS LF@%s$%s$%d$%d", token->attribute->string, function_name, depth, array_depth);
 				break;
 			default:
 				break;
@@ -517,8 +517,8 @@ void generate_if_body(){//nazov labelov sa bude odvijat od nazvu funkcie a hlbky
 	CODE("RETURN");
 }
 
-void generate_pop_stack_to_var(char *var_id, char *function_id, int *array_depth, int depth){
-	CODE("POPS LF@%s$%s$%d$%d", var_id, function_id, depth, array_depth[depth]);
+void generate_pop_stack_to_var(char *var_id, char *function_id, int array_depth, int depth){
+	CODE("POPS LF@%s$%s$%d$%d", var_id, function_id, depth, array_depth);
 
 	return;
 }
@@ -572,6 +572,7 @@ void generate_main_scope(){
 	return;
 
 }
+
 #endif
 
 #if NORMAL
