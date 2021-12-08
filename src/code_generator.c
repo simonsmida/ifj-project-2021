@@ -42,7 +42,10 @@ void generate_head(){
 	CODE("DEFVAR GF@tmp3");
 	CODE("DEFVAR GF@tmp4");
 	CODE("DEFVAR GF@tmp5");
-	CODE("\nJUMP $MAIN");
+	CODE("\nCALL $MAIN");
+	CODE("EXIT int@0");
+
+	return;
 }
 
 void generate_built_in_reads(){
@@ -479,7 +482,7 @@ void generate_type_conversion(int op){//konverzia bude vzdy len z int na number?
 
 void generate_label_if(char *function_name, int *pole_zanoreni, int depth){ //zavola sa ked narazis na "if" ----> "if"(expr)
 	CODE("CALL $if");
-	CODE("JUMPIFEQ %s$else$%d$%d\n", function_name, depth, pole_zanoreni[depth]);
+	CODE("JUMPIFEQ %s$else$%d$%d GF@tmp1 bool@true", function_name, depth, pole_zanoreni[depth]);
 }
 
 void generate_label_else(char *function_name, int *pole_zanoreni, int depth){
@@ -550,4 +553,14 @@ void generate_jump_while_end(char *func_id, int depth, int *array_depth){
 	printf("JUMPIFEQ %s$while_end$%d$%d GF@tmp1 bool@false\n",func_id, depth, array_depth[depth] );
 
 	return;
+}
+
+void generate_main_scope(){
+	printf("RETURN\n");
+	printf("LABEL $MAIN\n");
+	printf("CREATEFRAME\n");
+	printf("PUSHFRAME\n");
+
+	return;
+
 }
