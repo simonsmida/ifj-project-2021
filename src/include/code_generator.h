@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include "scanner.h"
 #include "symtable.h"
+#include "parser.h"
 
 void generate_built_in_write( token_t *token, char *function_id, int depth, int *array_depth);
 
@@ -43,7 +44,7 @@ void generate_pass_param(token_t *token, int param_index);
 
 void generate_type_conversion(int op);
 
-void generate_pass_param_to_operation(token_t *token, char *function_name, int depth, int *array_depth);
+void generate_pass_param_to_operation(token_t *token, char *function_name, int depth, int array_depth);
 
 void generate_pass_param_to_function(token_t *token,  char *function_name, int depth, int *array_depth, int param_index);
 
@@ -53,7 +54,7 @@ void generate_start_of_program();
 
 void generate_createframe();
 
-void generate_pop_stack_to_var(char *var_id, char *function_id, int *array_depth, int depth);
+void generate_pop_stack_to_var(char *var_id, char *function_id, int array_depth, int depth);
 
 void check_nil_builtin();
 
@@ -74,3 +75,5 @@ void generate_while_end_label(char *func_id, int depth, int *array_depth, string
 void generate_stack_operation(token_t *token);
 
 void generate_main_scope();
+
+void check_nil_write();

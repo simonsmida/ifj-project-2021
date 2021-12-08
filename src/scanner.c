@@ -167,6 +167,10 @@ token_t *get_next_token(FILE *file)
 					append_character(buffer, '3');
 					append_character(buffer, '2');
 				}
+				else if (c == '\n'){
+					fprintf(stderr, "String literal cannot be on 2 separate lines\n");
+					return generate_token(buffer, STATE_ERROR);
+				}
                 else {
                     append_character(buffer, c);
                 }
@@ -368,10 +372,19 @@ token_t *get_next_token(FILE *file)
                 break;
 
             case ESCAPE_SEQUENCE:
-                if (c == '\"' || c == '\\' ) {
+                if ( c == '\"' ) {
                     append_character(buffer, c);
                     state = STRING_LITERAL;
+					
                 }
+				else if (c == '\\'){
+					append_character(buffer, '\\');
+					append_character(buffer, '0');
+					append_character(buffer, '9');
+					append_character(buffer, '2');
+					 state = STRING_LITERAL;
+					
+				}
                 else if ( c == 'n' ) {
 					// code for new line is 
                     append_character(buffer, '\\');
@@ -379,10 +392,12 @@ token_t *get_next_token(FILE *file)
 					append_character(buffer, '1');
 					append_character(buffer, '0');
                     state = STRING_LITERAL;
+					
                 }
                 else if ( c == 't' ) {
                     append_character(buffer, '\t' );
                     state = STRING_LITERAL;
+					
                 }
                 else if(c >= '0' && c <= '9' ) {
                     escape_seq_bufer[0] = c;
@@ -416,9 +431,10 @@ token_t *get_next_token(FILE *file)
 
 						return generate_token(buffer, STATE_ERROR);
                     }
-                    if (isprint(character)) {
-                        append_character(buffer, character);
-                    }
+					append_character(buffer, '\\');
+				   	for (int i = 0; escape_seq_bufer[i] != '\0'; i++){
+						   append_character(buffer, escape_seq_bufer[i]);
+					   }
 
                     state = STRING_LITERAL;
                 }
