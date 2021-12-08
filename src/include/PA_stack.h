@@ -16,8 +16,7 @@
 
 /** Defining constants for recognising expressions and list of expressions */
 typedef enum non_terminals_type{
-	EXPR,
-	EXPR_LIST
+	EXPR
 }non_terminal_type;
 
 /** Structure for storing non-terminals */

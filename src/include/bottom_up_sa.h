@@ -74,15 +74,6 @@ int is_literal(token_t* token);
  */
 int get_data_type(token_t* token);
 
-/**
- *	@brief Function returns data type of the
- *		   given token, while using reduction
- *		   rule for IDs/literals.
- *	@param token For identifying token data type
- *	@return token data type.
- */
-int get_type(token_t* token);
-
 int analyze_bottom_up(parser_t *parser);
 
 #endif /** BOTOM_UP_PARSER */
