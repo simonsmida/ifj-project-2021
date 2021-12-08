@@ -61,6 +61,7 @@ typedef struct item_const_var {
     int  block_depth; // Code block depth of the variable
     int  block_id;    // Code block of the variable
 	data_type_t type;
+	int depth_array_number;
 } const_var_t;
 
 typedef struct symtable_item {
@@ -213,4 +214,3 @@ symtable_item_t *most_recent_var(symtable_t *s, const char *key, int block_id, i
 // TODO Funkcia definovana aj deklarovana?
 
 #endif
-
