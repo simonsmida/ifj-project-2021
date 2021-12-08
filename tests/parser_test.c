@@ -210,7 +210,7 @@ int main(void)
 {
     UNITY_BEGIN();
     
-    //RUN_TEST(write_1);
+    RUN_TEST(write_1);
     //RUN_TEST(err_sem_3);
     // RUN_TEST(err_sem_4);
     // RUN_TEST(err_sem_5);
