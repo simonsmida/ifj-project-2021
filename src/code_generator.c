@@ -525,25 +525,25 @@ void generate_var_declaration_function(char *var_name, char *function_id, int de
 
 
 void generate_while_repeat_label(char *func_id, int depth, int *array_depth){
-	printf("JUMP %s$define_vars$%d$%d\n",  func_id, depth, array_depth[depth]);
-	printf("LABEL %s$while$%d$%d\n", func_id, depth, array_depth[depth]);
+	// printf("JUMP %s$define_vars$%d$%d\n",  func_id, depth, array_depth[depth]);
+	// printf("LABEL %s$while$%d$%d\n", func_id, depth, array_depth[depth]);
 
 	return;
 }
 
 void generate_while_end_label(char *func_id, int depth, int *array_depth, string_t *buffer){
-	printf("JUMP %s$while$%d$%d\n",  func_id, depth, array_depth[depth]);
-	printf("LABEL %s$define_vars$%d$%d\n", func_id, depth, array_depth[depth]);
-	printf("%s", buffer->string);
-	printf("JUMP %s$while$%d$%d\n",  func_id, depth, array_depth[depth]);
-	printf("LABEL %s$while_end$%d$%d\n", func_id, depth, array_depth[depth] );
+	// printf("JUMP %s$while$%d$%d\n",  func_id, depth, array_depth[depth]);
+	// printf("LABEL %s$define_vars$%d$%d\n", func_id, depth, array_depth[depth]);
+	// printf("%s", buffer->string);
+	// printf("JUMP %s$while$%d$%d\n",  func_id, depth, array_depth[depth]);
+	// printf("LABEL %s$while_end$%d$%d\n", func_id, depth, array_depth[depth] );
 }
 
 
 // Use this after then if inside_while == true 
 void generate_jump_while_end(char *func_id, int depth, int *array_depth){
-	printf("CALL $if\n");
-	printf("JUMPIFEQ %s$while_end$%d$%d GF@tmp1 bool@false\n",func_id, depth, array_depth[depth] );
+	// printf("CALL $if\n");
+	// printf("JUMPIFEQ %s$while_end$%d$%d GF@tmp1 bool@false\n",func_id, depth, array_depth[depth] );
 
 	return;
 }

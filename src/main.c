@@ -78,6 +78,7 @@ int main(int argc, char *argv[])
             printf("5.10\n");
                 break;
             case 19 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_6.1.ifj21", "r");
+            printf("6.1\n");
                 break;
             // case 19 : //f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_7.1.ifj21", "r"); //seg
             //     printf("\nsegfault\n");.1
