@@ -439,9 +439,9 @@ int check_assign_type_func(parser_t *parser)
         if (result != EXIT_OK) return result;
         int id_type = parser->curr_item->const_var->type;
         if (!is_expr_type_valid(retval_type, id_type)) {
-            error_message("Parser", ERR_SEMANTIC_ASSIGN, "assignment type incompatibility");
+            error_message("Parser", ERR_SEMANTIC_PROG, "assignment type incompatibility");
             //fprintf(stderr, "id(%s): %d, retval[%d]: %d\n\n", parser->curr_item->key, id_type, i, retval_type);
-            return ERR_SEMANTIC_ASSIGN;
+            return ERR_SEMANTIC_PROG;
         }
         i++;
         temp.firstElement = temp.firstElement->nextElement;
