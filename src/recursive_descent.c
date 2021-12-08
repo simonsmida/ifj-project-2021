@@ -4,6 +4,7 @@
 
 
 bool is_write = false;
+bool first_used_function = true;
 
 
 /**
@@ -286,6 +287,13 @@ int func_call(parser_t *parser)
         
         strcpy(func_id, TOKEN_REPR);
         if (!strcmp(func_id, "write")) {is_write = true;}
+
+		if (parser->curr_func == NULL){
+			if (first_used_function == true){
+				generate_main_scope();
+				first_used_function = false;
+			}
+		}
         
         PARSER_EAT(); /* '(' */
         CHECK_TOKEN_TYPE(TOKEN_L_PAR); 
@@ -1148,7 +1156,7 @@ int stat(parser_t *parser)
                 // Leaving this block -> decrement depth
                 parser->curr_block_depth -= 1;
                 CHECK_MAIN_BLOCK();
-			    parser->inside_while = false;
+		parser->inside_while = false;
 
                 PARSER_EAT(); // to get next statement 
                 return EXIT_OK;
@@ -1258,6 +1266,12 @@ int stat(parser_t *parser)
                 
                 // Semantic check handled by func_call()
                 result = func_call(parser);
+		generate_pop_stack_to_var(
+                        id_name, 
+                        parser->curr_func->key, 
+                        parser->array_depth, 
+                        parser->curr_block_depth);
+
                 CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
                 PARSER_EAT();
                 DLL_Dispose(&parser->list);
@@ -1374,17 +1388,23 @@ int var_def(parser_t *parser, char *id_name)
 
         // *ATTENTION* - nondeterminism handling - func id vs var id
         result = analyze_bottom_up(parser);
-        
+	generate_pop_stack_to_var(
+                        id_name, 
+                        parser->curr_func->key, 
+                        parser->array_depth, 
+                        parser->curr_block_depth);
+
         switch (result) 
         {
             case EXIT_OK:
                 /*** Check type compatibility between left and right hand side ***/
                 SEMANTIC_ACTION(check_expr_type_compat, parser, parser->curr_item->const_var->type);
+		/*
        			generate_pop_stack_to_var(
                         id_name, 
                         parser->curr_func->key, 
                         parser->array_depth, 
-                        parser->curr_block_depth);
+                        parser->curr_block_depth);*/
 
                 result = expr_list(parser);
                 CHECK_RESULT_VALUE_SILENT(result, EXIT_OK);
