@@ -228,14 +228,14 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
 					reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
 					//convert first
-					generate_type_conversion(1);
+					generate_type_conversion(2);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
 				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
 					reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
 					//convert second
-					generate_type_conversion(2);
+					generate_type_conversion(1);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
@@ -300,14 +300,14 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
 					reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
 					//convert first
-					generate_type_conversion(1);
+					generate_type_conversion(2);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
 				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
 					reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
 					//convert second
-					generate_type_conversion(2);
+					generate_type_conversion(1);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
@@ -371,14 +371,14 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
 					reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
 					//convert first
-					generate_type_conversion(1);
+					generate_type_conversion(2);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
 				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
 					reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
 					//convert second
-					generate_type_conversion(2);
+					generate_type_conversion(1);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
@@ -472,7 +472,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 					}
 					reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
 					//convert first
-					generate_type_conversion(1);
+					generate_type_conversion(2);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
@@ -484,7 +484,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 					}
 					reduced_terminal.non_terminal.dtype = DTYPE_NUMBER;
 					//convert second
-					generate_type_conversion(2);
+					generate_type_conversion(1);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
@@ -647,14 +647,14 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
 					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
 					//convert first
-					generate_type_conversion(1);
+					generate_type_conversion(2);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
 				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
 					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
 					//convert second
-					generate_type_conversion(2);
+					generate_type_conversion(1);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
@@ -714,14 +714,14 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
 					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
 					//convert first
-					generate_type_conversion(1);
+					generate_type_conversion(2);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
 				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
 					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
 					//convert second
-					generate_type_conversion(2);
+					generate_type_conversion(1);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
@@ -780,14 +780,14 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
 					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
 					//convert first
-					generate_type_conversion(1);
+					generate_type_conversion(2);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
 				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
 					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
 					//convert second
-					generate_type_conversion(2);
+					generate_type_conversion(1);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
@@ -846,14 +846,14 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
 					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
 					//convert first
-					generate_type_conversion(1);
+					generate_type_conversion(2);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
 				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
 					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
 					//convert second
-					generate_type_conversion(2);
+					generate_type_conversion(1);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
@@ -917,14 +917,14 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
 					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
 					//convert first
-					generate_type_conversion(1);
+					generate_type_conversion(2);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
 				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
 					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
 					//convert second
-					generate_type_conversion(2);
+					generate_type_conversion(1);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
@@ -989,14 +989,14 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 				else if(first_op == DTYPE_INT && second_op == DTYPE_NUMBER){
 					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
 					//convert first
-					generate_type_conversion(1);
+					generate_type_conversion(2);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
 				else if(first_op == DTYPE_NUMBER && second_op == DTYPE_INT){
 					reduced_terminal.non_terminal.dtype = DTYPE_BOOL;
 					//convert second
-					generate_type_conversion(2);
+					generate_type_conversion(1);
 					//call generator
 					generate_stack_operation(items[1].terminal);
 				}
