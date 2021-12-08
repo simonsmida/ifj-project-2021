@@ -2,6 +2,6 @@ require "ifj21"
 function main()
     local x : integer 
     x = 5 + 9
-    --write(x)
+    write(x)
 end
 main()

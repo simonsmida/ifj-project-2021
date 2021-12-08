@@ -1354,7 +1354,7 @@ int var_def(parser_t *parser, char *id_name)
 
         // *ATTENTION* - nondeterminism handling - func id vs var id
         result = analyze_bottom_up(parser);
-        printf("curr expr type: %d\n", parser->curr_expr_type);
+        //printf("curr expr type: %d\n", parser->curr_expr_type);
         switch (result) 
         {
             case EXIT_OK:

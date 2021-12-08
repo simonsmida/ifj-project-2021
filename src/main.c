@@ -8,15 +8,15 @@
 
 int main(int argc, char *argv[])
 {
-    /* This code demonstrates the scanners work */
+    /* This code is used for testing */
+    
 #if 1
+    int passed = 0;
+    int failed = 0;
     FILE *f;
-        // if ((f = fopen(argv[1], "r")) == NULL) {
-        //     fprintf(stderr, "Failed to open file '%s'\n", argv[1]);
-        //     return ERR_INTERNAL;
-        // }
-        int i = 0;
-        while(i<37){
+    int i = 0;
+    int all = 37;
+        while(i<43){
             printf("\n");
             switch (i)
             {
@@ -44,71 +44,74 @@ int main(int argc, char *argv[])
             case 7 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_3.8.ifj21", "r");
                      printf("3.8\n");
                 break;
-            case 8 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_5.1.ifj21", "r");
+            case 8 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_3.9.ifj21", "r");
+                     printf("3.9\n");
+                break;
+            case 9 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_5.1.ifj21", "r");
                      printf("5.1\n");
                 break;
-            case 9 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_5.2.ifj21", "r");
+            case 10 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_5.2.ifj21", "r");
                     printf("5.2\n");
                 break;
-            case 10 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_5.3.ifj21", "r");
+            case 11 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_5.3.ifj21", "r");
             printf("5.3\n");
                 break;
-            case 11 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_5.4.ifj21", "r");
+            case 12 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_5.4.ifj21", "r");
             printf("5.4\n");
                 break;
-            case 12 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_5.5.ifj21", "r");
+            case 13 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_5.5.ifj21", "r");
             printf("5.5\n");
                 break;
-            case 13 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_5.6.ifj21", "r");
+            case 14 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_5.6.ifj21", "r");
             printf("5.6\n");
                 break;
-            case 14 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_5.7.ifj21", "r");
+            case 15 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_5.7.ifj21", "r");
             printf("5.7\n");
                 break;
-            case 15 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_5.8.ifj21", "r");
+            case 16 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_5.8.ifj21", "r");
             printf("5.8\n");
                 break;
-            case 16 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_5.9.ifj21", "r");
+            case 17 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_5.9.ifj21", "r");
             printf("5.9\n");
                 break;
-            case 17 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_5.10.ifj21", "r");
+            case 18 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_5.10.ifj21", "r");
             printf("5.10\n");
                 break;
-            case 18 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_6.1.ifj21", "r");
+            case 19 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_6.1.ifj21", "r");
                 break;
             // case 19 : //f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_7.1.ifj21", "r"); //seg
             //     printf("\nsegfault\n");.1
             //     break;
-            case 19 : f = fopen("tests/test_data/CodeStructureSnippets/bad/var_dec_syn_err.ifj21", "r");
-                break;
-            case 20 : f = fopen("tests/test_data/CodeStructureSnippets/good/func_dec.ifj21", "r");
-                break;
+            
             // case 21 : f = fopen("tests/test_data/CodeStructureSnippets/good/multiassign.ifj21", "r");    //seg
             //     break;
-            case 21 : f = fopen("tests/test_data/CodeStructureSnippets/good/var_def.ifj21", "r");
-                break;
-            case 22 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_4.1.ifj21", "r");
+            
+            case 20 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_4.1.ifj21", "r");
                       printf("4.1\n");
                 break;
-            case 23 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_4.2.ifj21", "r");
+            case 21 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_4.2.ifj21", "r");
             printf("4.2\n");
                 break;
-            case 24 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_4.3.ifj21", "r");
+            case 22 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_4.3.ifj21", "r");
             printf("4.3\n");
                 break;
-            case 25 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_4.4.ifj21", "r");
+            case 23 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_4.4.ifj21", "r");
             printf("4.4\n");
                 break;
-            case 26 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_4.5.ifj21", "r");
+            case 24 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_4.5.ifj21", "r");
             printf("4.5\n");
                 break;
-            case 27 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_4.6.ifj21", "r");
+            case 25 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_4.6.ifj21", "r");
             printf("4.6\n");
                 break;
-            case 28 : f = fopen("tests/test_data/CodeStructureSnippets/good/visibility.ifj21", "r");
+            case 26 : f = fopen("tests/test_data/CodeStructureSnippets/bad/var_dec_syn_err.ifj21", "r");
                 break;
-            case 29 : f = fopen("tests/test_data/CodeStructureSnippets/bad/sem_err_3.9.ifj21", "r");
+            case 27 : f = fopen("tests/test_data/CodeStructureSnippets/good/func_dec.ifj21", "r");
                 break;
+            case 28 : f = fopen("tests/test_data/CodeStructureSnippets/good/var_def.ifj21", "r");
+                break;
+            case 29 : f = fopen("tests/test_data/CodeStructureSnippets/good/visibility.ifj21", "r");
+                break;            
             case 30 : f = fopen("tests/test_data/CodeStructureSnippets/good/filip1.ifj21", "r");
                 break;
             case 31 : f = fopen("tests/test_data/CodeStructureSnippets/good/snipWrite.ifj21", "r");
@@ -128,6 +131,20 @@ int main(int argc, char *argv[])
             case 36 : f = fopen("tests/test_data/CodeStructureSnippets/bad/expr_bad2.ifj21", "r");
             printf("epxr2bad\n");
                 break;
+            case 37 : f = fopen("tests/test_data/CodeStructureSnippets/good/example3.tl", "r");
+            printf("\nKRIVKA START:\n");
+                break;
+            case 38 : f = fopen("tests/test_data/CodeStructureSnippets/good/fact_iter.ifj21", "r");
+                break;
+            case 39 : f = fopen("tests/test_data/CodeStructureSnippets/good/fact_recur.ifj21", "r");
+                break;
+            case 40 : f = fopen("tests/test_data/CodeStructureSnippets/good/fun.tl", "r");
+                break;
+            case 41 : f = fopen("tests/test_data/CodeStructureSnippets/good/hello.tl", "r");
+                break;
+            case 42 : f = fopen("tests/test_data/CodeStructureSnippets/good/substr.tl", "r");
+            printf("\nKRIVKA END:\n");
+                break;   
             default:
                 break;
             }
@@ -136,27 +153,104 @@ int main(int argc, char *argv[])
             // static int four = 1;
             // static int five = 1;
             int a = parser_parse(f);
-            // if(a == 3){
-            //     three ++;
-            //     printf("\n3.%d\n",three);
-            // }
-            // if(a == 5){
-            //     five ++;
-            //     printf("\n5.%d\n",five);
-            // }
-            // if(a == 4){
-            //     four ++;
-            //     printf("\n5.%d\n",four);
-            // }
-            //printf("%d\n",a);
+            if(i>=0 && i<= 8){
+                
+                if(a == 3){
+                    printf("|PASSED|\n");
+                    passed++;
+                }
+                else{
+                    if(i== 6 || i==7){
+                        printf("|PASSED|\n");
+                        passed++;
+                    }
+                        
+
+                    else{
+                        printf("|FAILED|\n");
+                    }
+                        
+
+                }
+                    
+            }
+            if((i>=9 && i<= 18)){
+                if(a == 5){
+                    printf("|PASSED|\n");
+                    passed++;
+                }
+                    
+                else{
+                    printf("|FAILED|\n");
+                }
+            }   
+            if(i>=20 && i<= 25){
+                if(a == 4){
+                    printf("|PASSED|\n");
+                    passed++;           
+                }
+                    
+                else{
+                    printf("|FAILED|\n");
+                }
+            }
+            if(i>=32 && i<= 34){
+                if(a == 0){
+                    printf("|PASSED|\n");
+                    passed++;
+                }
+                else{
+                    printf("|FAILED|\n");
+                }
+            }
+            if((i>=35 && i<= 36) || i == 19){
+                if(a == 6 || a == 4){
+                    printf("|PASSED|\n");
+                    passed++;
+                }
+                    
+                else{
+                    printf("|FAILED|\n");
+                    
+                }
+            }
+            if(i>=27 && i<= 31){
+                if(a == 0){
+                    printf("|PASSED|\n");
+                    passed++;
+                    
+                }
+                else
+                    printf("|FAILED|\n");
+            }
+            if(i == 26){
+                if(a == 2){
+                    printf("|PASSED|\n");
+                    passed++;
+                }
+                else
+                    printf("|FAILED|\n");
+            }
+            if(i>=37 && i<= 42){
+                if(a == 0){
+                    printf("|PASSED|\n");
+                    passed++;
+                    
+                }
+                else
+                    printf("|FAILED|\n");
+            }
+
             if(a == 0){
-                printf("subor %d je EXIT_OK\n",i+1);
+                printf("test %d je EXIT_OK\n",i+1);
             }
             
             //fclose(f);
             i++;
            // printf("----------------------------------\n");
         }
+        printf("/////////////////////////////////////////////\n");
+        printf("PASSED %d/%d\n", passed,all);
 #endif
 #if 0
     FILE *f = stdin;
