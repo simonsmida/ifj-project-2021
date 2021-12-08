@@ -191,7 +191,7 @@ int define_readi(parser_t *parser, char *func_id)
     if (create_builtin_function(parser, func_id) == EXIT_OK) {
         FUNC_ITEM->num_params = 0;
         // Insert return type - updates num_ret_types
-        symtable_insert_new_function_ret_type(SYMTAB_G, DTYPE_INT,  parser->curr_item->key);
+        symtable_insert_new_function_ret_type(SYMTAB_G, DTYPE_INT, parser->curr_item->key);
         return EXIT_OK;
     }
     return ERR_INTERNAL;
