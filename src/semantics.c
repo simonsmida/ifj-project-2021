@@ -42,6 +42,8 @@ int dtype_token(parser_t *parser)
 
 bool is_expr_type_valid(int expr_type, int expected_type)
 {
+    if (expr_type == DTYPE_NIL) return true;
+
     if (expected_type == DTYPE_NUMBER) {
         return (expr_type == DTYPE_INT || expr_type == DTYPE_NUMBER);
     } 
@@ -399,6 +401,18 @@ int check_expr_type_compat(parser_t *parser, int expected)
     }
     return EXIT_OK;
 }
-// TODO: solve error output
 
+int check_multiassign_count(parser_t *parser)
+{
+    if (parser->curr_rhs == NULL) return ERR_INTERNAL;
+    if (parser->curr_rhs->function == NULL) return ERR_INTERNAL;
 
+    int ret_type_count = parser->curr_rhs->function->num_ret_types;
+    int id_count = dll_item_count(parser->list);
+    if (id_count > ret_type_count) {
+        error_message("Parser", ERR_SEMANTIC_PROG, "not enough return values"
+                                          " for '%s'", parser->curr_rhs->key);
+        return ERR_SEMANTIC_PROG;
+    }
+    return EXIT_OK;
+}
