@@ -24,6 +24,7 @@ typedef enum non_terminals_type{
 typedef struct nonterminal{
 	non_terminal_type expr_type;
 	data_type_t	dtype;
+	int reduction_order;
 	int int_value;
 	double double_value;
 }non_terminal_t;
