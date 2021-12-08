@@ -33,7 +33,7 @@ char precedence_table[19][19] =
 /*	~= */{ '<' ,'<', '<' , '<'  ,'<','<', '<','>','>', '>', '>', '>', '>','<','>', '<','<','>', '>'},
 /*	(  */{ '<' ,'<', '<' , '<'  ,'<','<', '<','<','<', '<', '<', '<', '<','<','=', '<','<','=', ERR},
 /*	)  */{ ERR ,'>', '>' , '>'  ,'>','>', '>','>','>', '>', '>', '>', '>',ERR,'>', END,ERR,'>', '>'},
-/*	id */{ ERR ,'>', '>' , '>'  ,'>','>', '>','>','>', '>', '>', '>', '>',ERR,'>', END,ERR,'>', '>'},
+/*	id */{ ERR ,'>', '>' , '>'  ,'>','>', '>','>','>', '>', '>', '>', '>',ERR,'>',  ID,ERR,'>', '>'},
 /*	f  */{ ERR ,ERR, ERR , ERR  ,ERR,ERR, ERR,ERR,ERR, ERR, ERR, ERR, ERR,'=',ERR, ERR,ERR,ERR, ERR},
 /*	,  */{ '<' ,'<', '<' , '<'  ,'<','<', '<','<','<', '<', '<', '<', '<','<','=', '<','<','=', ERR},
 /*	$  */{ '<' ,'<', '<' , '<'  ,'<','<', '<','<','<', '<', '<', '<', '<','<',ERR, '<','<',ERR, EPT}};
@@ -1177,6 +1177,10 @@ int analyze_bottom_up(parser_t *parser){
 				/** Dealloc the stack */
 				PA_stack_destroy(&stack);
 				return EXIT_OK;
+			case ID:
+				parser->token = copy_token(token_in.terminal);
+				token_in.terminal -> type = TOKEN_EOF;
+				reduction = 1;
 		}
 	}while(((top_terminal.terminal->type != TOKEN_EOF) || (token_in.terminal->type != TOKEN_EOF)));
 	

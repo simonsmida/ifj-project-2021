@@ -97,16 +97,6 @@ int PA_stack_top_terminal(const PA_stack *stack, PA_item_t* item){
 		/** 2. Start searching the nearest terminal */
 		while(index > -1){
 			if ( stack -> items[index].item_type == 1 ){
-#if 0
-				/** 3. Dealloc the structure which will be overwrited */
-				PA_item_destroy(*item);
-				/** 4. We are finding the nearest terminal so we have to the deep copy */
-				token_t *copy;
-				copy = copy_token(stack -> items[stack -> top_index].terminal);
-				(*item).terminal = copy;
-				(*item).non_terminal = stack -> items[stack -> top_index].non_terminal;
-				(*item).item_type = stack -> items[stack -> top_index].item_type;
-#endif
 				(*item).terminal = stack -> items[index].terminal;
 				(*item).non_terminal = stack -> items[index].non_terminal;
 				(*item).item_type = stack -> items[index].item_type;
