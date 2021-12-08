@@ -12,22 +12,36 @@
 
 void print_elements_of_list(DLList TL) 
 {
-	// DLList TempList = TL;
-	// int CurrListLength = 0;
-	// printf("-----------------");
-	// while ((TempList.firstElement != NULL) && (CurrListLength < MAXLEN))
-	// {
-	// 	printf("\n \t%s (%d)", TempList.firstElement->item->key, TempList.firstElement->item->const_var->type);
-	// 	if ((TempList.firstElement == TL.activeElement) && (TL.activeElement != NULL))
-	// 		printf("\t <= active element");
-	// 	TempList.firstElement = TempList.firstElement->nextElement;
-	// 	CurrListLength++;
-	// }
-	// if (CurrListLength >= MAXLEN)
-	// 	printf("\nList exceeded maximum length!");
-	// printf("\n-----------------\n");
+	DLList TempList = TL;
+	int CurrListLength = 0;
+	printf("-----------------");
+	while ((TempList.firstElement != NULL) && (CurrListLength < MAXLEN))
+	{
+		printf("\n \t%s (%d)", TempList.firstElement->item->key, TempList.firstElement->item->const_var->type);
+		if ((TempList.firstElement == TL.activeElement) && (TL.activeElement != NULL))
+     		printf("\t <= active element");
+		TempList.firstElement = TempList.firstElement->nextElement;
+	 	CurrListLength++;
+	}
+	if (CurrListLength >= MAXLEN)
+	 	printf("\nList exceeded maximum length!");
+	printf("\n-----------------\n");
 }
 
+
+int dll_item_count(DLList TL) 
+{
+
+	DLList TempList = TL;
+	int CurrListLength = 0;
+	while ((TempList.firstElement != NULL) && (CurrListLength < MAXLEN)) {
+	 	CurrListLength++;
+		TempList.firstElement = TempList.firstElement->nextElement;
+	}
+	if (CurrListLength >= MAXLEN)
+        return -1;
+    return CurrListLength;
+}
 /**
  * @brief Notifies user about invalid doubly linked list operation
  */
@@ -328,14 +342,14 @@ void DLL_InsertBefore(DLList *list, symtable_item_t *item)
 /**
  * @brief via parameter data returns value of the active element
  */
-void DLL_GetValue( DLList *list, symtable_item_t **item) 
+int DLL_GetValue( DLList *list, symtable_item_t **item) 
 {
     if (list->activeElement == NULL) {
-        printf("HEEEERE\n\n\n");
-        DLL_Error(); // list has no active element
-        return;
+        error_message("Parser", ERR_SEMANTIC_OTHER, "not enough rvalues");
+        return ERR_SEMANTIC_OTHER;
     }
     *item = list->activeElement->item;
+    return EXIT_OK;
 }
 
 /**
