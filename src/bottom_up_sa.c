@@ -1058,7 +1058,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 int analyze_bottom_up(parser_t *parser){
 	//Dealloc the read token from recursive descent
 	destroy_token(parser->token);
-	
+	fprintf(stderr,"Vstupujem do analyzy\n");
 	/** 1. Create stack */
 	//Static allocation
 	PA_stack stack;
@@ -1092,6 +1092,15 @@ int analyze_bottom_up(parser_t *parser){
             }
 			
 			token_in.terminal = get_next_token(parser -> src);
+			if (token_in.terminal == NULL) {                                           
+				PA_stack_destroy(&stack);
+				error_message("Fatal", ERR_INTERNAL, "INTERNAL INTERPRET ERROR!"); 
+				return ERR_INTERNAL;                                               
+			}                                                                      
+			if (token_in.terminal->type == TOKEN_ERROR) {                                            
+				error_message("Scanner", ERR_LEX, "unknown token '%s'", TOKEN_REPR); 
+				return ERR_LEX; /* scanner handles error message */                  
+			}                                                                        
 			
 			if(token_in.terminal->type == TOKEN_EOF){
 					parser -> token = token_in.terminal;
