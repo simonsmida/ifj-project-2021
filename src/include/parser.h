@@ -3,6 +3,7 @@
 
 #include "symtable.h"
 #include "scanner.h"
+#include "dll_list.h"
 
 #define ARRAY_DEPTH_NUM 10
 
@@ -25,6 +26,7 @@ typedef struct parser {
     bool inside_func_def;
     bool inside_func_dec;
 	bool inside_while;
+    DLList list;
 	int array_depth[ARRAY_DEPTH_NUM];
 	string_t *buffer;
 } parser_t;
