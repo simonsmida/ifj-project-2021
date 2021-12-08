@@ -1058,7 +1058,7 @@ int reduce_terminal(PA_stack *stack,parser_t *parser, symtable_t *local_symtab){
 int analyze_bottom_up(parser_t *parser){
 	//Dealloc the read token from recursive descent
 	destroy_token(parser->token);
-	fprintf(stderr,"Vstupujem do analyzy\n");
+	//fprintf(stderr,"Vstupujem do analyzy\n");
 	/** 1. Create stack */
 	//Static allocation
 	PA_stack stack;
