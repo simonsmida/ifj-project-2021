@@ -1110,12 +1110,13 @@ int analyze_bottom_up(parser_t *parser){
 				symtable_item_t *id = symtable_search(parser->global_symtable, token_in.terminal->attribute->string);
 				if ((id != NULL) && (id -> function != NULL) ){
 					parser->token = copy_token(token_in.terminal);
-					token_in.terminal -> type = TOKEN_EOF;
-					reduction = 1;
+					//token_in.terminal -> type = TOKEN_EOF;
+					//reduction = 1;
 					//parser -> token = token_in.terminal;
 					/** Dealloc the stack */
-					//PA_stack_destroy(&stack);
-					//return EXIT_FUNC_ID;
+					PA_stack_destroy(&stack);
+					destroy_token(token_in.terminal);
+					return EXIT_FUNC_ID;
 				}
 			}
 			/** If the generated token has not supported type, transfrom it as $,
