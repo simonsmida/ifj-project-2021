@@ -674,7 +674,7 @@ bool is_keyword(char *string) {
 
 /** 
  * @brief Determines whether a given string is a variable type
- * aka "integer" or "double" etc
+ * aka "integer" or "number" etc
  * 
  * @param string String from which to be determined whether it is a variable type
  * 

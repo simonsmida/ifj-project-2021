@@ -467,7 +467,7 @@ int term(parser_t *parser, int num_param)
 		} else { // TODO: segfault curr_func
 			if (parser->curr_func != NULL){
             	generate_pass_param_to_function(parser->token, parser->curr_func->key, parser->curr_block_depth, parser->array_depth, num_param);
-			}
+		
 		}
 
         // RULE 15: <term> → 'literal' ... 'literal' = str_lit|int_lit|num_lit
@@ -572,7 +572,10 @@ int param_fdef(parser_t *parser)
             if (!(parser->curr_item = symtable_insert_const_var(SYMTAB_L, TOKEN_REPR))) {
                 return ERR_INTERNAL;
             }
-            
+            parser->curr_item->const_var->block_depth = -1;
+            parser->curr_item->const_var->declared = true;
+            parser->curr_item->const_var->defined = true;
+
             // Continue parsing 
             PARSER_EAT(); /* : */
             CHECK_TOKEN_TYPE(TOKEN_COLON);
@@ -648,6 +651,9 @@ int param_fdef_n(parser_t *parser)
             if (!(parser->curr_item = symtable_insert_const_var(SYMTAB_L, TOKEN_REPR))) {
                 return ERR_INTERNAL;
             }
+            parser->curr_item->const_var->block_depth = -1;
+            parser->curr_item->const_var->declared = true;
+            parser->curr_item->const_var->defined = true;
 
             PARSER_EAT(); /* ':' */
             CHECK_TOKEN_TYPE(TOKEN_COLON);
@@ -1028,8 +1034,8 @@ int stat(parser_t *parser)
                     parser->curr_item->const_var->block_id = parser->curr_block_id;
                 }
                 //parser->curr_item->const_var->block_id = parser->curr_block_id;
-                fprintf(stderr, "(%s) -> [%d]: %d\n", parser->curr_item->key, parser->curr_item->const_var->block_id,
-                                                      parser->curr_item->const_var->block_depth); 
+                //fprintf(stderr, "(%s) -> [%d]: %d\n", parser->curr_item->key, parser->curr_item->const_var->block_id,
+                  //                                    parser->curr_item->const_var->block_depth); 
                 
                 
                 strcpy(id_name, TOKEN_REPR);
