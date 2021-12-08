@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "include/recursive_descent.h"
+#include "include/parser.h"
 
 
 bool is_write = false;
@@ -467,6 +468,7 @@ int term(parser_t *parser, int num_param)
 		} else { // TODO: segfault curr_func
 			if (parser->curr_func != NULL){
             	generate_pass_param_to_function(parser->token, parser->curr_func->key, parser->curr_block_depth, parser->array_depth, num_param);
+			}
 		
 		}
 
